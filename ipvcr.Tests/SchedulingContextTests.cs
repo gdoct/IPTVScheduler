@@ -1,0 +1,31 @@
+// Purpose: This file contains the tests for the SchedulingContext class.
+using ipvcr.Scheduling;
+using Moq;
+
+namespace ipvcr.Tests;
+
+public class SchedulingContextTests 
+{
+    [Fact]
+    // test that the enumeration only offers recordings, even if more are present in the task manager's list
+    public void Recordings_OnlyReturnsRecordings()
+    {
+        // Arrange
+        var taskScheduler = new Mock<ITaskScheduler>();
+        taskScheduler.Setup(s => s.FetchScheduledTasks()).Returns(
+        [
+            new ScheduledTask(Guid.NewGuid(), "Task 1", "ffmpeg -i http://example.com/stream -t 3600 -c copy -f mp4 output.mp4", DateTime.Now, ScheduledTaskType.Recording),
+            new ScheduledTask(Guid.NewGuid(), "Task 2", "ffmpeg -i http://example.com/stream -t 3600 -c copy -f mp4 output.mp4", DateTime.Now, ScheduledTaskType.Recording),
+            new ScheduledTask(Guid.NewGuid(), "Task 3", "command 3", DateTime.Now, ScheduledTaskType.Transcoding),
+            new ScheduledTask(Guid.NewGuid(), "Task 4", "command 4", DateTime.Now, ScheduledTaskType.Transcoding),
+        ]);
+
+        var context = new RecordingSchedulingContext(taskScheduler.Object);
+
+        // Act
+        var recordings = context.Recordings;
+
+        // Assert
+        Assert.Equal(2, recordings.Count());
+    }
+}

@@ -1,0 +1,117 @@
+@using ipvcr.Scheduling
+@{
+    ViewData["Title"] = "Recording manager";
+}
+
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    @{
+        var data = Model as IEnumerable<ScheduledRecording>;
+        if (data != null)
+        {
+            <h2>Scheduled recordings</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Channel</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Filename</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in data)
+                    {
+                        <tr>
+                            <td>@item.ChannelUri</td>
+                            <td>@item.StartTime</td>
+                            <td>@item.EndTime</td>
+                            <td>@item.Filename</td>
+                            <td><button title="Delete" onclick="handleDelete('@item.Id')">Delete</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+    }
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRecordingModal">
+        Add New Recording
+    </button>
+
+    <div class="modal fade" id="addRecordingModal" tabindex="-1" aria-labelledby="addRecordingModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addRecordingModalLabel">Add New Recording</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" asp-action="Create">
+                        <div class="form-group">
+                            <label for="Description">Description</label>
+                            <input type="text" class="form-control" id="Description" name="Description" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="ChannelUri">Channel</label>
+                            <input type="text" class="form-control" id="ChannelUri" name="ChannelUri" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="StartTime">Start Time</label>
+                            <input type="datetime-local" class="form-control" id="StartTime" name="StartTime"
+                                required />
+                        </div>
+                        <div class="form-group">
+                            <label for="EndTime">End Time</label>
+                            <input type="datetime-local" class="form-control" id="EndTime" name="EndTime" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="Filename">Filename</label>
+                            <input type="text" class="form-control" id="Filename" name="Filename" required />
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Recording</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const modal = new bootstrap.Modal('#addRecordingModal');
+
+            // Hide modal when page loads
+            modal.hide();
+
+            // Clear form when modal is closed
+            $('#addRecordingModal').on('hidden.bs.modal', function () {
+                $(this).find('form').trigger('reset');
+            });
+
+        });
+        function handleDelete(id) {
+            // make a request to delete the recording
+            console.log('Deleting recording with id: ' + id);
+
+            fetch(`/Home/Delete/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        console.error('Failed to delete recording');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+}
