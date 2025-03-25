@@ -28,4 +28,35 @@ public class SchedulingContextTests
         // Assert
         Assert.Equal(2, recordings.Count());
     }
+
+    [Fact]
+    public void AddRecording_SchedulesTask()
+    {
+        // Arrange
+        var taskScheduler = new Mock<ITaskScheduler>();
+        var context = new RecordingSchedulingContext(taskScheduler.Object);
+
+        // Act
+        var recording = new ScheduledRecording(Guid.NewGuid(), "Task 1", "filename","http://whatevah", DateTime.Now, DateTime.Now.AddHours(1));
+        context.AddRecording(recording);
+
+        // Assert
+        taskScheduler.Verify(s => s.ScheduleTask(It.IsAny<ScheduledTask>()));
+    }
+
+    [Fact]
+    public void RemoveRecording_UnschedulesTask()
+    {
+        // Arrange
+        var taskScheduler = new Mock<ITaskScheduler>();
+        var context = new RecordingSchedulingContext(taskScheduler.Object);
+        var recording = new ScheduledRecording(Guid.NewGuid(), "Task 1", "filename","http://whatevah", DateTime.Now, DateTime.Now.AddHours(1));
+
+        // Act
+        context.AddRecording(recording);
+        context.RemoveRecording(recording.Id);
+
+        // Assert
+        taskScheduler.Verify(s => s.CancelTask(recording.Id));
+    }
 }

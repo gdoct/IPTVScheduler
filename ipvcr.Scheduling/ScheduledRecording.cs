@@ -17,7 +17,6 @@ public class ScheduledRecording(Guid id, string name, string filename, string ch
 
     public static ScheduledRecording FromScheduledTask(ScheduledTask scheduledTask)
     {
-        ArgumentNullException.ThrowIfNull(scheduledTask);
         if (scheduledTask.TaskType != ScheduledTaskType.Recording)
         {
             throw new Exception("Invalid task type");

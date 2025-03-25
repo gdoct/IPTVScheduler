@@ -1,14 +1,19 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
+
 namespace ipvcr.Scheduling.Linux
 {
+    [ExcludeFromCodeCoverage]
     public class AtRecordingScheduler : ITaskScheduler
     {
         private AtRecordingScheduler() {}
 
         public static AtRecordingScheduler Create()
-        {
-            if (!IsLinux())
+        { 
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && 
+                !RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD) )
             {
-                throw new PlatformNotSupportedException("AtRecordingScheduler can only be used on Linux systems.");
+                throw new PlatformNotSupportedException("AtRecordingScheduler can only be run on Linux or FreeBSD.");
             }
 
             EnsureCommandIsInstalled("at");
@@ -177,12 +182,6 @@ namespace ipvcr.Scheduling.Linux
             {
                 throw new InvalidOperationException($"Failed to cancel recording: {error}");
             }
-        }
-       
-        private static bool IsLinux()
-        {
-            return System.Runtime.InteropServices.RuntimeInformation
-                .IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
         }
     }
 }

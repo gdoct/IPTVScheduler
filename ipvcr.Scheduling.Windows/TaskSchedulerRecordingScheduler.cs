@@ -1,8 +1,10 @@
 using Microsoft.Win32.TaskScheduler;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace ipvcr.Scheduling.Windows
 {
+    [ExcludeFromCodeCoverage]
     public class TaskSchedulerRecordingScheduler : ITaskScheduler
     {
         public TaskSchedulerRecordingScheduler()

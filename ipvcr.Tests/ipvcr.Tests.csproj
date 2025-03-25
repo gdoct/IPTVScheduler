@@ -21,8 +21,24 @@
     <ProjectReference Include="..\ipvcr.Scheduling\ipvcr.Scheduling.csproj" />
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+    <DefineConstants>WINDOWS</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(OS)' == 'Linux'">
+    <DefineConstants>LINUX</DefineConstants>
+  </PropertyGroup>
+
+  <Target Name="CopyPlatformSchedulers" AfterTargets="Build">
+    <ItemGroup>
+      <WindowsScheduler Include="..\ipvcr.Scheduling.Windows\bin\$(Configuration)\**\*.dll" />
+      <LinuxScheduler Include="..\ipvcr.Scheduling.Linux\bin\$(Configuration)\**\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(WindowsScheduler)" DestinationFolder="$(OutputPath)\windows" />
+    <Copy SourceFiles="@(LinuxScheduler)" DestinationFolder="$(OutputPath)\linux" />
+  </Target>
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
+
 
 </Project>
