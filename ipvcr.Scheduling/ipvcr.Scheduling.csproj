@@ -5,27 +5,5 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
-<Target Name="CopyPlatformSchedulers" AfterTargets="Build">
-    <ItemGroup>
-      <WindowsScheduler Include="..\ipvcr.Scheduling.Windows\bin\$(Configuration)\**\*.dll" />
-      <LinuxScheduler Include="..\ipvcr.Scheduling.Linux\bin\$(Configuration)\**\*.dll" />
-    </ItemGroup>
-    <Copy SourceFiles="@(WindowsScheduler)" DestinationFolder="windows" />
-    <Copy SourceFiles="@(LinuxScheduler)" DestinationFolder="linux" />
-  </Target>
-
-  <!-- <ItemGroup>
-    <Content Include="$(OutputPath)\windows\**\*.*">
-      <Pack>true</Pack>
-      <PackagePath>contentFiles\any\any\windows</PackagePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(OutputPath)\linux\**\*.*">
-      <Pack>true</Pack>
-      <PackagePath>contentFiles\any\any\linux</PackagePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup> -->
   
 </Project>
