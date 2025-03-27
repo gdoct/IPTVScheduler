@@ -11,11 +11,11 @@
       <WindowsScheduler Include="..\ipvcr.Scheduling.Windows\bin\$(Configuration)\**\*.dll" />
       <LinuxScheduler Include="..\ipvcr.Scheduling.Linux\bin\$(Configuration)\**\*.dll" />
     </ItemGroup>
-    <Copy SourceFiles="@(WindowsScheduler)" DestinationFolder="$(OutputPath)\windows" />
-    <Copy SourceFiles="@(LinuxScheduler)" DestinationFolder="$(OutputPath)\linux" />
+    <Copy SourceFiles="@(WindowsScheduler)" DestinationFolder="windows" />
+    <Copy SourceFiles="@(LinuxScheduler)" DestinationFolder="linux" />
   </Target>
 
-  <ItemGroup>
+  <!-- <ItemGroup>
     <Content Include="$(OutputPath)\windows\**\*.*">
       <Pack>true</Pack>
       <PackagePath>contentFiles\any\any\windows</PackagePath>
@@ -26,6 +26,6 @@
       <PackagePath>contentFiles\any\any\linux</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
+  </ItemGroup> -->
   
 </Project>

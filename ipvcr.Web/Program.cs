@@ -11,7 +11,8 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddControllersWithViews();
-        builder.Services.AddTransient<IRecordingSchedulingContext>((_) => new RecordingSchedulingContext(SchedulerFactory.GetScheduler()));
+        var platform = Environment.OSVersion.Platform;
+        builder.Services.AddTransient<IRecordingSchedulingContext>((_) => new RecordingSchedulingContext(SchedulerFactory.GetScheduler(platform)));
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.

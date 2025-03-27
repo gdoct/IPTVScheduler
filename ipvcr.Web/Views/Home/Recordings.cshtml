@@ -14,10 +14,11 @@
             <table class="table">
                 <thead>
                     <tr>
+                        <th>Name</th>
+                        <th>Filename</th>
                         <th>Channel</th>
                         <th>Start</th>
                         <th>End</th>
-                        <th>Filename</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -25,10 +26,11 @@
                     @foreach (var item in data)
                     {
                         <tr>
+                            <td>@item.Name</td>
+                            <td>@item.Filename</td>
                             <td>@item.ChannelUri</td>
                             <td>@item.StartTime</td>
                             <td>@item.EndTime</td>
-                            <td>@item.Filename</td>
                             <td><button title="Delete" onclick="handleDelete('@item.Id')">Delete</button></td>
                         </tr>
                     }
@@ -52,8 +54,13 @@
                 <div class="modal-body">
                     <form method="post" asp-action="Create">
                         <div class="form-group">
-                            <label for="Description">Description</label>
-                            <input type="text" class="form-control" id="Description" name="Description" required />
+                            <label for="Name">Name</label>
+                            <input type="text" class="form-control" id="Name" name="Name" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="Filename">Filename</label>
+                            <input type="hidden" class="form-control" id="Filename" name="Filename" required />
+                            <label id="FilenameLabel" class="label-readonly"></label>
                         </div>
                         <div class="form-group">
                             <label for="ChannelUri">Channel</label>
@@ -68,11 +75,7 @@
                             <label for="EndTime">End Time</label>
                             <input type="datetime-local" class="form-control" id="EndTime" name="EndTime" required />
                         </div>
-                        <div class="form-group">
-                            <label for="Filename">Filename</label>
-                            <input type="text" class="form-control" id="Filename" name="Filename" required />
-                        </div>
-                        <button type="submit" class="btn btn-primary">Add Recording</button>
+                        <button type="submit" class="btn btn-primary" disabled>Add Recording</button>
                     </form>
                 </div>
             </div>
@@ -113,5 +116,27 @@
                 })
                 .catch(error => console.error('Error:', error));
         }
+
+        function updateFormState() {
+            const name = document.getElementById('Name').value;
+            const startTime = document.getElementById('StartTime').value;
+            if (startTime !== '') {
+                // format the startTime as yyyymmddHHmm, e.g., 202508070605
+                const startTimeFormatted = new Date(startTime).toISOString().replace(/[-:]/g, '').slice(0, 12);
+                const filename = `${name}_${startTimeFormatted}.mp4`;
+                document.getElementById('Filename').value = filename;
+                document.getElementById('FilenameLabel').innerText = filename;
+            }
+            // enable or disable the submit button based on whether aria-label form controls have a value
+            const submitButton = document.querySelector('button[type="submit"]');
+            const formControls = document.querySelectorAll('input.form-control');
+            const allControlsHaveValue = Array.from(formControls).every(control => control.value);
+            submitButton.disabled = !allControlsHaveValue;
+        }
+
+        document.getElementById('Name').addEventListener('input', updateFormState);
+        document.getElementById('ChannelUri').addEventListener('input', updateFormState);
+        document.getElementById('StartTime').addEventListener('input', updateFormState);
+        document.getElementById('EndTime').addEventListener('input', updateFormState);
     </script>
 }

@@ -20,7 +20,9 @@ namespace ipvcr.Scheduling.Windows
             // Schedule the recording using the TaskScheduler nuget package
             using var ts = new TaskService();
             var td = ts.NewTask();
-            td.RegistrationInfo.Description = task.Name;
+            td.RegistrationInfo.Author = "IPTV Recorder";
+            td.RegistrationInfo.Source = "IPTV Recorder";
+            td.RegistrationInfo.Description = "IPTV Recording: " + task.Name;
             td.Triggers.Add(new TimeTrigger(task.StartTime));
             td.Actions.Add(new ExecAction(task.Command, null, null));
             td.Data = "Task:" + System.Text.Json.JsonSerializer.Serialize(task);

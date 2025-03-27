@@ -1,13 +1,28 @@
 ﻿namespace ipvcr.Scheduling;
 
-public class ScheduledRecording(Guid id, string name, string filename, string channelUri, DateTime startTime, DateTime endTime) 
+public class ScheduledRecording
 {
-    public Guid Id { get; init; } = id;
-    public string Name { get; init; } = name;
-    public string Filename { get; init; } = filename;
-    public string ChannelUri { get; init; } = channelUri;
-    public DateTime StartTime { get; init; } = startTime;
-    public DateTime EndTime { get; init; } = endTime;
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Filename { get; init; } = string.Empty;
+    public string ChannelUri { get; init; } = string.Empty;
+    public DateTime StartTime { get; init; }
+    public DateTime EndTime { get; init; }
+
+    public ScheduledRecording()
+    {
+
+    }
+
+    public ScheduledRecording(Guid id, string name, string filename, string channelUri, DateTime startTime, DateTime endTime)
+    {
+        Id = id;
+        Name = name;
+        Filename = filename;
+        ChannelUri = channelUri;
+        StartTime = startTime;
+        EndTime = endTime;
+    }
 
     public ScheduledTask ToScheduledTask() => new (Id,
             Name,
@@ -59,5 +74,4 @@ public class ScheduledRecording(Guid id, string name, string filename, string ch
 
         return new ScheduledRecording(scheduledTask.Id, scheduledTask.Name, filename, channelUri, startTime, endTime);
     }
-
 }
