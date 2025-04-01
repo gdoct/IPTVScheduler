@@ -1,13 +1,27 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
 
 namespace ipvcr.Scheduling.Linux;
 
 public class AtRecordingScheduler : ITaskScheduler
 {
     private readonly IProcessRunner _processRunner;
+    private readonly ILogger<AtRecordingScheduler> _logger;
+    private static readonly char[] separator = new[] { '\n' };
+    private static readonly char[] separatorArray = new[] { ' ' };
 
-    private AtRecordingScheduler(IProcessRunner processRunner) { _processRunner = processRunner; }
+    private AtRecordingScheduler(IProcessRunner processRunner) 
+    {
+        _processRunner = processRunner; 
+        var loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder.AddConsole(); // Add console logging
+        });
+
+        // Create a logger for this class
+        _logger = loggerFactory.CreateLogger<AtRecordingScheduler>();
+    }
 
     [ExcludeFromCodeCoverage]
     public static AtRecordingScheduler Create()
@@ -17,11 +31,11 @@ public class AtRecordingScheduler : ITaskScheduler
         {
             throw new PlatformNotSupportedException("AtRecordingScheduler can only be run on Linux or FreeBSD.");
         }
-        return Create(new ProcessRunner());
+        return CreateWithProcessRunner(new ProcessRunner());
     }
 
     // unit tests can create this object with a mocked IProcessRunner
-    public static AtRecordingScheduler Create(IProcessRunner processRunner)
+    public static AtRecordingScheduler CreateWithProcessRunner(IProcessRunner processRunner)
     {
         EnsureCommandIsInstalled(processRunner, "at");
         EnsureCommandIsInstalled(processRunner, "atq");
@@ -31,19 +45,25 @@ public class AtRecordingScheduler : ITaskScheduler
 
     private static void EnsureCommandIsInstalled(IProcessRunner processRunner, string command)
     {
-        var (output, _, _) = processRunner.RunProcess("which", command);
+        var (output, _, _) = processRunner.RunProcess("which", "x" + command);
 
         if (string.IsNullOrWhiteSpace(output))
         {
-            throw new InvalidOperationException($"'{command}' command is not available on this system.");
+            throw new MissingDependencyException(command);
         }
     }
 
     public void ScheduleTask(ScheduledTask task)
     {
+        _logger.LogInformation("Scheduling task {taskid}..: {taskname} at {starttime} with command: {command}", task.Id.ToString()[..5], task.Name, task.StartTime, task.Command);
+        if (task.StartTime < DateTime.Now)
+        {
+            throw new InvalidOperationException("Cannot schedule a task in the past.");
+        }
         var startTime = task.StartTime.ToString("HH:mm MM/dd/yyyy");
         var command = $"export TASK_JOB_ID='{task.Id}';\nexport TASK_DEFINITION='{System.Text.Json.JsonSerializer.Serialize(task)}'\necho \"{task.Command}\" | at {startTime}";
-
+        _logger.LogInformation("Command to be executed: {command}", command);
+        // Run the command in a shell to schedule the task
         var (_, error, exitCode) = _processRunner.RunProcess("/bin/bash", $"-c \"{command}\"");
 
         if (exitCode != 0)
@@ -61,11 +81,12 @@ public class AtRecordingScheduler : ITaskScheduler
             throw new InvalidOperationException($"Failed to get scheduled tasks: {error}");
         }
 
-        var lines = output.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var lines = output.Split(separator, StringSplitOptions.RemoveEmptyEntries);
 
         foreach (var line in lines)
         {
-            var parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            _logger.LogInformation("{line}", line);
+            var parts = line.Split(separatorArray, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 1) continue;
 
             var jobId = parts[0];
@@ -77,11 +98,15 @@ public class AtRecordingScheduler : ITaskScheduler
             }
 
             var serializedTask = jobOutput.Split('\n').LastOrDefault(l => l.StartsWith("export TASK_DEFINITION="));
-            if (serializedTask == null) continue;
+            if (serializedTask == null) 
+            {
+                _logger.LogWarning("No serialized task found for job {jobId}", jobId);
+                continue;
+            }
 
             var taskjson = serializedTask[23..].Trim('\'', '\r', '\n');
             // Clean up the taskjson string by removing extra characters
-
+            _logger.LogDebug("Serialized task JSON: {taskjson}", taskjson);
             var task = System.Text.Json.JsonSerializer.Deserialize<ScheduledTask>(taskjson);
             if (task == null) continue;
 

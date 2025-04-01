@@ -11,6 +11,7 @@ public class ProcessRunner : IProcessRunner
 
     public (string output, string error, int exitCode) RunProcess(string fileName, string arguments, int msTimeOut = 10000)
     {
+
         var process = new System.Diagnostics.Process
         {
             StartInfo = new System.Diagnostics.ProcessStartInfo

@@ -27,7 +27,7 @@
   <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
     <DefineConstants>WINDOWS</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(OS)' == 'Linux'">
+  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
     <DefineConstants>LINUX</DefineConstants>
   </PropertyGroup>
 

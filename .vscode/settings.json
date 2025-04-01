@@ -1,0 +1,4 @@
+{
+    "dotnet-test-explorer.testProjectPath": "**/*.csproj",
+    "dotnet-test-explorer.testArguments": "--loggert:trx",
+}

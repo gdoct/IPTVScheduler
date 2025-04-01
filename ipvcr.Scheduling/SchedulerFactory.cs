@@ -15,6 +15,7 @@ public class SchedulerFactory
                               // if on windows, load the Windows scheduler assembly
         if (platform == PlatformID.Win32NT)
         {
+            
             var assemblypath = Path.Combine(rootpath, "windows/ipvcr.Scheduling.Windows.dll");
             var assembly = Assembly.LoadFrom(assemblypath);
             var type = assembly.GetType("ipvcr.Scheduling.Windows.TaskSchedulerRecordingScheduler") ?? throw new Exception("Failed to load Windows scheduler");

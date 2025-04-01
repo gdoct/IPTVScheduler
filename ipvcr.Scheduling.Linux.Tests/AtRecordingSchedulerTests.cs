@@ -10,7 +10,18 @@ public class AtRecordingSchedulerTests
         // Arrange
         var mock = new Mock<IProcessRunner>(MockBehavior.Strict);
         mock.Setup(mock => mock.RunProcess("which", It.IsAny<string>())).Returns(("path", string.Empty, 0));
-        var scheduler = AtRecordingScheduler.Create(mock.Object);
+        var scheduler = AtRecordingScheduler.CreateWithProcessRunner(mock.Object);
+        Assert.NotNull(scheduler);
+        mock.VerifyAll();
+    }
+
+    [Fact]
+    public void AtRecordingScheduler_CtorThrowsIfNotInstalled()
+    {
+        // Arrange
+        var mock = new Mock<IProcessRunner>(MockBehavior.Strict);
+        mock.Setup(mock => mock.RunProcess("which", It.IsAny<string>())).Returns(("path", string.Empty, 0));
+        var scheduler = AtRecordingScheduler.CreateWithProcessRunner(mock.Object);
         Assert.NotNull(scheduler);
         mock.VerifyAll();
     }
@@ -21,7 +32,7 @@ public class AtRecordingSchedulerTests
         // Arrange
         var mock = new Mock<IProcessRunner>(MockBehavior.Strict);
         mock.Setup(mock => mock.RunProcess("which", It.IsAny<string>())).Returns(("path", string.Empty, 0));
-        var scheduler = AtRecordingScheduler.Create(mock.Object);
+        var scheduler = AtRecordingScheduler.CreateWithProcessRunner(mock.Object);
         var task = new ScheduledRecording
         {
             Id = Guid.NewGuid(),

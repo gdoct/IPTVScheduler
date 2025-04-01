@@ -13,7 +13,7 @@ public class ProcessRunnerTests
         var fileName = "ipconfig";
         var arguments = string.Empty;
 #elif LINUX
-        var fileName = "ifconfig";
+        var fileName = "echo";
         var arguments = string.Empty;
 #endif
         // Act
@@ -21,7 +21,11 @@ public class ProcessRunnerTests
 
         // Assert
         Assert.True(output.Length > 0);
+        #if WINDOWS
         Assert.Equal("\r\n", error);
+        #else
+        Assert.Equal("\n", error);
+        #endif
         Assert.Equal(0, exitCode);
     }
 
@@ -50,15 +54,21 @@ public class ProcessRunnerTests
 #if WINDOWS
         var fileName = "ipconfig";
 #elif LINUX
-        var fileName = "ifconfig";
+        var fileName = "grep";
 #endif
         var arguments = "--invalid-argument";
         // Act
         var (output, error, exitCode) = processRunner.RunProcess(fileName, arguments);
 
         // Assert
-        Assert.Contains("Error: unrecognized or incomplete", output);
-        Assert.Equal("\r\n", error);
+        #if WINDOWS
+        Assert.Contains("Error: unrecognized or incomplete command line", output);
+        Assert.Equal(Environment.NewLine, error);
+        #else
+        Assert.Equal(Environment.NewLine, output);
+        Assert.Contains("grep: unrecognized option", error);
+        #endif
+
         Assert.NotEqual(0, exitCode);
     }
 
