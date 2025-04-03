@@ -27,9 +27,10 @@ public class AtRecordingScheduler : ITaskScheduler
     public static AtRecordingScheduler Create()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux) &&
-            !RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
+            !RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD) &&
+            !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            throw new PlatformNotSupportedException("AtRecordingScheduler can only be run on Linux or FreeBSD.");
+            throw new PlatformNotSupportedException("AtRecordingScheduler can only be run on Linux, MacOS or FreeBSD.");
         }
         return CreateWithProcessRunner(new ProcessRunner());
     }
