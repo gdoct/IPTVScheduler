@@ -1,0 +1,5 @@
+<Project>
+  <Target Name="DockerBuild" AfterTargets="Build" Condition="'$(BuildDockerImage)' == 'true'">
+    <Exec Command="docker compose build" WorkingDirectory="$(MSBuildThisFileDirectory)" />
+  </Target>
+</Project>

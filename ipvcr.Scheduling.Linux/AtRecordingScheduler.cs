@@ -45,7 +45,7 @@ public class AtRecordingScheduler : ITaskScheduler
 
     private static void EnsureCommandIsInstalled(IProcessRunner processRunner, string command)
     {
-        var (output, _, _) = processRunner.RunProcess("which", "x" + command);
+        var (output, _, _) = processRunner.RunProcess("which", command);
 
         if (string.IsNullOrWhiteSpace(output))
         {
@@ -61,10 +61,11 @@ public class AtRecordingScheduler : ITaskScheduler
             throw new InvalidOperationException("Cannot schedule a task in the past.");
         }
         var startTime = task.StartTime.ToString("HH:mm MM/dd/yyyy");
-        var command = $"export TASK_JOB_ID='{task.Id}';\nexport TASK_DEFINITION='{System.Text.Json.JsonSerializer.Serialize(task)}'\necho \"{task.Command}\" | at {startTime}";
+        Environment.SetEnvironmentVariable("TASK_JOB_ID", task.Id.ToString());
+        Environment.SetEnvironmentVariable("TASK_DEFINITION", System.Text.Json.JsonSerializer.Serialize(task));
+        var command = $"echo '{task.Command}' | at {startTime}";
         _logger.LogInformation("Command to be executed: {command}", command);
-        // Run the command in a shell to schedule the task
-        var (_, error, exitCode) = _processRunner.RunProcess("/bin/bash", $"-c \"{command}\"");
+        var (result, error, exitCode) = _processRunner.RunProcess("/bin/bash", $"-c \"{command}\"");
 
         if (exitCode != 0)
         {
@@ -86,10 +87,13 @@ public class AtRecordingScheduler : ITaskScheduler
         foreach (var line in lines)
         {
             _logger.LogInformation("{line}", line);
-            var parts = line.Split(separatorArray, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 1) continue;
+            // example line: 
+            // 2       Wed Apr  2 13:08:00 2025 a guido
+            // extract the first  number using a RegEx
+            var jobIdMatch = System.Text.RegularExpressions.Regex.Match(line, @"^\d+");
+            var jobId = jobIdMatch.Success ? jobIdMatch.Value : string.Empty;
+            if (string.IsNullOrWhiteSpace(jobId)) continue;
 
-            var jobId = parts[0];
             var (jobOutput, jobError, jobExitCode) = _processRunner.RunProcess("at", $"-c {jobId}");
 
             if (jobExitCode != 0)
@@ -97,19 +101,20 @@ public class AtRecordingScheduler : ITaskScheduler
                 throw new InvalidOperationException($"Failed to get job details for job {jobId}: {jobError}");
             }
 
-            var serializedTask = jobOutput.Split('\n').LastOrDefault(l => l.StartsWith("export TASK_DEFINITION="));
+            var serializedTask = jobOutput.Split('\n').LastOrDefault(l => l.StartsWith("TASK_DEFINITION="));
+            // ; export TASK_DEFINITION
             if (serializedTask == null) 
             {
                 _logger.LogWarning("No serialized task found for job {jobId}", jobId);
                 continue;
             }
 
-            var taskjson = serializedTask[23..].Trim('\'', '\r', '\n');
-            // Clean up the taskjson string by removing extra characters
-            _logger.LogDebug("Serialized task JSON: {taskjson}", taskjson);
+            var taskjson = serializedTask[16..].Trim('\'', '\r', '\n').Replace("\\", string.Empty).Replace("; export TASK_DEFINITION", string.Empty);
+            _logger.LogInformation("Serialized task JSON: {taskjson}", taskjson);
             var task = System.Text.Json.JsonSerializer.Deserialize<ScheduledTask>(taskjson);
-            if (task == null) continue;
 
+            if (task == null) continue;
+            task.TaskId = int.Parse(jobId);
             yield return task;
         }
     }
@@ -118,7 +123,8 @@ public class AtRecordingScheduler : ITaskScheduler
     public void CancelTask(Guid taskId)
     {
         var recording = FetchScheduledTasks().FirstOrDefault(r => r.Id == taskId) ?? throw new InvalidOperationException($"Task with id {taskId} is not scheduled.");
-        var jobId = FetchScheduledTasks().First(r => r.Id == taskId).Id.ToString();
+        var jobId = recording.TaskId.ToString();
+        _logger.LogInformation("Cancelling task {taskid}..: {taskname} with job id: {jobId}", taskId.ToString()[..5], recording.Name, jobId);
         var (output, error, exitCode) = _processRunner.RunProcess("atrm", jobId);
 
         if (exitCode != 0)

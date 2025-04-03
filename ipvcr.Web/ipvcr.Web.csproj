@@ -12,9 +12,7 @@
 <Target Name="CopyPlatformSchedulers" AfterTargets="Build">
     <ItemGroup>
       <WindowsScheduler Include="..\ipvcr.Scheduling.Windows\bin\$(Configuration)\**\*.dll" />
-      <LinuxScheduler Include="..\ipvcr.Scheduling.Linux\bin\$(Configuration)\**\*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(WindowsScheduler)" DestinationFolder="$(OutputPath)\windows" />
-    <Copy SourceFiles="@(LinuxScheduler)" DestinationFolder="$(OutputPath)\linux" />
   </Target>
 </Project>

@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ipvcr.Tests", "ipvcr.Tests\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ipvcr.Scheduling", "ipvcr.Scheduling\ipvcr.Scheduling.csproj", "{E87AEFD6-C38D-4E34-A268-8B52D6519A1B}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ipvcr.Scheduling.Shared", "ipvcr.Scheduling.Shared\ipvcr.Scheduling.Shared.csproj", "{17AE3928-3F8D-4E72-1234-7E52C6519A1B}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ipvcr.Scheduling.Windows", "ipvcr.Scheduling.Windows\ipvcr.Scheduling.Windows.csproj", "{4795A730-F1E8-4E0F-BD5D-E718AC333A58}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ipvcr.Scheduling.Linux", "ipvcr.Scheduling.Linux\ipvcr.Scheduling.Linux.csproj", "{96CFE9A6-5B00-45CB-8D62-6105D1E29B1F}"

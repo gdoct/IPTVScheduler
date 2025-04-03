@@ -5,5 +5,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../ipvcr.Scheduling.Shared/ipvcr.Scheduling.Shared.csproj" />
+    <ProjectReference Include="../ipvcr.Scheduling.Linux/ipvcr.Scheduling.Linux.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IO.Abstractions" Version="22.0.12" />
+  </ItemGroup>
   
 </Project>

@@ -1,0 +1,35 @@
+@using ipvcr.Scheduling
+@{
+    ViewData["Title"] = "Settings";
+}
+
+@{
+    var data = Model as SchedulerSettings;
+    // data contains one field, "OutputPath"
+    if (data != null)
+    {
+        <h2>Settings</h2>
+        <form method="post" asp-action="UpdateSettings">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in data.GetType().GetProperties())
+                    {
+                        <tr>
+                            <td>@item.Name</td>
+                            <td>
+                                <input type="text" class="form-control" name="@item.Name" value="@item.GetValue(data)" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-success">Save</button>
+        </form>
+    }
+}

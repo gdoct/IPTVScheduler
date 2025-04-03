@@ -23,13 +23,28 @@ public class HomeController : Controller
 
     public IActionResult Recordings()
     {
-        var data = _context.Recordings.ToList();
-        return View(data);
+        var model = new HomeRecordingsViewModel
+        {
+            RecordingPath = SettingsManager.Instance.Settings.OutputPath,
+            Recordings = _context.Recordings.ToList()
+        };
+        return View(model);
     }
 
     public IActionResult Settings()
     {
-        return View();
+        return View(SettingsManager.Instance.Settings);
+    }
+
+    [HttpPost]
+    public IActionResult UpdateSettings(SchedulerSettings settings)
+    {
+        if (ModelState.IsValid)
+        {
+            SettingsManager.Instance.Settings = settings;
+            return RedirectToAction(nameof(Settings));
+        }
+        return View(settings);
     }
 
     [HttpPost]

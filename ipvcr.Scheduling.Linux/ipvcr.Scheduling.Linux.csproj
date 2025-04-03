@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ipvcr.Scheduling\ipvcr.Scheduling.csproj" />
+    <ProjectReference Include="..\ipvcr.Scheduling.Shared\ipvcr.Scheduling.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

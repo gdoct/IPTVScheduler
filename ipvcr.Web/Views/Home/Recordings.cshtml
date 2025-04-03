@@ -1,4 +1,5 @@
-@using ipvcr.Scheduling
+@model ipvcr.Web.Models.HomeRecordingsViewModel
+
 @{
     ViewData["Title"] = "Recording manager";
 }
@@ -7,7 +8,7 @@
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
     @{
-        var data = Model as IEnumerable<ScheduledRecording>;
+        var data = Model.Recordings;
         if (data != null)
         {
             <h2>Scheduled recordings</h2>
@@ -120,10 +121,11 @@
         function updateFormState() {
             const name = document.getElementById('Name').value;
             const startTime = document.getElementById('StartTime').value;
+            const rootpath = '@Model.RecordingPath';
             if (startTime !== '') {
                 // format the startTime as yyyymmddHHmm, e.g., 202508070605
                 const startTimeFormatted = new Date(startTime).toISOString().replace(/[-:]/g, '').slice(0, 12);
-                const filename = `${name}_${startTimeFormatted}.mp4`;
+                const filename = rootpath + '/' + `${name}_${startTimeFormatted}.mp4`;
                 document.getElementById('Filename').value = filename;
                 document.getElementById('FilenameLabel').innerText = filename;
             }

@@ -2,12 +2,12 @@
 
 public class ScheduledRecording
 {
-    public Guid Id { get; init; }
+    public Guid Id { get; init; } = Guid.NewGuid();
     public string Name { get; init; } = string.Empty;
     public string Filename { get; init; } = string.Empty;
     public string ChannelUri { get; init; } = string.Empty;
-    public DateTime StartTime { get; init; }
-    public DateTime EndTime { get; init; }
+    public DateTime StartTime { get; init; } = DateTime.Now.AddDays(1);
+    public DateTime EndTime { get; init; } = DateTime.Now.AddDays(1).AddHours(1);
 
     public ScheduledRecording()
     {
