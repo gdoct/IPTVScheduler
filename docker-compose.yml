@@ -1,18 +1,17 @@
-version: '3.8'
-
 services:
   ipvcr-web:
-    image: ipvcr-web:${TAG:-latest} # Ensure TAG is set in your environment or defaults to 'latest'
+    image: ipvcr-web:latest
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        - Configuration=${Configuration:-Release} # Ensure Configuration is set or defaults to 'Release'
+        - Configuration=${Configuration:-Release}
     ports:
-      - "5000:80" # HTTP port
-      - "5001:443" # HTTPS port
+      - "5000:5000"
+      - "5001:5001"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - APPDATA=/root/.appdata
     volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro # Ensure APPDATA is set
-      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro # Ensure APPDATA is set
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro

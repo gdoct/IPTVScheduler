@@ -57,7 +57,7 @@ public class AtRecordingScheduler : ITaskScheduler
     public void ScheduleTask(ScheduledTask task)
     {
         _logger.LogInformation("Scheduling task {taskid}..: {taskname} at {starttime} with command: {command}", task.Id.ToString()[..5], task.Name, task.StartTime, task.Command);
-        if (task.StartTime < DateTime.Now)
+        if (task.StartTime < DateTime.UtcNow)
         {
             throw new InvalidOperationException("Cannot schedule a task in the past.");
         }

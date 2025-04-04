@@ -12,6 +12,15 @@ public class ScheduledTaskTests
     }
 
     [Fact]
+    public void ScheduledTask_FromScheduledTask_ShouldCOnvertTimeFromUtcToLocal30041973()
+    {
+        var localnow = DateTime.Now;
+        var scheduledTask = new ScheduledTask(Guid.NewGuid(), "name", "ffmpeg -i http://channelUri -t 10 -c copy -f mp4 filename", localnow, ScheduledTaskType.Recording);
+        var t = ScheduledRecording.FromScheduledTask(scheduledTask);
+        Assert.Equal(localnow.ToString("yyyy-MM-dd HH:mm:ss"), t.StartTime.ToString("yyyy-MM-dd HH:mm:ss"));
+    }
+
+    [Fact]
     public void ScheduledTask_FromScheduledTask_ShouldSucceedConversion()
     {
         var id = Guid.NewGuid();

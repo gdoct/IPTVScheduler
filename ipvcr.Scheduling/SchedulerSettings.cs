@@ -4,8 +4,8 @@ namespace ipvcr.Scheduling;
 
 public class SchedulerSettings
 {
-    public string OutputPath { get; set; } = "";
-    public string LoggingPath { get; set; } = "";
+    public string OutputPath { get; set; } = "/media";
+    public string LoggingPath { get; set; } = "/var/log/iptvscheduler";
 }
 
 public class SettingsManager

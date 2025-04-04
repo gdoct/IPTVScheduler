@@ -6,7 +6,6 @@
 
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
     @{
         var data = Model.Recordings;
         if (data != null)
@@ -76,6 +75,7 @@
                             <label for="EndTime">End Time</label>
                             <input type="datetime-local" class="form-control" id="EndTime" name="EndTime" required />
                         </div>
+                        <input type="hidden" name="TimezoneOffset" id="timezoneOffset" />
                         <button type="submit" class="btn btn-primary" disabled>Add Recording</button>
                     </form>
                 </div>
@@ -85,6 +85,7 @@
 </div>
 @section Scripts {
     <script>
+        const timezoneOffset = new Date().getTimezoneOffset();
         $(document).ready(function () {
             const modal = new bootstrap.Modal('#addRecordingModal');
 
@@ -94,8 +95,9 @@
             // Clear form when modal is closed
             $('#addRecordingModal').on('hidden.bs.modal', function () {
                 $(this).find('form').trigger('reset');
+                document.getElementById('TimezoneOffset').value = timezoneOffset;
             });
-
+            document.getElementById('TimezoneOffset').value = timezoneOffset;
         });
         function handleDelete(id) {
             // make a request to delete the recording
@@ -129,6 +131,8 @@
                 document.getElementById('Filename').value = filename;
                 document.getElementById('FilenameLabel').innerText = filename;
             }
+            // Update the TimezoneOffset field
+            document.getElementById('timezoneOffset').value = new Date().getTimezoneOffset();
             // enable or disable the submit button based on whether aria-label form controls have a value
             const submitButton = document.querySelector('button[type="submit"]');
             const formControls = document.querySelectorAll('input.form-control');

@@ -22,7 +22,7 @@ public class SettingsManagerTests
 
         // Assert
         Assert.NotNull(settings);
-        Assert.Equal("", settings.OutputPath);
+        Assert.Equal("/media", settings.OutputPath);
     }
 
     [Fact]

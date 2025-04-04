@@ -8,7 +8,6 @@ public class ScheduledRecording
     public string ChannelUri { get; init; } = string.Empty;
     public DateTime StartTime { get; init; } = DateTime.Now.AddDays(1);
     public DateTime EndTime { get; init; } = DateTime.Now.AddDays(1).AddHours(1);
-
     public ScheduledRecording()
     {
 
@@ -24,11 +23,18 @@ public class ScheduledRecording
         EndTime = endTime;
     }
 
-    public ScheduledTask ToScheduledTask() => new (Id,
+    public ScheduledTask ToScheduledTask()
+    {
+        // we have the user's StartTime and we have the user's TimezoneOffset
+        // e.g. the user schedules at 16.00 localtime with a 2 hr offset. we should create a task at 14.00 UTC
+        // so we need to convert the local time to UTC by subtracting the offset
+        return new(Id,
             Name,
             $"ffmpeg -i {ChannelUri} -t {Convert.ToInt32((EndTime - StartTime).TotalSeconds)} -c copy -f mp4 {Filename}",
             StartTime,
-            ScheduledTaskType.Recording);
+            ScheduledTaskType.Recording
+            );
+    }
 
     public static ScheduledRecording FromScheduledTask(ScheduledTask scheduledTask)
     {
@@ -69,9 +75,10 @@ public class ScheduledRecording
             throw new Exception("Invalid filename");
         }
 
-        var startTime = scheduledTask.StartTime;
+        var startTime = scheduledTask.StartTime; //.AddHours(scheduledTask.TimezoneOffset);
         var endTime = startTime.AddSeconds(duration);
 
-        return new ScheduledRecording(scheduledTask.Id, scheduledTask.Name, filename, channelUri, startTime, endTime);
+        return new ScheduledRecording(
+            scheduledTask.Id, scheduledTask.Name, filename, channelUri, startTime, endTime);
     }
 }
