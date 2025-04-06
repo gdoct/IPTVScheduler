@@ -2,10 +2,12 @@
 
 public class ScheduledRecording
 {
+    public string Description { get; init; } = string.Empty;
     public Guid Id { get; init; } = Guid.NewGuid();
     public string Name { get; init; } = string.Empty;
     public string Filename { get; init; } = string.Empty;
     public string ChannelUri { get; init; } = string.Empty;
+    public string ChannelName { get; init; } = string.Empty;
     public DateTime StartTime { get; init; } = DateTime.Now.AddDays(1);
     public DateTime EndTime { get; init; } = DateTime.Now.AddDays(1).AddHours(1);
     public ScheduledRecording()
@@ -13,12 +15,14 @@ public class ScheduledRecording
 
     }
 
-    public ScheduledRecording(Guid id, string name, string filename, string channelUri, DateTime startTime, DateTime endTime)
+    public ScheduledRecording(Guid id, string name, string description, string filename, string channelUri, string channelName, DateTime startTime, DateTime endTime)
     {
         Id = id;
         Name = name;
+        Description = description;
         Filename = filename;
         ChannelUri = channelUri;
+        ChannelName = channelName;
         StartTime = startTime;
         EndTime = endTime;
     }
@@ -78,7 +82,9 @@ public class ScheduledRecording
         var startTime = scheduledTask.StartTime; //.AddHours(scheduledTask.TimezoneOffset);
         var endTime = startTime.AddSeconds(duration);
 
+        var description  = string.Empty;
+        var channelname  = string.Empty;
         return new ScheduledRecording(
-            scheduledTask.Id, scheduledTask.Name, filename, channelUri, startTime, endTime);
+            scheduledTask.Id, scheduledTask.Name, description, filename, channelUri, channelname, startTime, endTime);
     }
 }

@@ -48,7 +48,7 @@ public class ScheduledTaskTests
         var channelUri = "http://channelUri";
         var startTime = DateTime.Now;
         var endTime = DateTime.Now.AddSeconds(10);
-        var scheduledRecording = new ScheduledRecording(id, name, filename, channelUri, startTime, endTime);
+        var scheduledRecording = new ScheduledRecording(id, name, "", filename, channelUri, "", startTime, endTime);
         var scheduledTask = scheduledRecording.ToScheduledTask();
         var result = ScheduledRecording.FromScheduledTask(scheduledTask);
         Assert.Equal(id, result.Id);
@@ -94,5 +94,15 @@ public class ScheduledTaskTests
         //if (string.IsNullOrWhiteSpace(commandParts[9])) throw new Exception("Invalid filename"); */
         scheduledTask = new ScheduledTask(Guid.NewGuid(), "name", "ffmpeg -i http://example.com/stream -t 3600 -c copy -f mp4 ", DateTime.Now, ScheduledTaskType.Recording);
         Assert.Throws<Exception>(() => ScheduledRecording.FromScheduledTask(scheduledTask));
+    }
+
+    [Fact]
+    public void TimeTest()
+    {
+        var now = DateTime.Now;
+        // these are correct converted to utc
+        var localnow3 = DateTime.SpecifyKind(now, DateTimeKind.Local).ToUniversalTime();
+        var localnow4 = DateTime.SpecifyKind(now, DateTimeKind.Unspecified).ToUniversalTime();
+        var x = "";
     }
 }

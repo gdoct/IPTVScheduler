@@ -9,31 +9,36 @@ public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
     private readonly IRecordingSchedulingContext _context;
+    private readonly ISettingsManager _settingsManager;
+    private readonly IPlaylistManager _playlistManager;
 
-    public HomeController(ILogger<HomeController> logger, IRecordingSchedulingContext context)
+    public HomeController(ILogger<HomeController> logger, IRecordingSchedulingContext context, ISettingsManager settingsManager, IPlaylistManager playlistManager)
     {
         _logger = logger;
         _context = context;
+        _settingsManager = settingsManager;
+        _playlistManager = playlistManager;
     }
 
     public IActionResult Index()
     {
-        return View();
+        return RedirectToAction(nameof(Recordings));
     }
 
     public IActionResult Recordings()
     {
         var model = new HomeRecordingsViewModel
         {
-            RecordingPath = SettingsManager.Instance.Settings.OutputPath,
-            Recordings = _context.Recordings.ToList()
+            RecordingPath = _settingsManager.Settings.OutputPath,
+            Recordings = _context.Recordings.ToList(),
+            Channels = _playlistManager.GetPlaylistItems()
         };
         return View(model);
     }
 
     public IActionResult Settings()
     {
-        return View(SettingsManager.Instance.Settings);
+        return View(_settingsManager.Settings);
     }
 
     [HttpPost]
@@ -41,7 +46,7 @@ public class HomeController : Controller
     {
         if (ModelState.IsValid)
         {
-            SettingsManager.Instance.Settings = settings;
+            _settingsManager.Settings = settings;
             return RedirectToAction(nameof(Settings));
         }
         return View(settings);
@@ -68,6 +73,46 @@ public class HomeController : Controller
             return NotFound();
         }
         _context.RemoveRecording(recording.Id);
+        return RedirectToAction(nameof(Recordings));
+    }
+
+    [HttpPost]
+    public IActionResult UploadM3u(IFormFile m3uFile)
+    {
+        if (m3uFile == null || m3uFile.Length == 0)
+        {
+            ModelState.AddModelError("File", "Please upload a valid M3U file.");
+            return RedirectToAction(nameof(Recordings));
+        }
+
+        var uploadPath = "/var/lib/iptvscheduler";
+        var filePath = Path.Combine(uploadPath, m3uFile.FileName);
+
+        try
+        {
+            if (!Directory.Exists(uploadPath))
+            {
+                Directory.CreateDirectory(uploadPath);
+            }
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                m3uFile.CopyTo(stream);
+            }
+
+            var settings = _settingsManager.Settings;
+            settings.M3uPlaylistPath = filePath;
+            _settingsManager.Settings = settings;
+
+            _logger.LogInformation($"M3U file uploaded successfully to {filePath}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading M3U file.");
+            ModelState.AddModelError("File", "An error occurred while uploading the file.");
+            return RedirectToAction(nameof(Recordings));
+        }
+
         return RedirectToAction(nameof(Recordings));
     }
 

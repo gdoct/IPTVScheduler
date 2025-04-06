@@ -31,5 +31,13 @@
             </table>
             <button type="submit" class="btn btn-success">Save</button>
         </form>
+        <h3>Upload M3U playlist</h3>
+        <form method="post" enctype="multipart/form-data" asp-action="UploadM3U">
+            <div class="form-group">
+            <label for="m3uFile">Select M3U playlist</label>
+            <input type="file" class="form-control-file" id="m3uFile" name="m3uFile" />
+            </div>
+            <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
     }
 }

@@ -37,7 +37,7 @@ public class SchedulingContextTests
         var context = new RecordingSchedulingContext(taskScheduler.Object);
 
         // Act
-        var recording = new ScheduledRecording(Guid.NewGuid(), "Task 1", "filename","http://whatevah", DateTime.Now, DateTime.Now.AddHours(1));
+        var recording = new ScheduledRecording(Guid.NewGuid(), "Task 1", "", "filename","http://whatevah", "", DateTime.Now, DateTime.Now.AddHours(1));
         context.AddRecording(recording);
 
         // Assert
@@ -50,7 +50,7 @@ public class SchedulingContextTests
         // Arrange
         var taskScheduler = new Mock<ITaskScheduler>();
         var context = new RecordingSchedulingContext(taskScheduler.Object);
-        var recording = new ScheduledRecording(Guid.NewGuid(), "Task 1", "filename","http://whatevah", DateTime.Now, DateTime.Now.AddHours(1));
+        var recording = new ScheduledRecording(Guid.NewGuid(), "Task 1", "", "filename","http://whatevah", "", DateTime.Now, DateTime.Now.AddHours(1));
 
         // Act
         context.AddRecording(recording);

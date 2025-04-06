@@ -6,13 +6,32 @@ public class SchedulerSettings
 {
     public string OutputPath { get; set; } = "/media";
     public string LoggingPath { get; set; } = "/var/log/iptvscheduler";
+    public string M3uPlaylistPath { get; set; } = "/var/lib/iptvscheduler/m3u-playlist.m3u";
 }
 
-public class SettingsManager
+public interface ISettingsManager
 {
+    SchedulerSettings Settings { get; set; }
+
+    event EventHandler<SettingsManager.SettingsChangedEventArgs>? SettingsChanged;
+}
+
+public class SettingsManager : ISettingsManager
+{
+    public event EventHandler<SettingsChangedEventArgs>? SettingsChanged;
+
+    public class SettingsChangedEventArgs : EventArgs
+    {
+        public SchedulerSettings NewSettings { get; }
+
+        public SettingsChangedEventArgs(SchedulerSettings newSettings)
+        {
+            NewSettings = newSettings;
+        }
+    }
+
     const string SETTINGS_FILENAME = "/etc/iptvscheduler/settings.json";
-    private static readonly Lazy<SettingsManager> _instance = new(() => new SettingsManager(new FileSystem()));
-    public static SettingsManager Instance => _instance.Value;
+
 
     public SettingsManager(IFileSystem filesystem)
     {
@@ -22,7 +41,7 @@ public class SettingsManager
 
     private readonly IFileSystem _filesystem;
     private SchedulerSettings _settings;
-    private readonly object _lock = new ();
+    private readonly object _lock = new();
 
     public SchedulerSettings Settings
     {
@@ -33,6 +52,7 @@ public class SettingsManager
         set
         {
             SaveSettings(value);
+            SettingsChanged?.Invoke(this, new SettingsChangedEventArgs(value));
         }
     }
     private SchedulerSettings LoadSettings()
