@@ -21,11 +21,11 @@ public class ProcessRunnerTests
 
         // Assert
         Assert.True(output.Length > 0);
-        #if WINDOWS
+#if WINDOWS
         Assert.Equal("\r\n", error);
-        #else
+#else
         Assert.Equal("\n", error);
-        #endif
+#endif
         Assert.Equal(0, exitCode);
     }
 
@@ -61,13 +61,13 @@ public class ProcessRunnerTests
         var (output, error, exitCode) = processRunner.RunProcess(fileName, arguments);
 
         // Assert
-        #if WINDOWS
+#if WINDOWS
         Assert.Contains("Error: unrecognized or incomplete command line", output);
         Assert.Equal(Environment.NewLine, error);
-        #else
+#else
         Assert.Equal(Environment.NewLine, output);
         Assert.Contains("grep: unrecognized option", error);
-        #endif
+#endif
 
         Assert.NotEqual(0, exitCode);
     }

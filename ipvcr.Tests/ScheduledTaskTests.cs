@@ -67,8 +67,8 @@ public class ScheduledTaskTests
         var startTime = DateTime.Now;
         var endTime = DateTime.Now.AddSeconds(10);
         var scheduledRecording = new ScheduledRecording(id, name, description, filename, channelUri, channelName, startTime, endTime);
-        
-        
+
+
         var task = scheduledRecording.ToScheduledTask();
         var innerjson = task.InnerScheduledTask;
         Assert.NotNull(innerjson);

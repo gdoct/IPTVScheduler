@@ -1,8 +1,7 @@
-using System.IO.Abstractions;
-using System.IO.Abstractions.TestingHelpers;
-using System.Text;
 using ipvcr.Scheduling;
 using Moq;
+using System.IO.Abstractions;
+using System.Text;
 
 namespace ipvcr.Tests
 {

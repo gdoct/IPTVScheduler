@@ -1,6 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-using System.Runtime;
 
 namespace ipvcr.Scheduling;
 
@@ -12,7 +10,7 @@ public class SchedulerFactory
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
         var rootpath = new FileInfo(System.Reflection.Assembly.GetEntryAssembly().Location).Directory.FullName;
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
-                              // if on windows, load the Windows scheduler assembly
+        // if on windows, load the Windows scheduler assembly
         if (platform == PlatformID.Win32NT)
         {
             // // the Windows assembly auto-loads to the Windows TaskManager dlls and should not be loaded on Linux

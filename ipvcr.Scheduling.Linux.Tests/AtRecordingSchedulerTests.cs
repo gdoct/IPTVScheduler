@@ -48,6 +48,10 @@ public class AtRecordingSchedulerTests
         // Act
         mock.Setup(m => m.RunProcess("chmod", It.IsAny<string>())).Returns(("", "", 0));
         mock.Setup(m => m.RunProcess("/bin/bash", It.IsAny<string>())).Returns(("", "", 0));
+
+#if WINDOWS
+        Assert.Throws<DirectoryNotFoundException>(() => scheduler.ScheduleTask(task));
+#else
         scheduler.ScheduleTask(task);
         // Assert
         mock.Setup(m => m.RunProcess("atq", string.Empty)).Returns(("3\tThu Apr  3 15:30:00 2025 a guido", "", 0));
@@ -66,6 +70,7 @@ public class AtRecordingSchedulerTests
         mock.Setup(m => m.RunProcess("atq", string.Empty)).Returns(("", "", 0));
         Assert.Empty(scheduler.FetchScheduledTasks());
         mock.VerifyAll();
+#endif
     }
 
     [Fact]
@@ -112,8 +117,12 @@ public class AtRecordingSchedulerTests
         Assert.Empty(scheduler.FetchScheduledTasks());
         // Act
         mock.Setup(m => m.RunProcess("chmod", It.IsAny<string>())).Returns(("", "error", 2));
+#if WINDOWS
+        Assert.Throws<DirectoryNotFoundException>(() => scheduler.ScheduleTask(task));
+#else
         Assert.Throws<InvalidOperationException>(() => scheduler.ScheduleTask(task));
         mock.VerifyAll();
+#endif
     }
 
     [Fact]
@@ -139,7 +148,12 @@ public class AtRecordingSchedulerTests
         // Act
         mock.Setup(m => m.RunProcess("chmod", It.IsAny<string>())).Returns(("", "", 0));
         mock.Setup(m => m.RunProcess("/bin/bash", It.IsAny<string>())).Returns(("", "error", 2));
+#if WINDOWS
+        Assert.Throws<DirectoryNotFoundException>(() => scheduler.ScheduleTask(task));
+#else
         Assert.Throws<InvalidOperationException>(() => scheduler.ScheduleTask(task));
+        mock.VerifyAll();
+#endif
     }
 
     [Fact]
@@ -307,7 +321,7 @@ public class AtRecordingSchedulerTests
     }
 
 
-[Fact]
+    [Fact]
     public void AtRecordingScheduler_FetchScheduledTasks_SkipsIfSerializedTaskIsNull()
     {
         // Arrange
@@ -404,7 +418,7 @@ public class AtRecordingSchedulerTests
     [Fact]
     public void AtRecordingScheduler_CancelTask_ThrowsIfCancelFails()
     {
-         var mock = new Mock<IProcessRunner>(MockBehavior.Strict);
+        var mock = new Mock<IProcessRunner>(MockBehavior.Strict);
         mock.Setup(mock => mock.RunProcess("which", It.IsAny<string>())).Returns(("path", string.Empty, 0));
         var scheduler = AtRecordingScheduler.CreateWithProcessRunner(mock.Object);
 

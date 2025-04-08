@@ -1,24 +1,16 @@
-using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
-using ipvcr.Web.Models;
 using ipvcr.Scheduling;
+using ipvcr.Web.Models;
+using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace ipvcr.Web.Controllers;
 
-public class HomeController : Controller
+public class HomeController(ILogger<HomeController> logger, IRecordingSchedulingContext context, ISettingsManager settingsManager, IPlaylistManager playlistManager) : Controller
 {
-    private readonly ILogger<HomeController> _logger;
-    private readonly IRecordingSchedulingContext _context;
-    private readonly ISettingsManager _settingsManager;
-    private readonly IPlaylistManager _playlistManager;
-
-    public HomeController(ILogger<HomeController> logger, IRecordingSchedulingContext context, ISettingsManager settingsManager, IPlaylistManager playlistManager)
-    {
-        _logger = logger;
-        _context = context;
-        _settingsManager = settingsManager;
-        _playlistManager = playlistManager;
-    }
+    private readonly ILogger<HomeController> _logger = logger;
+    private readonly IRecordingSchedulingContext _context = context;
+    private readonly ISettingsManager _settingsManager = settingsManager;
+    private readonly IPlaylistManager _playlistManager = playlistManager;
 
     public IActionResult Index()
     {
@@ -121,7 +113,7 @@ public class HomeController : Controller
             settings.M3uPlaylistPath = filePath;
             _settingsManager.Settings = settings;
 
-            _logger.LogDebug($"M3U file uploaded successfully to {filePath}");
+            _logger.LogDebug("M3U file uploaded successfully to {filePath}", filePath);
         }
         catch (Exception ex)
         {

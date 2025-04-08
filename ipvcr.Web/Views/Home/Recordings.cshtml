@@ -4,19 +4,19 @@
     ViewData["Title"] = "Scheduled recording";
 }
 
-    @if (Model.Channels.Count == 0)
-    {
+@if (Model.Channels.Count == 0)
+{
     <label class="label-readonly warning-label">
         No channels available! Use the settings page to upload a m3u file.
     </label>
-    }
-    else
-    {
-<label class="label-readonly info-label">
-        <div><Var>Recording path</Var>: @Model.RecordingPath</div>
-        <div><Var>Channel count</Var>: @Model.Channels.Count</div>
+}
+else
+{
+    <label class="label-readonly info-label">
+        <span><Var>Recording path</Var>: @Model.RecordingPath</span>
+        <span><Var>Channel count</Var>: @Model.Channels.Count</span>
     </label>
-    }
+}
 <div class="text-center">
     @{
         var data = Model.Recordings;
@@ -56,7 +56,7 @@
     </button>
 
     <div class="modal fade" id="addRecordingModal" tabindex="-1" aria-labelledby="addRecordingModalLabel"
-        aria-hidden="true">
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -73,7 +73,7 @@
                         </div>
                         <div class="form-group">
                             <label for="Description">Description</label>
-                            <input type="hidden" class="form-control" id="Description" name="Description"  />
+                            <input type="hidden" class="form-control" id="Description" name="Description" />
                             <label id="DescriptionLabel" class="label-readonly info-label"></label>
                         </div>
                         <div class="form-group">
@@ -110,12 +110,12 @@
 @section Scripts {
     <script>
         const timezoneOffset = new Date().getTimezoneOffset();
-        
+
         function showModal() {
             const modal = new bootstrap.Modal('#addRecordingModal');
             modal.show();
         }
-        
+
         $(document).ready(function () {
             const modal = new bootstrap.Modal('#addRecordingModal');
 
@@ -246,7 +246,7 @@
                 const description = name + ' - recorded from ' + channelName + ' at ' + niceStartTime;
                 document.getElementById('Description').value = description;
                 document.getElementById('DescriptionLabel').innerText = description;
-            } 
+            }
 
             // Check if all form controls have a value
             // and enable/disable the submit button accordingly

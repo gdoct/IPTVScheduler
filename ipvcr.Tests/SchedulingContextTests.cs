@@ -4,7 +4,7 @@ using Moq;
 
 namespace ipvcr.Tests;
 
-public class SchedulingContextTests 
+public class SchedulingContextTests
 {
     [Fact]
     // test that the enumeration only offers recordings, even if more are present in the task manager's list
@@ -12,7 +12,7 @@ public class SchedulingContextTests
     {
         // Arrange
         var taskScheduler = new Mock<ITaskScheduler>();
-        var json = System.Text.Json.JsonSerializer.Serialize(new ScheduledRecording(Guid.NewGuid(), "Task 1", "", "filename","http://whatevah", "", DateTime.Now, DateTime.Now.AddHours(1)));
+        var json = System.Text.Json.JsonSerializer.Serialize(new ScheduledRecording(Guid.NewGuid(), "Task 1", "", "filename", "http://whatevah", "", DateTime.Now, DateTime.Now.AddHours(1)));
         taskScheduler.Setup(s => s.FetchScheduledTasks()).Returns(
         [
             new ScheduledTask(Guid.NewGuid(), "Task 1", "ffmpeg -i http://example.com/stream -t 3600 -c copy -f mp4 output.mp4", DateTime.Now, json),
@@ -36,7 +36,7 @@ public class SchedulingContextTests
         var context = new RecordingSchedulingContext(taskScheduler.Object);
 
         // Act
-        var recording = new ScheduledRecording(Guid.NewGuid(), "Task 1", "", "filename","http://whatevah", "", DateTime.Now, DateTime.Now.AddHours(1));
+        var recording = new ScheduledRecording(Guid.NewGuid(), "Task 1", "", "filename", "http://whatevah", "", DateTime.Now, DateTime.Now.AddHours(1));
         context.AddRecording(recording);
 
         // Assert
@@ -49,7 +49,7 @@ public class SchedulingContextTests
         // Arrange
         var taskScheduler = new Mock<ITaskScheduler>();
         var context = new RecordingSchedulingContext(taskScheduler.Object);
-        var recording = new ScheduledRecording(Guid.NewGuid(), "Task 1", "", "filename","http://whatevah", "", DateTime.Now, DateTime.Now.AddHours(1));
+        var recording = new ScheduledRecording(Guid.NewGuid(), "Task 1", "", "filename", "http://whatevah", "", DateTime.Now, DateTime.Now.AddHours(1));
 
         // Act
         context.AddRecording(recording);

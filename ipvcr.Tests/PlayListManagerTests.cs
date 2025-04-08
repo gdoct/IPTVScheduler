@@ -1,11 +1,11 @@
 namespace ipvcr.Tests;
 
+using ipvcr.Scheduling;
+using Moq;
 using System;
 using System.IO.Abstractions;
 using System.Text;
 using System.Threading.Tasks;
-using ipvcr.Scheduling;
-using Moq;
 public class PlaylistManagerTests
 {
     class MockedFileSystemStream : FileSystemStream
@@ -87,7 +87,7 @@ public class PlaylistManagerTests
         file.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
         file.Setup(x => x.OpenRead(It.IsAny<string>()))
             .Throws<IOException>();
-//            .Returns(new MockedFileSystemStream(stream, playlistPath, true));
+        //            .Returns(new MockedFileSystemStream(stream, playlistPath, true));
 
         var s = new SchedulerSettings { M3uPlaylistPath = playlistPath };
         settingsManager.SetupGet(s => s.Settings).Returns(s);
@@ -207,7 +207,7 @@ public class PlaylistManagerTests
     {
         // Arrange
         var settingsManager = new Mock<ISettingsManager>();
-        
+
         var s = new SchedulerSettings
         {
             M3uPlaylistPath = string.Empty
@@ -270,7 +270,7 @@ public class PlaylistManagerTests
         settingsManager.VerifyAll();
     }
 
-     [Fact]
+    [Fact]
     public void PlaylistManager_SettingsChanged_ReloadPlaylist()
     {
         var settingsManager = new Mock<ISettingsManager>();

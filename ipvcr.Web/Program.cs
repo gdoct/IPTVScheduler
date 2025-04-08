@@ -1,5 +1,5 @@
-using System.IO.Abstractions;
 using ipvcr.Scheduling;
+using System.IO.Abstractions;
 
 namespace ipvcr.Web;
 
@@ -9,8 +9,8 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         var configuration = builder.Configuration; // Access the configuration
-        var port = configuration.GetValue<int?>("Port") ?? 5000; 
-        var sslport = configuration.GetValue<int?>("SslPort") ?? 5001; 
+        var port = configuration.GetValue<int?>("Port") ?? 5000;
+        var sslport = configuration.GetValue<int?>("SslPort") ?? 5001;
         var useSsl = configuration.GetValue<bool?>("UseSsl") ?? false; // Default to false if not set
         var certpath = configuration.GetValue<string?>("CertPath") ?? string.Empty; // Default to empty if not set
         builder.WebHost.UseUrls($"http://*:{port}");
@@ -41,7 +41,7 @@ public class Program
         builder.Services.AddControllersWithViews();
         var platform = Environment.OSVersion.Platform;
         builder.Services.AddTransient<IRecordingSchedulingContext>((_) => new RecordingSchedulingContext(SchedulerFactory.GetScheduler(platform)));
-        
+
         var settingsManager = new SettingsManager(new FileSystem());
         builder.Services.AddSingleton<ISettingsManager>(settingsManager);
         builder.Services.AddSingleton<IPlaylistManager>((_) => new PlaylistManager(settingsManager, new FileSystem()));

@@ -1,7 +1,7 @@
+using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using Microsoft.Extensions.Logging;
-using System.IO.Abstractions;
+
 namespace ipvcr.Scheduling.Linux;
 
 public class AtRecordingScheduler : ITaskScheduler
@@ -58,7 +58,7 @@ public class AtRecordingScheduler : ITaskScheduler
     {
         _logger.LogInformation("Scheduling task {taskid}", task.Id.ToString()[..5]);
         _logger.LogDebug("Scheduling task {taskid}..: {taskname} at {starttime} with command: {command}", task.Id.ToString()[..5], task.Name, task.StartTime, task.Command);
-        if (task.StartTime < DateTime.Now )
+        if (task.StartTime < DateTime.Now)
         {
             throw new InvalidOperationException("Cannot schedule a task in the past.");
         }
@@ -109,11 +109,12 @@ public class AtRecordingScheduler : ITaskScheduler
             // 2       Wed Apr  2 13:08:00 2025 a guido
             // extract the first  number using a RegEx
             var jobId = line.Split("\t")[0];
-            if (string.IsNullOrWhiteSpace(jobId)) {
+            if (string.IsNullOrWhiteSpace(jobId))
+            {
                 _logger.LogWarning("No job ID found in line: {line}", line);
                 continue;
             };
-            if (!Int32.TryParse(jobId, out var jobIdInt)) 
+            if (!Int32.TryParse(jobId, out var jobIdInt))
             {
                 _logger.LogWarning("Failed to parse job ID: {jobId}", jobId);
                 continue;

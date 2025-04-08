@@ -12,7 +12,7 @@ public class RecordingSchedulingContext : IRecordingSchedulingContext
 {
     public RecordingSchedulingContext(ITaskScheduler taskScheduler) => Scheduler = taskScheduler ?? throw new ArgumentNullException(nameof(taskScheduler));
 
-    private ITaskScheduler Scheduler { get; init; } 
+    private ITaskScheduler Scheduler { get; init; }
 
     public IEnumerable<ScheduledRecording> Recordings => Scheduler
                             .FetchScheduledTasks()

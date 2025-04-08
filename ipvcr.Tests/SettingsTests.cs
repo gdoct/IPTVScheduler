@@ -1,8 +1,8 @@
-using System.Text.Json;
 using ipvcr.Scheduling;
 using Moq;
-using System.IO.Abstractions.TestingHelpers;
 using System.IO.Abstractions;
+using System.IO.Abstractions.TestingHelpers;
+using System.Text.Json;
 
 namespace ipvcr.Tests;
 
@@ -52,7 +52,7 @@ public class SettingsManagerTests
         Assert.Throws<InvalidOperationException>(() => _ = CreateSettingsManager(mockFileSystem));
     }
 
-    private SettingsManager CreateSettingsManager(MockFileSystem mockFileSystem)
+    private static SettingsManager CreateSettingsManager(MockFileSystem mockFileSystem)
     {
         var mockFileSystemWrapper = new Mock<IFileSystem>();
         mockFileSystemWrapper.Setup(fs => fs.File).Returns(mockFileSystem.File);
@@ -115,7 +115,7 @@ public class SettingsManagerTests
         // Set up the mock to throw an UnauthorizedAccessException for a specific method
         mockFileSystem
             .Setup(fs => fs.File.ReadAllText(It.IsAny<string>()))
-            .Throws(new UnauthorizedAccessException()); 
+            .Throws(new UnauthorizedAccessException());
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => new SettingsManager(mockFileSystem.Object));
@@ -131,7 +131,7 @@ public class SettingsManagerTests
         // Set up the mock to throw an UnauthorizedAccessException for a specific method
         mockFileSystem
             .Setup(fs => fs.File.ReadAllText(It.IsAny<string>()))
-            .Throws(new IOException()); 
+            .Throws(new IOException());
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => new SettingsManager(mockFileSystem.Object));
@@ -158,7 +158,7 @@ public class SettingsManagerTests
         // Act & Assert
         Assert.NotNull(CreateSettingsManager(mockFileSystem));
     }
-    
+
     [Fact]
     public void SettingsManager_ConstructorAllowsNullJson()
     {
@@ -196,20 +196,20 @@ public class SettingsManagerTests
         var mockFileSystem = new Mock<IFileSystem>();
         mockFileSystem.Setup(fs => fs.File.Exists(It.IsAny<string>()))
             .Returns(true);
-         mockFileSystem
-            .Setup(fs => fs.File.ReadAllText(It.IsAny<string>()))   
-            .Returns(JsonSerializer.Serialize(new SchedulerSettings() { OutputPath = "/tmp/output" }));
+        mockFileSystem
+           .Setup(fs => fs.File.ReadAllText(It.IsAny<string>()))
+           .Returns(JsonSerializer.Serialize(new SchedulerSettings() { OutputPath = "/tmp/output" }));
 
         // Set up the mock to throw an UnauthorizedAccessException for a specific method
         mockFileSystem
             .Setup(fs => fs.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
-            .Throws(new UnauthorizedAccessException()); 
+            .Throws(new UnauthorizedAccessException());
 
         // Act & Assert
         var sm = new SettingsManager(mockFileSystem.Object);
         Assert.Throws<InvalidOperationException>(() => sm.Settings = new SchedulerSettings());
     }
-    
+
     [Fact]
     public void SettingsManager_SaveThrowsIfFileSystemThrowsIOException()
     {
@@ -217,21 +217,21 @@ public class SettingsManagerTests
         var mockFileSystem = new Mock<IFileSystem>();
         mockFileSystem.Setup(fs => fs.File.Exists(It.IsAny<string>()))
             .Returns(true);
-         mockFileSystem
-            .Setup(fs => fs.File.ReadAllText(It.IsAny<string>()))   
-            .Returns(JsonSerializer.Serialize(new SchedulerSettings() { OutputPath = "/tmp/output" }));
+        mockFileSystem
+           .Setup(fs => fs.File.ReadAllText(It.IsAny<string>()))
+           .Returns(JsonSerializer.Serialize(new SchedulerSettings() { OutputPath = "/tmp/output" }));
 
         // Set up the mock to throw an UnauthorizedAccessException for a specific method
         mockFileSystem
             .Setup(fs => fs.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
-            .Throws(new IOException()); 
+            .Throws(new IOException());
 
         // Act & Assert
         var sm = new SettingsManager(mockFileSystem.Object);
         Assert.Throws<InvalidOperationException>(() => sm.Settings = new SchedulerSettings());
     }
 
-     [Fact]
+    [Fact]
     public void SettingsManager_Save_AllowRecreate()
     {
         // Arrange

@@ -41,7 +41,7 @@ public class ScheduledRecording
             Name,
             GenerateFfMpegCommandString(),
             StartTime,
-            System.Text.Json.JsonSerializer.Serialize(this) 
+            System.Text.Json.JsonSerializer.Serialize(this)
             );
     }
 
@@ -52,7 +52,7 @@ public class ScheduledRecording
         {
             throw new Exception("ScheduledTask.InnerScheduledTask is null or empty");
         }
-        try 
+        try
         {
             return System.Text.Json.JsonSerializer.Deserialize<ScheduledRecording>(json)!;
         }
