@@ -46,9 +46,9 @@ RUN apt-get install -y at ffmpeg && \
 # Create required directories
 RUN mkdir -p /var/spool/cron/atjobs && \
     mkdir -p /media && \
-    mkdir -p /var/log/iptvscheduler && \
+    mkdir -p /var/log/iptvscheduler/tasks && \
     mkdir -p /etc/iptvscheduler && \
-    chmod -R 755 /var/spool/cron/atjobs /media /var/log/iptvscheduler /etc/iptvscheduler
+    chmod -R 755 /var/spool/cron/atjobs /media /var/log/iptvscheduler /var/log/iptvscheduler/tasks /etc/iptvscheduler
 
 COPY --from=build /app/publish .
 

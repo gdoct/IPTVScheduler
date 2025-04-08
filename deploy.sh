@@ -1,7 +1,15 @@
 #!/bin/bash
-scp bin/ipvcr-web.img guido@nuc-guido:~
+# Exit on any error
+set -e
 
-# send these command over ssh
+# Keep track of the last executed command
+trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+
+# Echo an error message before exiting
+trap 'echo "The command \"${last_command}\" failed with exit code $?."' EXIT
+dotnet clean
+dotnet build /p:BuildDockerImage=true /p:Configuration=Debug 
+scp bin/ipvcr-web.img guido@nuc-guido:~ 
 ssh guido@nuc-guido << 'ENDSSH'
 
 # remove the running container

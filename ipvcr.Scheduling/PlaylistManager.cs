@@ -1,6 +1,7 @@
 namespace ipvcr.Scheduling;
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO.Abstractions;
 
 
@@ -15,33 +16,25 @@ public class PlaylistManager : IPlaylistManager
     private readonly List<ChannelInfo> _playlistItems;
     private readonly IFileSystem _filesystem;
     private string? _m3uPlaylistPath;
-
-    public PlaylistManager(ISettingsManager settingsManager) : this(settingsManager, new FileSystem())
-    {
-
-    }
+    private object _lock = new object();
 
     public PlaylistManager(ISettingsManager settingsManager, IFileSystem fileSystem)
     {
         _playlistItems = new List<ChannelInfo>();
         _filesystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
-
+        if (string.IsNullOrEmpty(settingsManager.Settings.M3uPlaylistPath))
+        {
+            throw new ArgumentException("M3uPlaylistPath cannot be null or empty.", nameof(settingsManager));
+        }
         if (_filesystem.File.Exists(settingsManager.Settings.M3uPlaylistPath))
         {
-            Task.Run(() => LoadPlaylist(settingsManager.Settings.M3uPlaylistPath))
-                .ContinueWith(t =>
-                {
-                    if (t.IsFaulted)
-                    {
-                        throw new Exception("Failed to load playlist", t.Exception);
-                    }
-                });
+            LoadPlaylist(settingsManager.Settings.M3uPlaylistPath);
         }
         settingsManager.SettingsChanged += async (sender, args) =>
         {
             if (string.Compare(args.NewSettings.M3uPlaylistPath, _m3uPlaylistPath, StringComparison.OrdinalIgnoreCase) != 0)
             {
-                await LoadPlaylist(args.NewSettings.M3uPlaylistPath);
+                await LoadPlaylistAsync(args.NewSettings.M3uPlaylistPath);
             }
         };
     }
@@ -52,22 +45,53 @@ public class PlaylistManager : IPlaylistManager
         {
             throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
         }
+        if (!_filesystem.File.Exists(filePath))
+        {
+            throw new FileNotFoundException($"Playlist file not found: {filePath}");
+        }
 
-        return LoadPlaylist(filePath);
+        return LoadPlaylistAsync(filePath);
     }
 
-    private async Task LoadPlaylist(string playlistPath)
+    private void LoadPlaylist(string playlistPath)
     {
-        var parser = new M3uParser(playlistPath);
-        _playlistItems.Clear();
+        // call LoadPlaylistAsync and block until it completes
+        try
+        {
+            var task = LoadPlaylistAsync(playlistPath);
+            task.Wait(); // Block synchronously
+        }
+        catch (AggregateException ae)
+        {
+            // Handle the AggregateException and throw the inner exception
+            throw new InvalidOperationException("Failed to load playlist", ae.InnerException);
+        }
+    }
+
+    private async Task LoadPlaylistAsync(string playlistPath)
+    {
+
+        var parser = new M3uParser(_filesystem, playlistPath);
+        var channels = new List<ChannelInfo>();
         await foreach (var channel in parser.ParsePlaylistAsync())
         {
-            _playlistItems.Add(channel);
+            channels.Add(channel);
         }
+
+        lock (_lock)
+        {
+            _playlistItems.Clear();
+            _playlistItems.AddRange(channels);
+        }
+        _m3uPlaylistPath = playlistPath;
         _m3uPlaylistPath = playlistPath;
     }
     public List<ChannelInfo> GetPlaylistItems()
     {
-        return _playlistItems;
+        // return a copy of the collection
+        lock (_lock)
+        {
+            return new(_playlistItems);
+        }
     }
 }

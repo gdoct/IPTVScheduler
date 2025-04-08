@@ -42,10 +42,9 @@ public class Program
         var platform = Environment.OSVersion.Platform;
         builder.Services.AddTransient<IRecordingSchedulingContext>((_) => new RecordingSchedulingContext(SchedulerFactory.GetScheduler(platform)));
         
-        builder.Services.AddTransient<ISettingsManager>((_) => new SettingsManager(new FileSystem()));
         var settingsManager = new SettingsManager(new FileSystem());
         builder.Services.AddSingleton<ISettingsManager>(settingsManager);
-        builder.Services.AddTransient<IPlaylistManager>((_) => new PlaylistManager(settingsManager, new FileSystem()));
+        builder.Services.AddSingleton<IPlaylistManager>((_) => new PlaylistManager(settingsManager, new FileSystem()));
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.

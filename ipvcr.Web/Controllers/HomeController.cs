@@ -57,10 +57,27 @@ public class HomeController : Controller
     {
         if (ModelState.IsValid)
         {
+            if (_context.Recordings.Any(r => r.Id == recording.Id))
+            {
+                _logger.LogDebug("Recording {recordingId} already exists, removing it first.", recording.Id);
+                _context.RemoveRecording(recording.Id);
+            }
             _context.AddRecording(recording);
             return RedirectToAction(nameof(Recordings));
         }
         return View("Recordings", _context.Recordings.ToList());
+    }
+
+    [HttpGet]
+    [Route("Home/Edit/{recordingId}")]
+    public IActionResult Edit(Guid recordingId)
+    {
+        var recording = _context.Recordings.FirstOrDefault(r => r.Id == recordingId);
+        if (recording == null)
+        {
+            return NotFound();
+        }
+        return Json(recording);
     }
 
     [HttpDelete]
@@ -104,7 +121,7 @@ public class HomeController : Controller
             settings.M3uPlaylistPath = filePath;
             _settingsManager.Settings = settings;
 
-            _logger.LogInformation($"M3U file uploaded successfully to {filePath}");
+            _logger.LogDebug($"M3U file uploaded successfully to {filePath}");
         }
         catch (Exception ex)
         {

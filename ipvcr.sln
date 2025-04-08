@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ipvcr.Scheduling", "ipvcr.S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ipvcr.Scheduling.Shared", "ipvcr.Scheduling.Shared\ipvcr.Scheduling.Shared.csproj", "{17AE3928-3F8D-4E72-1234-7E52C6519A1B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ipvcr.Scheduling.Windows", "ipvcr.Scheduling.Windows\ipvcr.Scheduling.Windows.csproj", "{4795A730-F1E8-4E0F-BD5D-E718AC333A58}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ipvcr.Scheduling.Linux", "ipvcr.Scheduling.Linux\ipvcr.Scheduling.Linux.csproj", "{96CFE9A6-5B00-45CB-8D62-6105D1E29B1F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ipvcr.Scheduling.Linux.Tests", "ipvcr.Scheduling.Linux.Tests\ipvcr.Scheduling.Linux.Tests.csproj", "{EB9E4CA5-9226-42A9-8DAE-C66B33DFA938}"
@@ -35,10 +33,6 @@ Global
 		{E87AEFD6-C38D-4E34-A268-8B52D6519A1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E87AEFD6-C38D-4E34-A268-8B52D6519A1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E87AEFD6-C38D-4E34-A268-8B52D6519A1B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4795A730-F1E8-4E0F-BD5D-E718AC333A58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4795A730-F1E8-4E0F-BD5D-E718AC333A58}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4795A730-F1E8-4E0F-BD5D-E718AC333A58}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4795A730-F1E8-4E0F-BD5D-E718AC333A58}.Release|Any CPU.Build.0 = Release|Any CPU
 		{96CFE9A6-5B00-45CB-8D62-6105D1E29B1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{96CFE9A6-5B00-45CB-8D62-6105D1E29B1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96CFE9A6-5B00-45CB-8D62-6105D1E29B1F}.Release|Any CPU.ActiveCfg = Release|Any CPU

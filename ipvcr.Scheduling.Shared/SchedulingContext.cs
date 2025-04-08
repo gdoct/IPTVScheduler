@@ -16,7 +16,6 @@ public class RecordingSchedulingContext : IRecordingSchedulingContext
 
     public IEnumerable<ScheduledRecording> Recordings => Scheduler
                             .FetchScheduledTasks()
-                            .Where(t => t.TaskType == ScheduledTaskType.Recording)
                             .Select(ScheduledRecording.FromScheduledTask);
 
     public void AddRecording(ScheduledRecording recording) => Scheduler.ScheduleTask(recording.ToScheduledTask());

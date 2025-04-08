@@ -12,12 +12,11 @@ public class SchedulingContextTests
     {
         // Arrange
         var taskScheduler = new Mock<ITaskScheduler>();
+        var json = System.Text.Json.JsonSerializer.Serialize(new ScheduledRecording(Guid.NewGuid(), "Task 1", "", "filename","http://whatevah", "", DateTime.Now, DateTime.Now.AddHours(1)));
         taskScheduler.Setup(s => s.FetchScheduledTasks()).Returns(
         [
-            new ScheduledTask(Guid.NewGuid(), "Task 1", "ffmpeg -i http://example.com/stream -t 3600 -c copy -f mp4 output.mp4", DateTime.Now, ScheduledTaskType.Recording),
-            new ScheduledTask(Guid.NewGuid(), "Task 2", "ffmpeg -i http://example.com/stream -t 3600 -c copy -f mp4 output.mp4", DateTime.Now, ScheduledTaskType.Recording),
-            new ScheduledTask(Guid.NewGuid(), "Task 3", "command 3", DateTime.Now, ScheduledTaskType.Transcoding),
-            new ScheduledTask(Guid.NewGuid(), "Task 4", "command 4", DateTime.Now, ScheduledTaskType.Transcoding),
+            new ScheduledTask(Guid.NewGuid(), "Task 1", "ffmpeg -i http://example.com/stream -t 3600 -c copy -f mp4 output.mp4", DateTime.Now, json),
+            new ScheduledTask(Guid.NewGuid(), "Task 2", "ffmpeg -i http://example.com/stream -t 3600 -c copy -f mp4 output.mp4", DateTime.Now, json),
         ]);
 
         var context = new RecordingSchedulingContext(taskScheduler.Object);

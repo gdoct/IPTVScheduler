@@ -1,7 +1,7 @@
 @model ipvcr.Web.Models.HomeRecordingsViewModel
 
 @{
-    ViewData["Title"] = "Recording manager";
+    ViewData["Title"] = "Scheduled recording";
 }
 
     @if (Model.Channels.Count == 0)
@@ -26,11 +26,11 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Filename</th>
-                        <th>Channel</th>
                         <th>Start</th>
                         <th>End</th>
+                        <th>Channel</th>
+                        <th>Name</th>
+                        <th></th>
                         <th></th>
                     </tr>
                 </thead>
@@ -38,11 +38,11 @@
                     @foreach (var item in data)
                     {
                         <tr>
-                            <td>@item.Name</td>
-                            <td>@item.Filename</td>
-                            <td>@item.ChannelUri</td>
                             <td>@item.StartTime</td>
                             <td>@item.EndTime</td>
+                            <td title="@item.ChannelUri">@item.ChannelName</td>
+                            <td title="@item.Filename">@item.Name</td>
+                            <td><button title="Edit" onclick="handleEdit('@item.Id')">Edit</button></td>
                             <td><button title="Delete" onclick="handleDelete('@item.Id')">Delete</button></td>
                         </tr>
                     }
@@ -65,9 +65,16 @@
                 </div>
                 <div class="modal-body">
                     <form method="post" asp-action="Create">
+                        <input type="hidden" name="__RequestVerificationToken" value="@Html.AntiForgeryToken()" />
+                        <input type="hidden" name="Id" id="Id" />
                         <div class="form-group">
-                            <label for="Name">Name</label>
+                            <label for="Name">Recording name</label>
                             <input type="text" class="form-control" id="Name" name="Name" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="Description">Description</label>
+                            <input type="hidden" class="form-control" id="Description" name="Description"  />
+                            <label id="DescriptionLabel" class="label-readonly info-label"></label>
                         </div>
                         <div class="form-group">
                             <label for="ChannelUri">Channel</label>
@@ -77,22 +84,22 @@
                                     <option value="@channel.Uri">@channel.Name</option>
                                 }
                             </select>
+                            <input type="hidden" name="ChannelName" id="ChannelName" />
                         </div>
                         <div class="form-group">
                             <label for="StartTime">Start Time</label>
-                            <input type="datetime-local" class="form-control" id="StartTime" name="StartTime"
-                                required />
+                            <input type="datetime-local" class="form-control" id="StartTime" name="StartTime" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm")" required />
                         </div>
                         <div class="form-group">
                             <label for="EndTime">End Time</label>
-                            <input type="datetime-local" class="form-control" id="EndTime" name="EndTime" required />
+                            <input type="datetime-local" class="form-control" id="EndTime" name="EndTime" value="@DateTime.Now.AddHours(25).ToString("yyyy-MM-ddTHH:mm")" required />
                         </div>
                         <div class="form-group">
                             <label for="Filename">Recording will be saved to</label>
                             <input type="hidden" class="form-control" id="Filename" name="Filename" required />
                             <label id="FilenameLabel" class="label-readonly info-label"></label>
                         </div>
-                        <input type="hidden" name="TimezoneOffset" id="timezoneOffset" />
+                        <input type="hidden" name="TimezoneOffset" id="TimezoneOffset" />
                         <button type="submit" class="btn btn-primary" disabled>Add Recording</button>
                     </form>
                 </div>
@@ -103,6 +110,12 @@
 @section Scripts {
     <script>
         const timezoneOffset = new Date().getTimezoneOffset();
+        
+        function showModal() {
+            const modal = new bootstrap.Modal('#addRecordingModal');
+            modal.show();
+        }
+        
         $(document).ready(function () {
             const modal = new bootstrap.Modal('#addRecordingModal');
 
@@ -112,10 +125,16 @@
             // Clear form when modal is closed
             $('#addRecordingModal').on('hidden.bs.modal', function () {
                 $(this).find('form').trigger('reset');
+                document.getElementById('Id').value = '@Guid.NewGuid().ToString()';
                 document.getElementById('TimezoneOffset').value = timezoneOffset;
+                document.getElementById('FilenameLabel').innerText = '';
+                document.getElementById('DescriptionLabel').innerText = '';
             });
             document.getElementById('TimezoneOffset').value = timezoneOffset;
+
         });
+
+
         function handleDelete(id) {
             // make a request to delete the recording
             console.log('Deleting recording with id: ' + id);
@@ -137,20 +156,100 @@
                 .catch(error => console.error('Error:', error));
         }
 
+        function handleEdit(id) {
+            // make a request to edit the recording
+            console.log('Editing recording with id: ' + id);
+            fetch(`/Home/Edit/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+                        document.getElementById('Id').value = data.id;
+                        document.getElementById('Name').value = data.name;
+                        document.getElementById('Description').value = data.description;
+                        document.getElementById('ChannelUri').value = data.channelUri;
+                        document.getElementById('StartTime').value = data.startTime;
+                        document.getElementById('EndTime').value = data.endTime;
+                        document.getElementById('FilenameLabel').innerText = data.filename;
+                        document.getElementById('DescriptionLabel').innerText = data.description;
+                        showModal();
+                    } else {
+                        console.error('Failed to load recording data');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        function parseChannelName(fullChannelName) {
+            // channel name *may be* in this form "4K | RTL 7"
+            // in that case, split by " | " and take the second part
+            const parts = fullChannelName.split('|');
+            if (parts.length > 1) {
+                return parts[1].trim();
+            }
+            return fullChannelName.trim();
+        }
+
+        function sanitizeInput(input) {
+            // Remove any unwanted characters from the input including space
+            return input.replace(/[^a-zA-Z0-9 _]/g, '');
+        }
+
+        function formatFileDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}${month}${day}_${hours}${minutes}`;
+        }
+
+        function formatNiceDate(date) {
+            // format to mmm dd, yyyy hh:mm where mmm = monthname
+            const options = { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+            return date.toLocaleString('en-US', options).replace(',', '');
+        }
+
         function updateFormState() {
-            const name = document.getElementById('Name').value;
+            const name = sanitizeInput(document.getElementById('Name').value);
             const startTime = document.getElementById('StartTime').value;
             const rootpath = '@Model.RecordingPath';
+            const channelName = parseChannelName(document.getElementById('ChannelUri').selectedOptions[0].text);
+
+            // if name is empty, startTime is empty, or channelName is empty, disable the submit button
+            if (name === '' || startTime === '' || channelName === '') {
+                document.querySelector('button[type="submit"]').disabled = true;
+                // clear the non-form fields
+                document.getElementById('FilenameLabel').innerText = '';
+                document.getElementById('DescriptionLabel').innerText = '';
+
+                return;
+            }
+
+            document.getElementById('Name').value = name; // Update the input field with the sanitized value
+            document.getElementById('TimezoneOffset').value = new Date().getTimezoneOffset();
+            document.getElementById('ChannelName').value = channelName;
+
             if (startTime !== '') {
                 // format the startTime as yyyymmddHHmm, e.g., 202508070605
-                const startTimeFormatted = new Date(startTime).toISOString().replace(/[-:]/g, '').slice(0, 12);
-                const filename = rootpath + '/' + `${name}_${startTimeFormatted}.mp4`;
+                const startTimeFormatted = formatFileDate(new Date(startTime)) + startTime.split('T')[1].replace(':', '').substring(0, 4);
+                const filename = rootpath + '/' + `${name}_${startTimeFormatted}.mp4`.replace(/ /g, '_').toLowerCase();
                 document.getElementById('Filename').value = filename;
                 document.getElementById('FilenameLabel').innerText = filename;
-            }
-            // Update the TimezoneOffset field
-            document.getElementById('timezoneOffset').value = new Date().getTimezoneOffset();
-            // enable or disable the submit button based on whether aria-label form controls have a value
+
+                // Set the Description field based on the Name, ChannelName, and StartTime
+                var niceStartTime = formatNiceDate(new Date(startTime));
+                const description = name + ' - recorded from ' + channelName + ' at ' + niceStartTime;
+                document.getElementById('Description').value = description;
+                document.getElementById('DescriptionLabel').innerText = description;
+            } 
+
+            // Check if all form controls have a value
+            // and enable/disable the submit button accordingly
             const submitButton = document.querySelector('button[type="submit"]');
             const formControls = document.querySelectorAll('input.form-control');
             const allControlsHaveValue = Array.from(formControls).every(control => control.value);

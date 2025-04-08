@@ -27,6 +27,11 @@ public class ScheduledRecording
         EndTime = endTime;
     }
 
+    private string GenerateFfMpegCommandString()
+    {
+        return $"ffmpeg -i {ChannelUri} -t {Convert.ToInt32((EndTime - StartTime).TotalSeconds)} -c copy -f mp4 -metadata title=\"{Name}\" -metadata description=\"{Description}\" {Filename}";
+    }
+
     public ScheduledTask ToScheduledTask()
     {
         // we have the user's StartTime and we have the user's TimezoneOffset
@@ -34,57 +39,26 @@ public class ScheduledRecording
         // so we need to convert the local time to UTC by subtracting the offset
         return new(Id,
             Name,
-            $"ffmpeg -i {ChannelUri} -t {Convert.ToInt32((EndTime - StartTime).TotalSeconds)} -c copy -f mp4 {Filename}",
+            GenerateFfMpegCommandString(),
             StartTime,
-            ScheduledTaskType.Recording
+            System.Text.Json.JsonSerializer.Serialize(this) 
             );
     }
 
     public static ScheduledRecording FromScheduledTask(ScheduledTask scheduledTask)
     {
-        if (scheduledTask.TaskType != ScheduledTaskType.Recording)
+        var json = scheduledTask.InnerScheduledTask;
+        if (string.IsNullOrWhiteSpace(json))
         {
-            throw new Exception("Invalid task type");
+            throw new Exception("ScheduledTask.InnerScheduledTask is null or empty");
         }
-
-        // Example input: "ffmpeg -i http://example.com/stream -t 3600 -c copy -f mp4 output.mp4"
-        var commandParts = scheduledTask.Command.Split(' ');
-
-        // Ensure the command starts with "ffmpeg"
-        if (commandParts.Length < 10 || commandParts[0] != "ffmpeg")
+        try 
         {
-            throw new Exception("Invalid command format");
+            return System.Text.Json.JsonSerializer.Deserialize<ScheduledRecording>(json)!;
         }
-
-        // Validate the command structure
-        if (commandParts[1] != "-i" || commandParts[3] != "-t" || commandParts[5] != "-c" || commandParts[6] != "copy" || commandParts[7] != "-f" || commandParts[8] != "mp4")
+        catch (System.Text.Json.JsonException ex)
         {
-            throw new Exception("Invalid command structure");
+            throw new Exception($"Failed to deserialize ScheduledRecording from ScheduledTask: {ex.Message}", ex);
         }
-
-        var channelUri = commandParts[2];
-        if (!Uri.IsWellFormedUriString(channelUri, UriKind.Absolute))
-        {
-            throw new Exception("Invalid channel URI");
-        }
-
-        if (!int.TryParse(commandParts[4], out int duration))
-        {
-            throw new Exception("Invalid duration");
-        }
-
-        var filename = commandParts[9];
-        if (string.IsNullOrWhiteSpace(filename))
-        {
-            throw new Exception("Invalid filename");
-        }
-
-        var startTime = scheduledTask.StartTime; //.AddHours(scheduledTask.TimezoneOffset);
-        var endTime = startTime.AddSeconds(duration);
-
-        var description  = string.Empty;
-        var channelname  = string.Empty;
-        return new ScheduledRecording(
-            scheduledTask.Id, scheduledTask.Name, description, filename, channelUri, channelname, startTime, endTime);
     }
 }

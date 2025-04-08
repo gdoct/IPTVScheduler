@@ -1,17 +1,37 @@
+using System.IO.Abstractions;
 using System.Text.RegularExpressions;
 
 namespace ipvcr.Scheduling;
 
-public class M3uParser(string path)
+public class M3uParser
 {
-    private readonly string _path = path;
+    private readonly IFileSystem _fileSystem;
+    private readonly string _path;
 
+    public M3uParser(IFileSystem fileSystem, string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            throw new ArgumentNullException(nameof(path));
+
+        ArgumentNullException.ThrowIfNull(fileSystem, nameof(fileSystem));
+
+        if (!fileSystem.File.Exists(path))
+            throw new FileNotFoundException("m3u file does not exist", path);
+
+        _fileSystem = fileSystem;
+        _path = path;
+    }
+
+    public M3uParser(string path)
+        : this(new FileSystem(), path)
+    {
+    }
 
     public async IAsyncEnumerable<ChannelInfo> ParsePlaylistAsync()
     {
-        if (string.IsNullOrWhiteSpace(_path) || !File.Exists(_path)) yield break;
-
-        using var reader = new StreamReader(_path);
+        if (string.IsNullOrWhiteSpace(_path) || !_fileSystem.File.Exists(_path)) yield break;
+        using var stream = _fileSystem.File.OpenRead(_path);
+        using var reader = new StreamReader(stream);
         string id = string.Empty;
         string name = string.Empty;
         string logo = string.Empty;
@@ -26,14 +46,14 @@ public class M3uParser(string path)
             }
             if (line.StartsWith("#EXTINF:", StringComparison.OrdinalIgnoreCase))
             {
-                id = ExtractAttributeValue(line, "tvg-ID");
-                name = ExtractAttributeValue(line, "tvg-name");
-                logo = ExtractAttributeValue(line, "tvg-logo");
-                var grpname = ExtractAttributeValue(line, "group-title");
-                if (!string.IsNullOrWhiteSpace(grpname))
+                var (tvgId, tvgName, tvgLogo, groupTitle) = ExtractAttributes(line);
+                if (!string.IsNullOrWhiteSpace(groupTitle))
                 {
-                    group = grpname;
+                    group = groupTitle;
                 }
+                id = tvgId;
+                name = tvgName;
+                logo = tvgLogo;
             }
             else if (!string.IsNullOrWhiteSpace(id) &&
                 Uri.IsWellFormedUriString(line, UriKind.Absolute))
@@ -47,66 +67,29 @@ public class M3uParser(string path)
 
     private static bool TryParseGroup(string line, out string name)
     {
-        const string pattern = "##### .* #####";
-        var match = Regex.Match(line, pattern, RegexOptions.None, TimeSpan.FromMilliseconds(250));
-        if (!match.Success)
+        const string marker = "#####";
+        if (line.StartsWith(marker) && line.EndsWith(marker))
         {
-            name = string.Empty;
-            return false;
+            name = line[marker.Length..^marker.Length].Trim();
+            return true;
         }
-        var group = match.Groups[0].Value;
-        name = group[6..^6];
-        return true;
+        name = string.Empty;
+        return false;
     }
 
-    static string ExtractAttributeValue(string line, string attribute)
+    private static (string tvgId, string tvgName, string tvgLogo, string groupTitle) ExtractAttributes(string input)
     {
-        // Create a regex pattern that matches the attribute value
-        // The pattern uses positive lookbehind to find the position where the attribute value starts
-        // It then matches everything up to the ending double quote
-        string pattern = @"(?<=\b" + attribute + @"="")[^""]*";
+        string tvgIdPattern = @"tvg-id=""(.*?)""";
+        string tvgNamePattern = @"tvg-name=""(.*?)""";
+        string tvgLogoPattern = @"tvg-logo=""(.*?)""";
+        string groupTitlePattern = @"group-title=""(.*?)""";
 
-        // Create a regex object with the pattern
-        var regex = new Regex(pattern, RegexOptions.None, TimeSpan.FromMilliseconds(250));
+        // Extract the values
+        string tvgId = Regex.Match(input, tvgIdPattern).Groups[1].Value;
+        string tvgName = Regex.Match(input, tvgNamePattern).Groups[1].Value;
+        string tvgLogo = Regex.Match(input, tvgLogoPattern).Groups[1].Value;
+        string groupTitle = Regex.Match(input, groupTitlePattern).Groups[1].Value;
 
-        // Find the first match in the XML string
-        var match = regex.Match(line);
-
-        // If there is a match, return its value
-        if (match.Success)
-        {
-            return match.Value;
-        }
-
-        // Otherwise, return null
-        else
-        {
-            return ParseChannelAttribute(line, attribute, true);
-        }
-    }
-
-    private static string ParseChannelAttribute(string line, string attribute, bool useLineEndWhenEmpty = false)
-    {
-        string pattern = attribute + "=\"([^\"]+)\"";
-        if (Regex.IsMatch(line, pattern, RegexOptions.None, TimeSpan.FromMilliseconds(250)))
-        {
-            var match = Regex.Match(line, pattern, RegexOptions.None, TimeSpan.FromMilliseconds(250));
-            return match.Value[10..^1];
-        }
-        if (useLineEndWhenEmpty && line.Contains(','))
-        {
-            var idx = line.LastIndexOf(',') + 1;
-            if (idx < line.Length)
-            {
-                var sub = line[idx..];
-                if (sub.Contains(" #"))
-                {
-                    sub = sub[..sub.IndexOf(" #")];
-                }
-                return sub;
-            }
-        }
-
-        return string.Empty;
+        return (tvgId, tvgName, tvgLogo, groupTitle);
     }
 }
