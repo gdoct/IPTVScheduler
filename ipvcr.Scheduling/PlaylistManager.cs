@@ -1,9 +1,7 @@
 namespace ipvcr.Scheduling;
 
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO.Abstractions;
-
 
 public interface IPlaylistManager
 {
@@ -70,7 +68,6 @@ public class PlaylistManager : IPlaylistManager
 
     private async Task LoadPlaylistAsync(string playlistPath)
     {
-
         var parser = new M3uParser(_filesystem, playlistPath);
         var channels = new List<ChannelInfo>();
         await foreach (var channel in parser.ParsePlaylistAsync())
