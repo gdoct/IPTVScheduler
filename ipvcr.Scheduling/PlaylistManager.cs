@@ -2,6 +2,7 @@ namespace ipvcr.Scheduling;
 
 using System.Collections.Generic;
 using System.IO.Abstractions;
+using ipvcr.Scheduling.Shared;
 
 public interface IPlaylistManager
 {

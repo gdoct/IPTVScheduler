@@ -11,11 +11,10 @@ WORKDIR /source
 # Copy the solution file and restore dependencies
 COPY ["ipvcr.sln", "."]
 COPY ["ipvcr.Scheduling/ipvcr.Scheduling.csproj", "ipvcr.Scheduling/"]
-COPY ["ipvcr.Scheduling.Shared/ipvcr.Scheduling.Shared.csproj", "ipvcr.ipvcr.Scheduling.Shared/"]
 COPY ["ipvcr.Scheduling.Linux/ipvcr.Scheduling.Linux.csproj", "ipvcr.Scheduling.Linux/"]
-COPY ["ipvcr.Scheduling.Windows/ipvcr.Scheduling.Windows.csproj", "ipvcr.Scheduling.Windows/"]
-COPY ["ipvcr.Tests/ipvcr.Tests.csproj", "ipvcr.Tests/"]
 COPY ["ipvcr.Scheduling.Linux.Tests/ipvcr.Scheduling.Linux.Tests.csproj", "ipvcr.Scheduling.Linux.Tests/"]
+COPY ["ipvcr.Scheduling.Shared/ipvcr.Scheduling.Shared.csproj", "ipvcr.Scheduling.Shared/"]
+COPY ["ipvcr.Tests/ipvcr.Tests.csproj", "ipvcr.Tests/"]
 COPY ["ipvcr.Web/ipvcr.Web.csproj", "ipvcr.Web/"]
 
 RUN dotnet restore "ipvcr.sln"
@@ -46,9 +45,9 @@ RUN apt-get install -y at ffmpeg && \
 # Create required directories
 RUN mkdir -p /var/spool/cron/atjobs && \
     mkdir -p /media && \
-    mkdir -p /var/log/iptvscheduler/tasks && \
+    mkdir -p /data && \
     mkdir -p /etc/iptvscheduler && \
-    chmod -R 755 /var/spool/cron/atjobs /media /var/log/iptvscheduler /var/log/iptvscheduler/tasks /etc/iptvscheduler
+    chmod -R 755 /var/spool/cron/atjobs /media /data /etc/iptvscheduler
 
 COPY --from=build /app/publish .
 

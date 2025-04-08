@@ -11,7 +11,7 @@ RUN apt-get update && \
 # Create required directories
 RUN mkdir -p /var/spool/cron/atjobs && \
     mkdir -p /media && \
-    mkdir -p /var/log/iptvscheduler && \
+    mkdir -p /data && \
     mkdir -p /etc/iptvscheduler && \
     chmod -R 755 /var/spool/cron/atjobs /media /var/log/iptvscheduler /etc/iptvscheduler
 

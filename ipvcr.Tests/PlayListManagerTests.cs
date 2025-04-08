@@ -1,6 +1,7 @@
 namespace ipvcr.Tests;
 
 using ipvcr.Scheduling;
+using ipvcr.Scheduling.Shared;
 using Moq;
 using System;
 using System.IO.Abstractions;
@@ -262,7 +263,7 @@ public class PlaylistManagerTests
         var playlistManager = new PlaylistManager(settingsManager.Object, fileSystem.Object);
 
         // Act
-        settingsManager.Raise(x => x.SettingsChanged += null, new SettingsManager.SettingsChangedEventArgs(s));
+        settingsManager.Raise(x => x.SettingsChanged += null, new ISettingsManager.SettingsChangedEventArgs(s));
 
         // Assert
         // No exception should be thrown
@@ -310,7 +311,7 @@ public class PlaylistManagerTests
             .Returns(new MockedFileSystemStream(stream2, newplaylistPath, true));
         fileSystem.Setup(fs => fs.File.Exists(newplaylistPath)).Returns(true);
 
-        settingsManager.Raise(x => x.SettingsChanged += null, new SettingsManager.SettingsChangedEventArgs(newSettings));
+        settingsManager.Raise(x => x.SettingsChanged += null, new ISettingsManager.SettingsChangedEventArgs(newSettings));
 
         // Assert
         // No exception should be thrown

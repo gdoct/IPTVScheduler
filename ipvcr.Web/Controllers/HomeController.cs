@@ -1,4 +1,5 @@
 using ipvcr.Scheduling;
+using ipvcr.Scheduling.Shared;
 using ipvcr.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -21,7 +22,7 @@ public class HomeController(ILogger<HomeController> logger, IRecordingScheduling
     {
         var model = new HomeRecordingsViewModel
         {
-            RecordingPath = _settingsManager.Settings.OutputPath,
+            RecordingPath = _settingsManager.Settings.MediaPath,
             Recordings = _context.Recordings.ToList(),
             Channels = _playlistManager.GetPlaylistItems()
         };
@@ -57,7 +58,13 @@ public class HomeController(ILogger<HomeController> logger, IRecordingScheduling
             _context.AddRecording(recording);
             return RedirectToAction(nameof(Recordings));
         }
-        return View("Recordings", _context.Recordings.ToList());
+        var model = new HomeRecordingsViewModel
+        {
+            RecordingPath = _settingsManager.Settings.MediaPath,
+            Recordings = _context.Recordings.ToList(),
+            Channels = _playlistManager.GetPlaylistItems()
+        };
+        return View("Recordings", model);
     }
 
     [HttpGet]
@@ -94,7 +101,7 @@ public class HomeController(ILogger<HomeController> logger, IRecordingScheduling
             return RedirectToAction(nameof(Recordings));
         }
 
-        var uploadPath = "/var/lib/iptvscheduler";
+        var uploadPath = "/data";
         var filePath = Path.Combine(uploadPath, m3uFile.FileName);
 
         try

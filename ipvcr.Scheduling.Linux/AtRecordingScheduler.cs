@@ -1,5 +1,7 @@
+using ipvcr.Scheduling.Shared;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
+using System.IO.Abstractions;
 using System.Runtime.InteropServices;
 
 namespace ipvcr.Scheduling.Linux;
@@ -7,19 +9,21 @@ namespace ipvcr.Scheduling.Linux;
 public class AtRecordingScheduler : ITaskScheduler
 {
     private readonly IProcessRunner _processRunner;
+    private readonly IFileSystem _filesystem;
+    private readonly ISettingsManager _settingsManager;
     private readonly ILogger<AtRecordingScheduler> _logger;
     private static readonly char[] separator = new[] { '\n' };
     private static readonly char[] separatorArray = new[] { ' ' };
 
-    private AtRecordingScheduler(IProcessRunner processRunner) //, IFilesystem fileSystem)
+    private AtRecordingScheduler(IProcessRunner processRunner, IFileSystem fileSystem, ISettingsManager settingsManager)
     {
         _processRunner = processRunner;
+        _filesystem = fileSystem;
+        _settingsManager = settingsManager;
         var loggerFactory = LoggerFactory.Create(builder =>
         {
-            builder.AddConsole(); // Add console logging
+            builder.AddConsole(); 
         });
-
-        // Create a logger for this class
         _logger = loggerFactory.CreateLogger<AtRecordingScheduler>();
     }
 
@@ -32,16 +36,19 @@ public class AtRecordingScheduler : ITaskScheduler
         {
             throw new PlatformNotSupportedException("AtRecordingScheduler can only be run on Linux, MacOS or FreeBSD.");
         }
-        return CreateWithProcessRunner(new ProcessRunner());
+        return CreateWithProcessRunner(new ProcessRunner(), new FileSystem(), new SettingsManager(new FileSystem()));
     }
 
     // unit tests can create this object with a mocked IProcessRunner
-    public static AtRecordingScheduler CreateWithProcessRunner(IProcessRunner processRunner)
+    public static AtRecordingScheduler CreateWithProcessRunner(IProcessRunner processRunner, IFileSystem fileSystem, ISettingsManager settingsManager)
     {
+        ArgumentNullException.ThrowIfNull(settingsManager);
+        ArgumentNullException.ThrowIfNull(processRunner);
+        ArgumentNullException.ThrowIfNull(fileSystem);
         EnsureCommandIsInstalled(processRunner, "at");
         EnsureCommandIsInstalled(processRunner, "atq");
         EnsureCommandIsInstalled(processRunner, "atrm");
-        return new AtRecordingScheduler(processRunner);
+        return new AtRecordingScheduler(processRunner, fileSystem, settingsManager);
     }
 
     private static void EnsureCommandIsInstalled(IProcessRunner processRunner, string command)
@@ -66,14 +73,14 @@ public class AtRecordingScheduler : ITaskScheduler
         Environment.SetEnvironmentVariable("TASK_JOB_ID", task.Id.ToString());
         Environment.SetEnvironmentVariable("TASK_DEFINITION", task.InnerScheduledTask);
         // create a script at /var/lib/iptvscheduler/tasks named {id}.sh
-        var scriptfilename = $"/var/lib/iptvscheduler/tasks/{task.Id}.sh";
+        var scriptfilename = Path.Combine(_settingsManager.Settings.DataPath, $"tasks/{task.Id}.sh");
         _logger.LogDebug("Creating script file {scriptfilename}", scriptfilename);
         var scriptContent = @$"#!/bin/bash
         export TASK_JOB_ID={task.Id}
         export TASK_DEFINITION='{task.InnerScheduledTask}'
         {task.Command} && rm -f {scriptfilename}
         # remove the script after succesful execution";
-        File.WriteAllText(scriptfilename, scriptContent);
+        _filesystem.File.WriteAllText(scriptfilename, scriptContent);
         // make the script executable
         var (_, error, exitCode) = _processRunner.RunProcess("chmod", $"+x {scriptfilename}");
         if (exitCode != 0)
@@ -151,10 +158,11 @@ public class AtRecordingScheduler : ITaskScheduler
         var jobId = recording.TaskId.ToString();
         _logger.LogInformation("Cancelling task \"{taskname}\" with job id: {jobId}", recording.Name, jobId);
         var (output, error, exitCode) = _processRunner.RunProcess("atrm", jobId);
-        var taskfile = $"/var/lib/iptvscheduler/tasks/{taskId}.sh";
-        if (File.Exists(taskfile))
+        var scriptfilename = Path.Combine(_settingsManager.Settings.DataPath, $"tasks/{taskId}.sh");
+
+        if (_filesystem.File.Exists(scriptfilename))
         {
-            File.Delete(taskfile);
+            _filesystem.File.Delete(scriptfilename);
         }
         if (exitCode != 0)
         {

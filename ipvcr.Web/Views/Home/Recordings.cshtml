@@ -1,8 +1,16 @@
 @model ipvcr.Web.Models.HomeRecordingsViewModel
-
+@using ipvcr.Scheduling
 @{
     ViewData["Title"] = "Scheduled recording";
+
+    ChannelInfo FindChannel(string channelUri)
+    {
+        return Model?.Channels?.FirstOrDefault(c => c.Uri.Equals(channelUri)) ?? new ChannelInfo("", "", "", new
+        Uri("http://localhost"), "");
+    }
+
 }
+
 
 @if (Model.Channels.Count == 0)
 {
@@ -13,7 +21,7 @@
 else
 {
     <label class="label-readonly info-label">
-        <span><Var>Recording path</Var>: @Model.RecordingPath</span>
+        <span><Var>Recording path</Var>: @Model.RecordingPath</span><br />
         <span><Var>Channel count</Var>: @Model.Channels.Count</span>
     </label>
 }
@@ -22,10 +30,11 @@ else
         var data = Model.Recordings;
         if (data != null)
         {
-            <h2>Scheduled recordings</h2>
+            <h2>Upcoming recordings</h2>
             <table class="table">
                 <thead>
                     <tr>
+                        <th></th>
                         <th>Start</th>
                         <th>End</th>
                         <th>Channel</th>
@@ -37,7 +46,9 @@ else
                 <tbody>
                     @foreach (var item in data)
                     {
+                        var chan = FindChannel(item.ChannelUri);
                         <tr>
+                            <td><img src="@chan.Logo" /></td>
                             <td>@item.StartTime</td>
                             <td>@item.EndTime</td>
                             <td title="@item.ChannelUri">@item.ChannelName</td>
@@ -51,12 +62,20 @@ else
         }
 
     }
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRecordingModal">
-        Add New Recording
-    </button>
-
+    @if (Model.Channels.Any())
+    {
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRecordingModal">
+            Add New Recording
+        </button>
+    }
+    else
+    {
+        <label class="label-readonly warning-label">
+            No channels available! Use the settings page to upload a m3u file.
+        </label>
+    }
     <div class="modal fade" id="addRecordingModal" tabindex="-1" aria-labelledby="addRecordingModalLabel"
-         aria-hidden="true">
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -66,7 +85,9 @@ else
                 <div class="modal-body">
                     <form method="post" asp-action="Create">
                         <input type="hidden" name="__RequestVerificationToken" value="@Html.AntiForgeryToken()" />
-                        <input type="hidden" name="Id" id="Id" />
+                        @* <input type="hidden" name="Id" id="Id" /> *@
+                        <img id="ChannelLogo" src="@Model.Channels.First().Logo" alt="Channel Logo"
+                            class="channel-logo" />
                         <div class="form-group">
                             <label for="Name">Recording name</label>
                             <input type="text" class="form-control" id="Name" name="Name" required />
@@ -88,11 +109,13 @@ else
                         </div>
                         <div class="form-group">
                             <label for="StartTime">Start Time</label>
-                            <input type="datetime-local" class="form-control" id="StartTime" name="StartTime" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm")" required />
+                            <input type="datetime-local" class="form-control" id="StartTime" name="StartTime"
+                                value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm")" required />
                         </div>
                         <div class="form-group">
                             <label for="EndTime">End Time</label>
-                            <input type="datetime-local" class="form-control" id="EndTime" name="EndTime" value="@DateTime.Now.AddHours(25).ToString("yyyy-MM-ddTHH:mm")" required />
+                            <input type="datetime-local" class="form-control" id="EndTime" name="EndTime"
+                                value="@DateTime.Now.AddHours(25).ToString("yyyy-MM-ddTHH:mm")" required />
                         </div>
                         <div class="form-group">
                             <label for="Filename">Recording will be saved to</label>
@@ -116,6 +139,20 @@ else
             modal.show();
         }
 
+        const getChannelLogos = function () {
+            const channelLogos = {
+                    @{
+                        foreach (var channel in Model.Channels)
+                        {
+                        <text>'@channel.Uri': '@channel.Logo',</text>
+                }
+                
+    }
+                };
+        return channelLogos;
+            };
+
+
         $(document).ready(function () {
             const modal = new bootstrap.Modal('#addRecordingModal');
 
@@ -125,7 +162,7 @@ else
             // Clear form when modal is closed
             $('#addRecordingModal').on('hidden.bs.modal', function () {
                 $(this).find('form').trigger('reset');
-                document.getElementById('Id').value = '@Guid.NewGuid().ToString()';
+                document.getElementById('Id').value = '';
                 document.getElementById('TimezoneOffset').value = timezoneOffset;
                 document.getElementById('FilenameLabel').innerText = '';
                 document.getElementById('DescriptionLabel').innerText = '';
@@ -169,7 +206,7 @@ else
                 .then(response => response.json())
                 .then(data => {
                     if (data) {
-                        document.getElementById('Id').value = data.id;
+                       // document.getElementById('Id').value = data.id;
                         document.getElementById('Name').value = data.name;
                         document.getElementById('Description').value = data.description;
                         document.getElementById('ChannelUri').value = data.channelUri;
@@ -247,6 +284,11 @@ else
                 document.getElementById('Description').value = description;
                 document.getElementById('DescriptionLabel').innerText = description;
             }
+
+            var channelUri = document.getElementById('ChannelUri').value;
+            var channelLogo = getChannelLogos()[channelUri];
+            document.getElementById('ChannelLogo').src = channelLogo;
+            document.getElementById('ChannelLogo').alt = channelName + ' logo';
 
             // Check if all form controls have a value
             // and enable/disable the submit button accordingly

@@ -1,37 +1,15 @@
 using System.IO.Abstractions;
+using ipvcr.Scheduling.Shared;
+using static ipvcr.Scheduling.Shared.ISettingsManager;
 
-namespace ipvcr.Scheduling;
+namespace ipvcr.Scheduling.Shared;
 
-public class SchedulerSettings
-{
-    public string OutputPath { get; set; } = "/media";
-    public string LoggingPath { get; set; } = "/var/log/iptvscheduler";
-    public string M3uPlaylistPath { get; set; } = "/var/lib/iptvscheduler/m3u-playlist.m3u";
-}
-
-public interface ISettingsManager
-{
-    SchedulerSettings Settings { get; set; }
-
-    event EventHandler<SettingsManager.SettingsChangedEventArgs>? SettingsChanged;
-}
 
 public class SettingsManager : ISettingsManager
 {
     public event EventHandler<SettingsChangedEventArgs>? SettingsChanged;
 
-    public class SettingsChangedEventArgs : EventArgs
-    {
-        public SchedulerSettings NewSettings { get; }
-
-        public SettingsChangedEventArgs(SchedulerSettings newSettings)
-        {
-            NewSettings = newSettings;
-        }
-    }
-
     const string SETTINGS_FILENAME = "/etc/iptvscheduler/settings.json";
-
 
     public SettingsManager(IFileSystem filesystem)
     {

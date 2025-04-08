@@ -10,7 +10,7 @@ trap 'echo "The command \"${last_command}\" failed with exit code $?."' EXIT
 dotnet clean
 dotnet build /p:BuildDockerImage=true /p:Configuration=Debug 
 scp bin/ipvcr-web.img guido@nuc-guido:~ 
-ssh guido@nuc-guido << 'ENDSSH'
+ssh guido@nuc-guido << 'ENDSSH' || true
 
 # remove the running container
 docker rm -f ipvcr-web
@@ -22,7 +22,7 @@ docker rmi ipvcr-web
 docker load -i ipvcr-web.img
 
 # deploy the new image to a new container
-docker run --name ipvcr-web --network host -d -v /media/series:/media ipvcr-web
+docker run --name ipvcr-web --network host -d -v /media/series:/media -v /var/lib/iptvscheduler:/data ipvcr-web:latest
 
 # remove the image from the remote server
 rm ipvcr-web.img

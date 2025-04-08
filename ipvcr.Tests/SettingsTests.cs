@@ -1,4 +1,5 @@
 using ipvcr.Scheduling;
+using ipvcr.Scheduling.Shared;
 using Moq;
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
@@ -22,7 +23,7 @@ public class SettingsManagerTests
 
         // Assert
         Assert.NotNull(settings);
-        Assert.Equal("/media", settings.OutputPath);
+        Assert.Equal("/media", settings.MediaPath);
     }
 
     [Fact]
@@ -30,7 +31,7 @@ public class SettingsManagerTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
-        var validJson = JsonSerializer.Serialize(new SchedulerSettings { OutputPath = "/tmp/output" });
+        var validJson = JsonSerializer.Serialize(new SchedulerSettings { MediaPath = "/tmp/output" });
         mockFileSystem.AddFile(SettingsFilePath, new MockFileData(validJson));
         var settingsManager = CreateSettingsManager(mockFileSystem);
 
@@ -39,7 +40,7 @@ public class SettingsManagerTests
 
         // Assert
         Assert.NotNull(settings);
-        Assert.Equal("/tmp/output", settings.OutputPath);
+        Assert.Equal("/tmp/output", settings.MediaPath);
     }
 
     [Fact]
@@ -74,11 +75,11 @@ public class SettingsManagerTests
         mockFileSystem.AddFile(SettingsFilePath, new MockFileData(JsonSerializer.Serialize(new SchedulerSettings())));
         // Act
         var oldsettings = settingsManager.Settings;
-        settingsManager.Settings = new SchedulerSettings { OutputPath = "/new/path" };
+        settingsManager.Settings = new SchedulerSettings { MediaPath = "/new/path" };
 
         // Assert
         Assert.True(settingsChanged);
-        Assert.Equal("/new/path", settingsManager.Settings.OutputPath);
+        Assert.Equal("/new/path", settingsManager.Settings.MediaPath);
         Assert.NotEqual(oldsettings, newsettings);
     }
 
@@ -175,18 +176,18 @@ public class SettingsManagerTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
-        var settings = new SchedulerSettings { OutputPath = "/new/path" };
+        var settings = new SchedulerSettings { MediaPath = "/new/path" };
         mockFileSystem.AddFile(SettingsFilePath, new MockFileData(JsonSerializer.Serialize(settings)));
         var settingsManager = CreateSettingsManager(mockFileSystem);
         settingsManager.SettingsChanged += (sender, args) => { };
-        settings.OutputPath = "/other/path";
+        settings.MediaPath = "/other/path";
         // Act
         settingsManager.Settings = settings;
 
         // Assert
         var savedJson = mockFileSystem.File.ReadAllText(SettingsFilePath);
         var savedSettings = JsonSerializer.Deserialize<SchedulerSettings>(savedJson);
-        Assert.Equal(settings.OutputPath, savedSettings?.OutputPath);
+        Assert.Equal(settings.MediaPath, savedSettings?.MediaPath);
     }
 
     [Fact]
@@ -198,7 +199,7 @@ public class SettingsManagerTests
             .Returns(true);
         mockFileSystem
            .Setup(fs => fs.File.ReadAllText(It.IsAny<string>()))
-           .Returns(JsonSerializer.Serialize(new SchedulerSettings() { OutputPath = "/tmp/output" }));
+           .Returns(JsonSerializer.Serialize(new SchedulerSettings() { MediaPath = "/tmp/output" }));
 
         // Set up the mock to throw an UnauthorizedAccessException for a specific method
         mockFileSystem
@@ -219,7 +220,7 @@ public class SettingsManagerTests
             .Returns(true);
         mockFileSystem
            .Setup(fs => fs.File.ReadAllText(It.IsAny<string>()))
-           .Returns(JsonSerializer.Serialize(new SchedulerSettings() { OutputPath = "/tmp/output" }));
+           .Returns(JsonSerializer.Serialize(new SchedulerSettings() { MediaPath = "/tmp/output" }));
 
         // Set up the mock to throw an UnauthorizedAccessException for a specific method
         mockFileSystem
@@ -236,17 +237,17 @@ public class SettingsManagerTests
     {
         // Arrange
         var mockFileSystem = new MockFileSystem();
-        var settings = new SchedulerSettings { OutputPath = "/new/path" };
+        var settings = new SchedulerSettings { MediaPath = "/new/path" };
         mockFileSystem.AddFile(SettingsFilePath, new MockFileData(JsonSerializer.Serialize(settings)));
         var settingsManager = CreateSettingsManager(mockFileSystem);
         settingsManager.SettingsChanged += (sender, args) => { };
-        settings.OutputPath = "/other/path";
+        settings.MediaPath = "/other/path";
         mockFileSystem.RemoveFile(SettingsFilePath);
         settingsManager.Settings = settings;
 
         // Assert
         var savedJson = mockFileSystem.File.ReadAllText(SettingsFilePath);
         var savedSettings = JsonSerializer.Deserialize<SchedulerSettings>(savedJson);
-        Assert.Equal(settings.OutputPath, savedSettings?.OutputPath);
+        Assert.Equal(settings.MediaPath, savedSettings?.MediaPath);
     }
 }
