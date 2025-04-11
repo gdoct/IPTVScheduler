@@ -35,8 +35,7 @@ else
                 <thead>
                     <tr>
                         <th></th>
-                        <th>Start</th>
-                        <th>End</th>
+                        <th>Time</th>
                         <th>Channel</th>
                         <th>Name</th>
                         <th></th>
@@ -48,13 +47,22 @@ else
                     {
                         var chan = FindChannel(item.ChannelUri);
                         <tr>
-                            <td><img src="@chan.Logo" /></td>
-                            <td>@item.StartTime</td>
-                            <td>@item.EndTime</td>
-                            <td title="@item.ChannelUri">@item.ChannelName</td>
+                            <td><img src="@chan.Logo" height="200" /></td>
+                            <td>Start: @item.StartTime<br />
+                                End: @item.EndTime</td>
+                            <td title="@item.ChannelUri">@item.ChannelName<br><label class="info-label">@item.ChannelUri</label>
+                            </td>
                             <td title="@item.Filename">@item.Name</td>
-                            <td><button title="Edit" onclick="handleEdit('@item.Id')">Edit</button></td>
-                            <td><button title="Delete" onclick="handleDelete('@item.Id')">Delete</button></td>
+                            <td>
+                                <button title="Edit" onclick="handleEdit('@item.Id')">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            </td>
+                            <td>
+                                <button title="Delete" onclick="handleDelete('@item.Id')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -83,9 +91,9 @@ else
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form method="post" asp-action="Create">
-                        <input type="hidden" name="__RequestVerificationToken" value="@Html.AntiForgeryToken()" />
-                        @* <input type="hidden" name="Id" id="Id" /> *@
+                    <form id="addRecordingForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Id" id="Id" />
                         <img id="ChannelLogo" src="@Model.Channels.First().Logo" alt="Channel Logo"
                             class="channel-logo" />
                         <div class="form-group">
@@ -123,7 +131,8 @@ else
                             <label id="FilenameLabel" class="label-readonly info-label"></label>
                         </div>
                         <input type="hidden" name="TimezoneOffset" id="TimezoneOffset" />
-                        <button type="submit" class="btn btn-primary" disabled>Add Recording</button>
+                        <button type="button" class="btn btn-primary" id="submitFormButton" disabled>Add
+                            Recording</button>
                     </form>
                 </div>
             </div>
@@ -132,6 +141,9 @@ else
 </div>
 @section Scripts {
     <script>
+        document.getElementById('submitFormButton').addEventListener('click', function () {
+            handleSubmitButton();
+        });
         const timezoneOffset = new Date().getTimezoneOffset();
 
         function showModal() {
@@ -140,18 +152,15 @@ else
         }
 
         const getChannelLogos = function () {
-            const channelLogos = {
-                    @{
-                        foreach (var channel in Model.Channels)
-                        {
-                        <text>'@channel.Uri': '@channel.Logo',</text>
-                }
-                
-    }
-                };
-        return channelLogos;
+            const channelLogos = {@{
+            foreach (var channel in Model.Channels)
+            {
+                <text>'@channel.Uri': '@channel.Logo',</text>
+            }
+        }
             };
-
+            return channelLogos;
+        };
 
         $(document).ready(function () {
             const modal = new bootstrap.Modal('#addRecordingModal');
@@ -163,6 +172,11 @@ else
             $('#addRecordingModal').on('hidden.bs.modal', function () {
                 $(this).find('form').trigger('reset');
                 document.getElementById('Id').value = '';
+                document.getElementById('Name').value '';
+                document.getElementById('Description').value = '';
+                document.getElementById('ChannelUri').value = '';
+                document.getElementById('StartTime').value = '';
+                document.getElementById('EndTime').value = '';
                 document.getElementById('TimezoneOffset').value = timezoneOffset;
                 document.getElementById('FilenameLabel').innerText = '';
                 document.getElementById('DescriptionLabel').innerText = '';
@@ -171,6 +185,33 @@ else
 
         });
 
+        function handleSubmitButtion() {
+            const jsonData = {};
+            let isEdit = true;
+            formData.forEach((value, key) => {
+                if (key === "Id" && value === "") {
+                    isEdit = false;
+                    continue;
+                }
+                jsonData[key] = value;
+            });
+            const posturi = isEdit ? "/Home/Edit" : "/home/Create";
+            fetch(posturi, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() // Include if needed
+                },
+                body: JSON.stringify(jsonData)
+                    .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        console.error('Failed to submit form');
+                    }
+                })
+            .catch(error => console.error('Error:', error));
+        }
 
         function handleDelete(id) {
             // make a request to delete the recording
@@ -196,7 +237,7 @@ else
         function handleEdit(id) {
             // make a request to edit the recording
             console.log('Editing recording with id: ' + id);
-            fetch(`/Home/Edit/${id}`, {
+            fetch(`/Home/${id}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -206,7 +247,7 @@ else
                 .then(response => response.json())
                 .then(data => {
                     if (data) {
-                       // document.getElementById('Id').value = data.id;
+                        document.getElementById('Id').value = data.id;
                         document.getElementById('Name').value = data.name;
                         document.getElementById('Description').value = data.description;
                         document.getElementById('ChannelUri').value = data.channelUri;
@@ -256,9 +297,13 @@ else
             const startTime = document.getElementById('StartTime').value;
             const rootpath = '@Model.RecordingPath';
             const channelName = parseChannelName(document.getElementById('ChannelUri').selectedOptions[0].text);
+            const channelUri = document.getElementById('ChannelUri').value;
+            const channelLogo = getChannelLogos()[channelUri];
+            document.getElementById('ChannelLogo').src = channelLogo;
+            document.getElementById('ChannelLogo').alt = channelName + ' logo';
 
             // if name is empty, startTime is empty, or channelName is empty, disable the submit button
-            if (name === '' || startTime === '' || channelName === '') {
+            if (name === '' || startTime === '' || channelName === '' || channelUri === '') {
                 document.querySelector('button[type="submit"]').disabled = true;
                 // clear the non-form fields
                 document.getElementById('FilenameLabel').innerText = '';
@@ -284,11 +329,6 @@ else
                 document.getElementById('Description').value = description;
                 document.getElementById('DescriptionLabel').innerText = description;
             }
-
-            var channelUri = document.getElementById('ChannelUri').value;
-            var channelLogo = getChannelLogos()[channelUri];
-            document.getElementById('ChannelLogo').src = channelLogo;
-            document.getElementById('ChannelLogo').alt = channelName + ' logo';
 
             // Check if all form controls have a value
             // and enable/disable the submit button accordingly

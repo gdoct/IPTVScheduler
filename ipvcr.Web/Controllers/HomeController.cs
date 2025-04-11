@@ -18,6 +18,7 @@ public class HomeController(ILogger<HomeController> logger, IRecordingScheduling
         return RedirectToAction(nameof(Recordings));
     }
 
+    [Route("Home/Recordings")]
     public IActionResult Recordings()
     {
         var model = new HomeRecordingsViewModel
@@ -46,6 +47,7 @@ public class HomeController(ILogger<HomeController> logger, IRecordingScheduling
     }
 
     [HttpPost]
+    [Route("Home/Recordings/Create")]
     public IActionResult Create(ScheduledRecording recording)
     {
         if (ModelState.IsValid)
@@ -68,8 +70,8 @@ public class HomeController(ILogger<HomeController> logger, IRecordingScheduling
     }
 
     [HttpGet]
-    [Route("Home/Edit/{recordingId}")]
-    public IActionResult Edit(Guid recordingId)
+    [Route("Home/Recordings/{recordingId}")]
+    public IActionResult Read(Guid recordingId)
     {
         var recording = _context.Recordings.FirstOrDefault(r => r.Id == recordingId);
         if (recording == null)
@@ -79,8 +81,23 @@ public class HomeController(ILogger<HomeController> logger, IRecordingScheduling
         return Json(recording);
     }
 
+    [HttpPost]
+    [Route("Home/Recordings/Update")]
+    public IActionResult Update(ScheduledRecording recording)
+    {
+        var existing = _context.Recordings.FirstOrDefault(r => r.Id == recording.Id);
+        if (existing == null)
+        {
+            return NotFound();
+        }
+        _context.RemoveRecording(existing.Id);
+        _context.AddRecording(recording);
+
+        return Ok();
+    }
+
     [HttpDelete]
-    [Route("Home/Delete/{recordingId}")]
+    [Route("Home/Recordings/Delete/{recordingId}")]
     public IActionResult Delete(Guid recordingId)
     {
         var recording = _context.Recordings.FirstOrDefault(r => r.Id == recordingId);
