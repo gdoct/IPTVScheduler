@@ -12,6 +12,10 @@ A simple web VCR in a docker image
 - Automatic recording management
 - Easy configuration through the web interface
 
+## Screenshot
+
+![image](https://github.com/user-attachments/assets/2714a442-5914-46c2-9d52-3755116f6478)
+
 ## Requirements
 The docker image requires write access to two mounted folders.
  - media : where the recordings are stored
