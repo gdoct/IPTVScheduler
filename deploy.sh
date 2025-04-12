@@ -1,4 +1,5 @@
 #!/bin/bash
+REMOTE_SERVER="user@example.com"
 . deploy.sh.user
 # Exit on any error
 set -e
