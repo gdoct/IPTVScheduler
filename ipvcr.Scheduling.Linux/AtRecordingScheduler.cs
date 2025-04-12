@@ -73,8 +73,13 @@ public class AtRecordingScheduler : ITaskScheduler
         Environment.SetEnvironmentVariable("TASK_JOB_ID", task.Id.ToString());
         Environment.SetEnvironmentVariable("TASK_DEFINITION", task.InnerScheduledTask);
         // create a script at /var/lib/iptvscheduler/tasks named {id}.sh
-        var scriptfilename = Path.Combine(_settingsManager.Settings.DataPath, $"tasks/{task.Id}.sh");
+        var scriptpath = Path.Combine(_settingsManager.Settings.DataPath, "tasks");
+        var scriptfilename = Path.Combine(scriptpath, $"{task.Id}.sh");
         _logger.LogDebug("Creating script file {scriptfilename}", scriptfilename);
+        if (!_filesystem.Directory.Exists(scriptpath))
+        {
+            _filesystem.Directory.CreateDirectory(scriptpath);
+        }
         var scriptContent = @$"#!/bin/bash\n
     export TASK_JOB_ID={task.Id}\n
     export TASK_DEFINITION='{task.InnerScheduledTask}'\n

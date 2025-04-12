@@ -59,6 +59,7 @@ public class AtRecordingSchedulerTests
         fs.Setup(fs => fs.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
         fs.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
         fs.Setup(fs => fs.File.Delete(It.IsAny<string>()));
+        fs.Setup(fs => fs.Directory.Exists(It.IsAny<string>())).Returns(true);
 #if WINDOWS
         Assert.Throws<DirectoryNotFoundException>(() => scheduler.ScheduleTask(task));
 #else
@@ -135,6 +136,7 @@ public class AtRecordingSchedulerTests
         processrunner.Setup(m => m.RunProcess("chmod", It.IsAny<string>())).Returns(("", "error", 2));
         fs.Setup(fs => fs.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
         fs.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
+        fs.Setup(fs => fs.Directory.Exists(It.IsAny<string>())).Returns(true);
 #if WINDOWS
         Assert.Throws<DirectoryNotFoundException>(() => scheduler.ScheduleTask(task));
 #else
@@ -150,7 +152,7 @@ public class AtRecordingSchedulerTests
         var processrunner = new Mock<IProcessRunner>(MockBehavior.Strict);
         var fs = new Mock<IFileSystem>(MockBehavior.Strict);
         processrunner.Setup(mock => mock.RunProcess("which", It.IsAny<string>())).Returns(("path", string.Empty, 0));
-        var settings = new SchedulerSettings { MediaPath = "/new/path" };
+        var settings = new SchedulerSettings { DataPath = "/data" };
         var settingsmgr = new Mock<ISettingsManager>(MockBehavior.Strict);
         settingsmgr.SetupGet(m => m.Settings).Returns(settings);
         var scheduler = AtRecordingScheduler.CreateWithProcessRunner(processrunner.Object, fs.Object, settingsmgr.Object);
@@ -167,11 +169,17 @@ public class AtRecordingSchedulerTests
 
         processrunner.Setup(m => m.RunProcess("atq", string.Empty)).Returns(("", "", 0));
         Assert.Empty(scheduler.FetchScheduledTasks());
+        
         // Act
         processrunner.Setup(m => m.RunProcess("chmod", It.IsAny<string>())).Returns(("", "", 0));
         processrunner.Setup(m => m.RunProcess("/bin/bash", It.IsAny<string>())).Returns(("", "error", 2));
         fs.Setup(fs => fs.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
         fs.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
+        fs.Setup(fs => fs.Directory.Exists("/data/tasks")).Returns(false);
+
+        // Mock the directory info returned by CreateDirectory
+        var mockDirInfo = new Mock<IDirectoryInfo>();
+        fs.Setup(fs => fs.Directory.CreateDirectory("/data/tasks")).Returns(mockDirInfo.Object);
 
 #if WINDOWS
         Assert.Throws<DirectoryNotFoundException>(() => scheduler.ScheduleTask(task));
