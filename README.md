@@ -1,5 +1,5 @@
 [![Docker Image CI](https://github.com/gdoct/ipvcr/actions/workflows/docker-image.yml/badge.svg)](https://github.com/gdoct/ipvcr/actions/workflows/docker-image.yml)
-# IPTV Scheduler
+# IPVCR: A Docker-based IPTV Recorder / Scheduler
 ![image](https://github.com/user-attachments/assets/7c23f585-7103-4eda-aa75-ba20adfd9c4b)
 
 A simple web VCR in a docker image
