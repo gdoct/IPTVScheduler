@@ -1,13 +1,22 @@
-![image](https://github.com/user-attachments/assets/7c23f585-7103-4eda-aa75-ba20adfd9c4b)
+[![Docker Image CI](https://github.com/gdoct/ipvcr/actions/workflows/docker-image.yml/badge.svg)](https://github.com/gdoct/ipvcr/actions/workflows/docker-image.yml)
 # IPTV Scheduler
+![image](https://github.com/user-attachments/assets/7c23f585-7103-4eda-aa75-ba20adfd9c4b)
 
 A simple web VCR in a docker image
 
-## Requirements
+## Features
 
-The docker requires write access to two mounted folders.
+- Web-based interface for managing IPTV recordings
+- Schedule recordings by time or program
+- Support for IPTV streams
+- Automatic recording management
+- Easy configuration through the web interface
+
+## Requirements
+The docker image requires write access to two mounted folders.
  - media : where the recordings are stored
  - data : where it stores its data and settings
+The application requires a m3u file with iptv channels. This file can be copied to the mounted data volume, or uploaded through the web interface. Be aware that large m3u files (>10 mb) have not been tested and currently slow down the application because all channels are rendered into the page's 'channels' dropdown.
 
 ## Docker Deployment
 
@@ -21,17 +30,7 @@ To run the docker using bridged networking and redirect the default ports, use t
 docker run --name ipvcr -p 5000:5000 -d -v /path/to/media:/media -v /path/to/data:/data ghcr.io/gdoct/ipvcr:latest
 ```
 
-## Features
-
-- Web-based interface for managing IPTV recordings
-- Schedule recordings by time or program
-- Support for IPTV streams
-- Automatic recording management
-- Easy configuration through the web interface
-
-## Configuration
-
-A sample configuration file is provided in `setting.json.example`. Copy this to your data directory as `setting.json` and modify as needed.
+At the first run, make sure to configure the m3u file.
 
 ## Development
 
