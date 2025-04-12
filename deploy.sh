@@ -1,6 +1,5 @@
 #!/bin/bash
-REMOTE_SERVER="guido@nuc-guido"
-
+. deploy.sh.user
 # Exit on any error
 set -e
 
