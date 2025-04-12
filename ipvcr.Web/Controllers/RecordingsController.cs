@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using ipvcr.Scheduling;
 using ipvcr.Scheduling.Shared;
 using ipvcr.Web.Models;
@@ -78,6 +79,83 @@ public IActionResult Read(Guid id)
         return NotFound();
     }
     return Json(recording);
+}
+
+// [HttpGet]
+// [Route(ActionRoutes.GetTaskFile)]
+// public IActionResult TaskFile(Guid id)
+// {
+//     var recording = _context.Recordings.FirstOrDefault(r => r.Id == id);
+//     if (recording == null)
+//     {
+//         return NotFound();
+//     }
+//     var taskfile = _context.GetTaskDefinition(recording.Id);
+
+//     return Json(recording);
+// }
+
+// [HttpPost]
+// [Route(ActionRoutes.UpdateTaskFile)]
+// public IActionResult UpdateTaskFile(Guid id, string taskfile)
+// {
+//     if (string.IsNullOrEmpty(taskfile))
+//     {
+//         ModelState.AddModelError("TaskFile", "Task file content cannot be empty.");
+//         return BadRequest(ModelState);
+//     }
+//     var recording = _context.Recordings.FirstOrDefault(r => r.Id == id);
+//     if (recording == null)
+//     {
+//         return NotFound();
+//     }
+//     _context.UpdateTaskDefinition(recording.Id, taskfile);
+//     return Json(recording);
+// }
+
+[HttpGet]
+[Route(ActionRoutes.EditTask + "/" + ActionRoutes.Id)]
+public IActionResult EditTask(Guid id)
+{
+    var recording = _context.Recordings.FirstOrDefault(r => r.Id == id);
+    if (recording == null)
+    {
+        return NotFound();
+    }
+    var taskDefinition = _context.GetTaskDefinition(recording.Id);
+    
+    return Json(new { 
+        id = recording.Id, 
+        name = recording.Name,
+        content = taskDefinition 
+    });
+}
+
+[HttpPost]
+[Route(ActionRoutes.EditTask)]
+public IActionResult EditTask([FromBody] TaskEditModel model)
+{
+    if (string.IsNullOrEmpty(model.TaskFile))
+    {
+        ModelState.AddModelError("TaskFile", "Task file content cannot be empty.");
+        return BadRequest(ModelState);
+    }
+    
+    var recording = _context.Recordings.FirstOrDefault(r => r.Id == model.Id);
+    if (recording == null)
+    {
+        return NotFound();
+    }
+    
+    _context.UpdateTaskDefinition(recording.Id, model.TaskFile);
+    return Ok();
+}
+
+public class TaskEditModel
+{
+    public Guid Id { get; set; }
+    [JsonPropertyName("taskfile")]
+    public string TaskFile { get; set; } = "";
 }
 
 [HttpPost]

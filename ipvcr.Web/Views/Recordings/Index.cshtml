@@ -118,6 +118,9 @@
                                                         <button title="Edit" class="btn btn-sm btn-outline-primary" onclick="handleEdit('@item.Id')">
                                                             <i class="bi bi-pencil"></i>
                                                         </button>
+                                                        <button title="Edit Code" class="btn btn-sm btn-outline-secondary" onclick="handleEditTask('@item.Id')">
+                                                            <i class="bi bi-braces"></i>
+                                                        </button>
                                                         <button title="Delete" class="btn btn-sm btn-outline-danger" onclick="handleDelete('@item.Id')">
                                                             <i class="bi bi-trash"></i>
                                                         </button>
@@ -251,6 +254,47 @@
     </div>
 </div>
 
+<!-- Task Edit Modal -->
+<div class="modal fade" id="taskEditModal" tabindex="-1" aria-labelledby="taskEditModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg" style="resize: both; overflow: hidden; min-width: 500px; min-height: 300px;">
+        <div class="modal-content shadow-sm h-100">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title mb-0" id="taskEditModalLabel">
+                    <i class="bi bi-braces me-2"></i>Edit Task Definition: <span id="TaskRecordingName"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body d-flex flex-column" style="overflow: auto;">
+                <form id="taskEditForm" class="d-flex flex-column flex-grow-1">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="TaskRecordingId" name="TaskRecordingId" />
+                    <div class="form-group mb-3 flex-grow-1 d-flex flex-column">
+                        <div class="mb-2 d-flex justify-content-between align-items-center">
+                            <label for="TaskContent" class="form-label fw-bold">Task Definition</label>
+                            <small class="text-muted">Edit the task definition below</small>
+                        </div>
+                        <textarea class="form-control font-monospace flex-grow-1" id="TaskContent" name="TaskContent" 
+                            style="font-size: 0.9rem; resize: none;"></textarea>
+                    </div>
+                    <div class="card-footer bg-light mt-2 p-3 d-flex justify-content-between">
+                        <div>
+                            <small class="text-muted">Drag the bottom-right corner to resize</small>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-1"></i>Cancel
+                            </button>
+                            <button type="button" class="btn btn-primary" id="submitTaskButton">
+                                <i class="bi bi-save me-1"></i>Save
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         const timezoneOffset = new Date().getTimezoneOffset();
@@ -340,6 +384,62 @@
                     location.reload();
                 } else {
                     console.error('Failed to delete recording');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    const handleEditTask = function(id) {
+        // Fetch task definition content from server
+        console.log('Fetch task definition for recording with id: ' + id);
+        fetch(`/Recordings/EditTask/${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data) {
+                    // Populate the task edit modal
+                    document.getElementById('TaskRecordingId').value = id;
+                    document.getElementById('TaskContent').value = data.content;
+                    document.getElementById('TaskRecordingName').innerText = data.name || 'Task Definition';
+                    
+                    // Show the modal
+                    const taskModal = new bootstrap.Modal('#taskEditModal');
+                    taskModal.show();
+                } else {
+                    console.error('Failed to load task definition');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    const handleTaskSubmit = function() {
+        const id = document.getElementById('TaskRecordingId').value;
+        const taskContent = document.getElementById('TaskContent').value;
+        
+        fetch('/Recordings/EditTask', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            },
+            body: JSON.stringify({
+                id: id,
+                taskfile: taskContent
+            })
+        })
+            .then(response => {
+                if (response.ok) {
+                    // Close the modal and reload the page
+                    const taskModal = bootstrap.Modal.getInstance(document.getElementById('taskEditModal'));
+                    taskModal.hide();
+                    location.reload();
+                } else {
+                    console.error('Failed to save task definition');
                 }
             })
             .catch(error => console.error('Error:', error));
@@ -488,5 +588,10 @@
         handleSubmitButton();
     });
     document.getElementById('EndTime').addEventListener('input', updateFormState);
+    
+    // Add event listener for task edit submit button
+    document.getElementById('submitTaskButton').addEventListener('click', function() {
+        handleTaskSubmit();
+    });
 </script>
 }

@@ -18,6 +18,9 @@ public class ActionRoutes
     public const string Update = "Update";
     public const string UploadM3u = "UploadM3u";
     public const string Id = "{id}";
+    public const string UpdateTaskFile = "TaskFile";
+    public const string GetTaskFile = "TaskFile/{id}";
+    public const string EditTask = "EditTask";
 }
 
 public static class RouteHelper
