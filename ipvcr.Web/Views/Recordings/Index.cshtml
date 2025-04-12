@@ -273,8 +273,12 @@
                             <label for="TaskContent" class="form-label fw-bold">Task Definition</label>
                             <small class="text-muted">Edit the task definition below</small>
                         </div>
-                        <textarea class="form-control font-monospace flex-grow-1" id="TaskContent" name="TaskContent" 
-                            style="font-size: 0.9rem; resize: none;"></textarea>
+                        <!-- Hidden textarea for form submission -->
+                        <textarea class="d-none" id="TaskContent" name="TaskContent"></textarea>
+                        <!-- Visible code editor with syntax highlighting -->
+                        <div id="editor-container" class="flex-grow-1 border rounded" style="position: relative;">
+                            <pre class="m-0 h-100"><code id="codeEditor" class="language-bash h-100" style="font-size: 0.9rem; min-height: 200px; overflow: auto; padding: 10px;"></code></pre>
+                        </div>
                     </div>
                     <div class="card-footer bg-light mt-2 p-3 d-flex justify-content-between">
                         <div>
@@ -407,6 +411,16 @@
                     document.getElementById('TaskContent').value = data.content;
                     document.getElementById('TaskRecordingName').innerText = data.name || 'Task Definition';
                     
+                    // Set the content in the code editor with syntax highlighting
+                    const codeEditor = document.getElementById('codeEditor');
+                    codeEditor.textContent = data.content;
+                    
+                    // Apply syntax highlighting
+                    hljs.highlightElement(codeEditor);
+                    
+                    // Setup the code editor for editing
+                    setupCodeEditor();
+                    
                     // Show the modal
                     const taskModal = new bootstrap.Modal('#taskEditModal');
                     taskModal.show();
@@ -419,7 +433,10 @@
 
     const handleTaskSubmit = function() {
         const id = document.getElementById('TaskRecordingId').value;
-        const taskContent = document.getElementById('TaskContent').value;
+        // Get content from the editable code element
+        const taskContent = document.getElementById('codeEditor').textContent;
+        // Also update the hidden textarea
+        document.getElementById('TaskContent').value = taskContent;
         
         fetch('/Recordings/EditTask', {
             method: 'POST',
@@ -443,6 +460,102 @@
                 }
             })
             .catch(error => console.error('Error:', error));
+    }
+    
+    // Function to make the code element editable while preserving syntax highlighting
+    const setupCodeEditor = function() {
+        const codeElement = document.getElementById('codeEditor');
+        
+        // Make the code element editable
+        codeElement.contentEditable = 'true';
+        codeElement.spellcheck = false;
+        
+        // Focus and select all content when clicked
+        codeElement.addEventListener('focus', function() {
+            if (!this.hasSelection) {
+                const range = document.createRange();
+                range.selectNodeContents(this);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                this.hasSelection = true;
+            }
+        });
+        
+        // Reset selection state when blurred
+        codeElement.addEventListener('blur', function() {
+            this.hasSelection = false;
+        });
+        
+        // Reapply highlighting on input
+        codeElement.addEventListener('input', function() {
+            // We need to save the caret position
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+            const preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(this);
+            preCaretRange.setEnd(range.endContainer, range.endOffset);
+            const caretOffset = preCaretRange.toString().length;
+
+            // Remove highlight classes temporarily
+            const content = this.textContent;
+            
+            // Reapply syntax highlighting after a short delay to improve performance
+            clearTimeout(this.highlightTimeout);
+            this.highlightTimeout = setTimeout(() => {
+                hljs.highlightElement(this);
+                
+                // Restore caret position
+                restoreCaretPosition(this, caretOffset);
+            }, 150);
+        });
+        
+        // Handle tab key for indentation
+        codeElement.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                document.execCommand('insertText', false, '    '); // Insert 4 spaces
+            }
+        });
+    }
+    
+    // Helper function to restore caret position after highlighting
+    const restoreCaretPosition = function(element, offset) {
+        let charIndex = 0;
+        let foundNode = null;
+        let foundPosition = null;
+        
+        const traverseNodes = function(node) {
+            if (foundNode) return;
+            
+            if (node.nodeType === Node.TEXT_NODE) {
+                const nodeLength = node.textContent.length;
+                if (charIndex + nodeLength >= offset) {
+                    foundNode = node;
+                    foundPosition = offset - charIndex;
+                    return;
+                }
+                charIndex += nodeLength;
+            } else {
+                for (let i = 0; i < node.childNodes.length; i++) {
+                    traverseNodes(node.childNodes[i]);
+                    if (foundNode) break;
+                }
+            }
+        };
+        
+        traverseNodes(element);
+        
+        if (foundNode) {
+            const range = document.createRange();
+            const selection = window.getSelection();
+            
+            range.setStart(foundNode, foundPosition);
+            range.collapse(true);
+            
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
     }
 
     const readFormInputToRecording = function () {
