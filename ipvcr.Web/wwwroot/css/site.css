@@ -32,3 +32,22 @@ body {
   border: 1px solid #ced4da;
   border-radius: 0.25rem;
 }
+
+.label-recordingfilename {
+  /* a slightly yellow look like a post-it note */
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  margin-bottom: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 0.25rem;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.hidden-label {
+  display: none;
+}

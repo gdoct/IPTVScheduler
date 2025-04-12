@@ -22,7 +22,7 @@ public class AtRecordingScheduler : ITaskScheduler
         _settingsManager = settingsManager;
         var loggerFactory = LoggerFactory.Create(builder =>
         {
-            builder.AddConsole(); 
+            builder.AddConsole();
         });
         _logger = loggerFactory.CreateLogger<AtRecordingScheduler>();
     }
@@ -63,7 +63,7 @@ public class AtRecordingScheduler : ITaskScheduler
 
     public void ScheduleTask(ScheduledTask task)
     {
-        _logger.LogInformation("Scheduling task {taskid}", task.Id.ToString()[..5]);
+        _logger.LogDebug("Scheduling task {taskid}", task.Id.ToString()[..5]);
         _logger.LogDebug("Scheduling task {taskid}..: {taskname} at {starttime} with command: {command}", task.Id.ToString()[..5], task.Name, task.StartTime, task.Command);
         if (task.StartTime < DateTime.Now)
         {
@@ -75,11 +75,11 @@ public class AtRecordingScheduler : ITaskScheduler
         // create a script at /var/lib/iptvscheduler/tasks named {id}.sh
         var scriptfilename = Path.Combine(_settingsManager.Settings.DataPath, $"tasks/{task.Id}.sh");
         _logger.LogDebug("Creating script file {scriptfilename}", scriptfilename);
-        var scriptContent = @$"#!/bin/bash
-        export TASK_JOB_ID={task.Id}
-        export TASK_DEFINITION='{task.InnerScheduledTask}'
-        {task.Command} && rm -f {scriptfilename}
-        # remove the script after succesful execution";
+        var scriptContent = @$"#!/bin/bash\n
+    export TASK_JOB_ID={task.Id}\n
+    export TASK_DEFINITION='{task.InnerScheduledTask}'\n
+    {task.Command} && rm -f {scriptfilename}\n
+    # remove the script after succesful execution\n";
         _filesystem.File.WriteAllText(scriptfilename, scriptContent);
         // make the script executable
         var (_, error, exitCode) = _processRunner.RunProcess("chmod", $"+x {scriptfilename}");
@@ -101,7 +101,7 @@ public class AtRecordingScheduler : ITaskScheduler
     public IEnumerable<ScheduledTask> FetchScheduledTasks()
     {
         var (output, error, exitCode) = _processRunner.RunProcess("atq", string.Empty);
-        _logger.LogInformation("Fetching scheduled tasks..");
+        _logger.LogDebug("Fetching scheduled tasks..");
         if (exitCode != 0)
         {
             throw new InvalidOperationException($"Failed to get scheduled tasks: {error}");
@@ -156,7 +156,7 @@ public class AtRecordingScheduler : ITaskScheduler
     {
         var recording = FetchScheduledTasks().FirstOrDefault(r => r.Id == taskId) ?? throw new InvalidOperationException($"Task with id {taskId} is not scheduled.");
         var jobId = recording.TaskId.ToString();
-        _logger.LogInformation("Cancelling task \"{taskname}\" with job id: {jobId}", recording.Name, jobId);
+        _logger.LogDebug("Cancelling task \"{taskname}\" with job id: {jobId}", recording.Name, jobId);
         var (output, error, exitCode) = _processRunner.RunProcess("atrm", jobId);
         var scriptfilename = Path.Combine(_settingsManager.Settings.DataPath, $"tasks/{taskId}.sh");
 

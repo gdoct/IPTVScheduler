@@ -2,14 +2,14 @@
 
 public class ScheduledRecording
 {
-    public string Description { get; init; } = string.Empty;
-    public Guid Id { get; init; } = Guid.NewGuid();
-    public string Name { get; init; } = string.Empty;
-    public string Filename { get; init; } = string.Empty;
-    public string ChannelUri { get; init; } = string.Empty;
-    public string ChannelName { get; init; } = string.Empty;
-    public DateTime StartTime { get; init; } = DateTime.Now.AddDays(1);
-    public DateTime EndTime { get; init; } = DateTime.Now.AddDays(1).AddHours(1);
+    public string Description { get; set; } = string.Empty;
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Name { get; set; } = string.Empty;
+    public string Filename { get; set; } = string.Empty;
+    public string ChannelUri { get; set; } = string.Empty;
+    public string ChannelName { get; set; } = string.Empty;
+    public DateTime StartTime { get; set; } = DateTime.Now.AddDays(1);
+    public DateTime EndTime { get; set; } = DateTime.Now.AddDays(1).AddHours(1);
     public ScheduledRecording()
     {
 
@@ -60,5 +60,16 @@ public class ScheduledRecording
         {
             throw new Exception($"Failed to deserialize ScheduledRecording from ScheduledTask: {ex.Message}", ex);
         }
+    }
+
+    public string Obfuscate()
+    {
+        // input uri is "http://secret.host.tv/username/password/219885"
+        // transform to "http://secr.../219885"
+        var parts = ChannelUri.Split('/');
+        var first4letterersofhostname = parts[2].Substring(0, 4);
+        var lastpart = parts[parts.Length - 1];
+        var obfuscatedUri = parts[0] + "://" + first4letterersofhostname + "..." + "/" + lastpart;
+        return obfuscatedUri;
     }
 }
