@@ -1,4 +1,6 @@
 #!/bin/bash
+REMOTE_SERVER="guido@nuc-guido"
+
 # Exit on any error
 set -e
 
@@ -6,15 +8,21 @@ set -e
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 
 # Echo an error message before exiting
-trap 'echo "The command \"${last_command}\" failed with exit code $?."' EXIT
+trap 'exit_code=$?; if [ $exit_code -ne 0 ]; then echo "The command \"${last_command}\" failed with exit code $exit_code."; fi' EXIT
 dotnet clean
-dotnet build /p:Configuration=Release
+dotnet build /p:Configuration=Release 
 dotnet publish -c Release -o bin
 # Build the Docker image
-docker build -t ipvcr-web:latest -f Dockerfile .
+docker compose build
+docker save -o bin/ipvcr-web.img ipvcr-web
+# Check if the remote server is reachable
 
-scp bin/ipvcr-web.img guido@nuc-guido:~ 
-ssh guido@nuc-guido << 'ENDSSH' || true
+if ! ssh -o BatchMode=yes -o ConnectTimeout=5 "$REMOTE_SERVER" exit; then
+    echo "Remote server is not reachable. Exiting."
+    exit 1
+fi
+scp bin/ipvcr-web.img $REMOTE_SERVER:~ 
+ssh $REMOTE_SERVER << 'ENDSSH'
 
 # remove the running container
 docker rm -f ipvcr-web
