@@ -1,1 +1,3 @@
-Simple frontend for the "at" command so I can schedule http stream recordings through a web interface
+![image](https://github.com/user-attachments/assets/7c23f585-7103-4eda-aa75-ba20adfd9c4b)
+A simple web VCR in a docker image
+
