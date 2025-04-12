@@ -139,14 +139,15 @@ public class AtRecordingScheduler : ITaskScheduler
                 throw new InvalidOperationException($"Failed to get job details for job {jobId}: {jobError}");
             }
 
-            var serializedTask = jobOutput.Split('\n').LastOrDefault(l => l.StartsWith("TASK_DEFINITION="));
+            var serializedTask = jobOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            var theline = serializedTask.FirstOrDefault(l => l.Contains("TASK_DEFINITION"));
             // ; export TASK_DEFINITION
-            if (string.IsNullOrEmpty(serializedTask))
+            if (string.IsNullOrEmpty(theline))
             {
                 _logger.LogWarning("No serialized task found for job {jobId}", jobId);
                 continue;
             }
-            var taskjson = serializedTask[16..].Trim('\'', '\r', '\n').Replace("\\", string.Empty).Replace("; export TASK_DEFINITION", string.Empty);
+            var taskjson = theline[16..].Trim('\'', '\r', '\n').Replace("\\", string.Empty).Replace("; export TASK_DEFINITION", string.Empty);
             _logger.LogDebug("Serialized task JSON: {taskjson}", taskjson);
 
             var recordingtask = System.Text.Json.JsonSerializer.Deserialize<ScheduledRecording>(taskjson);
