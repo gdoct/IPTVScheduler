@@ -10,7 +10,7 @@ public class ScheduledTaskTests
         var id = Guid.NewGuid();
         var name = "name";
         var filename = "filename";
-        var channelUri = "http://channelUri";
+        var channelUri = "http://channel.uri.org/abc/def/1234";
         var startTime = DateTime.Now;
         var endTime = DateTime.Now.AddSeconds(10);
         var command = $"ffmpeg -i {channelUri} -t {Convert.ToInt32((endTime - startTime).TotalSeconds)} -c copy -f mp4 {filename}";
@@ -24,6 +24,8 @@ public class ScheduledTaskTests
         Assert.Equal(channelUri, result.ChannelUri);
         Assert.Equal(startTime.ToString("yyyy-MM-dd HH:mm:ss"), result.StartTime.ToString("yyyy-MM-dd HH:mm:ss"));
         Assert.Equal(endTime.ToString("yyyy-MM-dd HH:mm:ss"), result.EndTime.ToString("yyyy-MM-dd HH:mm:ss"));
+        Assert.NotEqual(schedrec.ChannelUri, schedrec.Obfuscate());
+        Assert.Equal("http://chan.../1234", schedrec.Obfuscate());
     }
 
     [Fact]

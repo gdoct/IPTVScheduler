@@ -69,7 +69,7 @@ public class ScheduledRecording
         var parts = ChannelUri.Split('/');
         var first4letterersofhostname = parts[2].Substring(0, 4);
         var lastpart = parts[parts.Length - 1];
-        var obfuscatedUri = parts[0] + "://" + first4letterersofhostname + "..." + "/" + lastpart;
+        var obfuscatedUri = parts[0] + "//" + first4letterersofhostname + "..." + "/" + lastpart;
         return obfuscatedUri;
     }
 }

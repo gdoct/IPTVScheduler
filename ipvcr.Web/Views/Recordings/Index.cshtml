@@ -24,133 +24,233 @@
     }
     </script>
 }
-@if (Model.Channels.Count == 0)
-{
-    <label class="label-readonly warning-label">
-        No channels available! Use the settings page to upload a m3u file.
-    </label>
-}
-else
-{
-    <label class="label-readonly info-label">
-        <span><Var>Recording path</Var>: @Model.RecordingPath</span><br />
-        <span><Var>Channel count</Var>: @Model.Channels.Count</span>
-    </label>
-}
-<div class="text-center">
-    @{
-        var data = Model.Recordings;
-        if (data != null)
-        {
-            <h2>Upcoming recordings</h2>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>Time</th>
-                        <th>Channel</th>
-                        <th>Name</th>
-                        <th></th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in data)
-                    {
-                        var chan = FindChannel(item.ChannelUri);
-                        <tr>
-                            <td><img src="@chan.Logo" /></td>
-                            <td>Start: @item.StartTime<br />
-                                End: @item.EndTime</td>
-                            <td title="@item.ChannelName">@item.ChannelName<br><label class="info-label">@item.Obfuscate()</label>
-                            </td>
-                            <td title="@item.Filename">@item.Name</td>
-                            <td>
-                                <button title="Edit" onclick="handleEdit('@item.Id')">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                            </td>
-                            <td>
-                                <button title="Delete" onclick="handleDelete('@item.Id')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
+<div class="hero-section mb-4">
+    <img src="/img/ipvcr.png" class="img-fluid w-60" alt="IPVCR Hero Image" style="object-fit: cover; max-height: 400px; width: 60%;">
+</div>
 
-    }
-    @if (Model.Channels.Any())
+<div class="container-fluid px-4">
+    @if (Model.Channels.Count == 0)
     {
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#recordingFormModal">
-            Add New Recording
-        </button>
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            No channels available! Use the settings page to upload a m3u file.
+        </div>
     }
     else
     {
-        <label class="label-readonly warning-label">
-            No channels available! Use the settings page to upload a m3u file.
-        </label>
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-info-circle text-primary me-2 fs-4"></i>
+                            <div>
+                                <div><strong>Recording path:</strong> @Model.RecordingPath</div>
+                                <div><strong>Channel count:</strong> @Model.Channels.Count</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     }
+
+    <div class="row">
+        <div class="col-12">
+            @{
+                var data = Model.Recordings;
+                if (data != null && data.Any())
+                {
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-calendar-event me-2"></i>Upcoming Recordings
+                            </h5>
+                            @if (Model.Channels.Any())
+                            {
+                                <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#recordingFormModal">
+                                    <i class="bi bi-plus-lg"></i> Add New Recording
+                                </button>
+                            }
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 60px"></th>
+                                            <th>Time</th>
+                                            <th>Channel</th>
+                                            <th>Program</th>
+                                            <th class="text-center" style="width: 100px">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in data)
+                                        {
+                                            var chan = FindChannel(item.ChannelUri);
+                                            <tr>
+                                                <td class="align-middle text-center">
+                                                    <img src="@chan.Logo" class="img-fluid rounded" style="max-height: 40px; max-width: 40px;" alt="Channel logo" />
+                                                </td>
+                                                <td class="align-middle">
+                                                    <div class="d-flex flex-column">
+                                                        <span class="fw-bold">
+                                                            <i class="bi bi-play-fill text-success"></i> @item.StartTime
+                                                        </span>
+                                                        <span class="text-muted small">
+                                                            <i class="bi bi-stop-fill text-danger"></i> @item.EndTime
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td class="align-middle" title="@item.ChannelName">
+                                                    <div class="fw-bold">@item.ChannelName</div>
+                                                    <span class="badge bg-light text-dark small">@item.Obfuscate()</span>
+                                                </td>
+                                                <td class="align-middle" title="@item.Filename">
+                                                    <div>@item.Name</div>
+                                                    <small class="text-muted text-truncate d-inline-block" style="max-width: 250px;">
+                                                        <i class="bi bi-file-earmark-play"></i> @System.IO.Path.GetFileName(item.Filename)
+                                                    </small>
+                                                </td>
+                                                <td class="align-middle text-center">
+                                                    <div class="btn-group" role="group">
+                                                        <button title="Edit" class="btn btn-sm btn-outline-primary" onclick="handleEdit('@item.Id')">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </button>
+                                                        <button title="Delete" class="btn btn-sm btn-outline-danger" onclick="handleDelete('@item.Id')">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="card shadow-sm">
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                            <h4 class="mt-3">No recordings scheduled</h4>
+                            <p class="text-muted">Start by adding a new recording.</p>
+                            @if (Model.Channels.Any())
+                            {
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#recordingFormModal">
+                                    <i class="bi bi-plus-lg"></i> Add New Recording
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    @if (Model.Channels.Any() == false)
+    {
+        <div class="alert alert-warning mt-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            No channels available! Use the settings page to upload a m3u file.
+        </div>
+    }
+
     <div class="modal fade" id="recordingFormModal" tabindex="-1" aria-labelledby="recordingFormModalLabel"
         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="createRecordingFormModalLabel">Add New Recording</h5>
-                    <h5 class="modal-title" id="editRecordingFormModalLabel">Edit Recording</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content shadow-sm">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title mb-0" id="createRecordingFormModalLabel">
+                        <i class="bi bi-plus-circle me-2"></i>Add New Recording
+                    </h5>
+                    <h5 class="modal-title mb-0 hidden-item" id="editRecordingFormModalLabel">
+                        <i class="bi bi-pencil-square me-2"></i>Edit Recording
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="addRecordingForm">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="Id" id="Id" />
-                        <img id="ChannelLogo" src="@Model.Channels.First().Logo" alt="Channel Logo"
-                            class="channel-logo" />
-                        <div class="form-group">
-                            <label for="Name">Recording name</label>
-                            <input type="text" class="form-control" id="Name" name="Name" required />
+                        <div class="row mb-3">
+                            <div class="col-md-3 text-center">
+                                <img id="ChannelLogo" src="@(Model.Channels.FirstOrDefault()?.Logo ?? "")" alt="Channel Logo"
+                                    class="img-fluid rounded mb-2" style="max-height: 100px; max-width: 100px; object-fit: contain;" />
+                            </div>
+                            <div class="col-md-9">
+                                <div class="form-group mb-3">
+                                    <label for="Name" class="form-label fw-bold">Recording name</label>
+                                    <input type="text" class="form-control" id="Name" name="Name" required />
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="Description" class="form-label fw-bold">Description</label>
+                                    <input type="hidden" class="form-control" id="Description" name="Description" />
+                                    <label id="DescriptionLabel" class="form-control bg-light text-muted hidden-label"></label>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="Description">Description</label>
-                            <input type="hidden" class="form-control" id="Description" name="Description" />
-                            <label id="DescriptionLabel" class="label-readonly info-label hidden-label"></label>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="ChannelUri" class="form-label fw-bold">Channel</label>
+                                    <select class="form-select" id="ChannelUri" name="ChannelUri" required>
+                                        @foreach (var channel in Model.Channels)
+                                        {
+                                            <option value="@channel.Uri">@channel.Name</option>
+                                        }
+                                    </select>
+                                    <input type="hidden" name="ChannelName" id="ChannelName" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="StartTime" class="form-label fw-bold">Start Time</label>
+                                            <input type="datetime-local" class="form-control" id="StartTime" name="StartTime"
+                                                value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm")" required />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="EndTime" class="form-label fw-bold">End Time</label>
+                                            <input type="datetime-local" class="form-control" id="EndTime" name="EndTime"
+                                                value="@DateTime.Now.AddHours(25).ToString("yyyy-MM-ddTHH:mm")" required />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="ChannelUri">Channel</label>
-                            <select class="form-control" id="ChannelUri" name="ChannelUri" required>
-                                @foreach (var channel in Model.Channels)
-                                {
-                                    <option value="@channel.Uri">@channel.Name</option>
-                                }
-                            </select>
-                            <input type="hidden" name="ChannelName" id="ChannelName" />
-                        </div>
-                        <div class="form-group">
-                            <label for="StartTime">Start Time</label>
-                            <input type="datetime-local" class="form-control" id="StartTime" name="StartTime"
-                                value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm")" required />
-                        </div>
-                        <div class="form-group">
-                            <label for="EndTime">End Time</label>
-                            <input type="datetime-local" class="form-control" id="EndTime" name="EndTime"
-                                value="@DateTime.Now.AddHours(25).ToString("yyyy-MM-ddTHH:mm")" required />
-                        </div>
-                        <div class="form-group label-recordingfilename hidden-label" id="label-recordingfilename">
-                            <label for="Filename">Recording will be saved to</label>
+
+                        <div class="form-group mb-3 label-recordingfilename hidden-label" id="label-recordingfilename">
+                            <label for="Filename" class="form-label fw-bold">Recording will be saved to</label>
                             <input type="hidden" class="form-control" id="Filename" name="Filename" required />
-                            <label id="FilenameLabel" class="label-readonly info-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-file-earmark-play"></i></span>
+                                <label id="FilenameLabel" class="form-control bg-light text-muted text-truncate"></label>
+                            </div>
                         </div>
                         <input type="hidden" name="TimezoneOffset" id="TimezoneOffset" />
-                        <button type="button" class="btn btn-primary" id="submitFormButton" disabled>Save</button>
+                        <div class="card-footer bg-light mt-4 p-3 d-flex justify-content-end">
+                            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-1"></i>Cancel
+                            </button>
+                            <button type="button" class="btn btn-primary" id="submitFormButton" disabled>
+                                <i class="bi bi-save me-1"></i>Save
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 @section Scripts {
     <script>
         const timezoneOffset = new Date().getTimezoneOffset();
@@ -190,14 +290,17 @@ else
             document.getElementById('FilenameLabel').innerText = '';
             document.getElementById('DescriptionLabel').innerText = '';
             updateChannelLogo();
-            document.getElementById('createRecordingFormModalLabel').hidden = false;
-            document.getElementById('editRecordingFormModalLabel').hidden = true;
+            document.getElementById('createRecordingFormModalLabel').classList.remove("hidden-item");
+            document.getElementById('editRecordingFormModalLabel').classList.add("hidden-item");
         });
         document.getElementById('TimezoneOffset').value = timezoneOffset;
-
+        
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     });
-
-    
 
     const handleSubmitButton = function () {
         const recording = readFormInputToRecording();
@@ -282,6 +385,8 @@ else
                     document.getElementById('DescriptionLabel').innerText = data.description;
                     document.getElementById('createRecordingFormModalLabel').hidden = true;
                     document.getElementById('editRecordingFormModalLabel').hidden = false;
+                    document.getElementById('createRecordingFormModalLabel').classList.add('hidden-item');
+                    document.getElementById('editRecordingFormModalLabel').classList.remove('hidden-item');
                     updateChannelLogo();
                     showModal();
                 } else {
@@ -343,8 +448,8 @@ else
             document.getElementById('submitFormButton').disabled = true;
             document.getElementById('FilenameLabel').innerText = '';
             document.getElementById('DescriptionLabel').innerText = '';
-            document.getElementById('DescriptionLabel').classList.add('hidden-label');
-            document.getElementById('label-recordingfilename').classList.add('hidden-label');
+            document.getElementById('DescriptionLabel').classList.add('hidden-item');
+            document.getElementById('label-recordingfilename').classList.add('hidden-item');
             return;
         }
 
@@ -364,8 +469,8 @@ else
             const description = name + ' - recorded from ' + channelName + ' at ' + niceStartTime;
             document.getElementById('Description').value = description;
             document.getElementById('DescriptionLabel').innerText = description;
-            document.getElementById('DescriptionLabel').classList.remove('hidden-label');
-            document.getElementById('label-recordingfilename').classList.remove('hidden-label');
+            document.getElementById('DescriptionLabel').classList.remove('hidden-item');
+            document.getElementById('label-recordingfilename').classList.remove('hidden-item');
         }
 
         // Check if all form controls have a value

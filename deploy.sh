@@ -8,7 +8,11 @@ trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 # Echo an error message before exiting
 trap 'echo "The command \"${last_command}\" failed with exit code $?."' EXIT
 dotnet clean
-dotnet build /p:BuildDockerImage=true /p:Configuration=Debug 
+dotnet build /p:Configuration=Release
+dotnet publish -c Release -o bin
+# Build the Docker image
+docker build -t ipvcr-web:latest -f Dockerfile .
+
 scp bin/ipvcr-web.img guido@nuc-guido:~ 
 ssh guido@nuc-guido << 'ENDSSH' || true
 
