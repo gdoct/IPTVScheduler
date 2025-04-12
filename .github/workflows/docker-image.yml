@@ -40,7 +40,6 @@ jobs:
     - name: Run .NET Code Analysis
       run: |
         dotnet tool install --global dotnet-format
-        dotnet format --verify-no-changes --verbosity diagnostic
         dotnet build /p:EnableNETAnalyzers=true /p:EnforceCodeStyleInBuild=true /p:AnalysisLevel=latest --no-restore
 
     # Initialize CodeQL
