@@ -169,7 +169,7 @@ public class AtRecordingSchedulerTests
 
         processrunner.Setup(m => m.RunProcess("atq", string.Empty)).Returns(("", "", 0));
         Assert.Empty(scheduler.FetchScheduledTasks());
-        
+
         // Act
         processrunner.Setup(m => m.RunProcess("chmod", It.IsAny<string>())).Returns(("", "", 0));
         processrunner.Setup(m => m.RunProcess("/bin/bash", It.IsAny<string>())).Returns(("", "error", 2));

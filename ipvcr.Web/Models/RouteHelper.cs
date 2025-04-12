@@ -1,12 +1,14 @@
 namespace ipvcr.Web.Models;
 
-public static class ControllerRoutes {
+public static class ControllerRoutes
+{
     public const string HomeController = "Home";
     public const string RecordingsController = "Recordings";
     public const string SettingsController = "Recordings";
 }
 
-public class ActionRoutes {
+public class ActionRoutes
+{
     public const string Index = "Index";
     public const string Settings = "Settings";
     public const string UpdateSettings = "UpdateSettings";
