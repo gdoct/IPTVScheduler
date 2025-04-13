@@ -23,7 +23,7 @@ const RecordingForm: React.FC<RecordingFormProps> = ({
 
   // Initialize form state
   const [formData, setFormData] = useState<Partial<ScheduledRecording>>({
-    id: '',
+    id: '00000000-0000-0000-0000-000000000000',
     name: '',
     description: '',
     channelUri: channels.length > 0 ? channels[0].uri : '',
@@ -48,7 +48,7 @@ const RecordingForm: React.FC<RecordingFormProps> = ({
     } else {
       // Reset form to default values
       setFormData({
-        id: '',
+        id: '00000000-0000-0000-0000-000000000000',
         name: '',
         description: '',
         channelUri: channels.length > 0 ? channels[0].uri : '',

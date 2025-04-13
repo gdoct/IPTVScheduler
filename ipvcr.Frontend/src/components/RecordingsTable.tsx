@@ -8,6 +8,8 @@ interface RecordingsTableProps {
   onEdit: (id: string) => void;
   onEditTask: (id: string) => void;
   onDelete: (id: string) => void;
+  onAdd: () => void;  // Add this new prop
+  showAddButton: boolean;  // Add this new prop
 }
 
 // Helper function to find channel info
@@ -20,7 +22,9 @@ const RecordingsTable: React.FC<RecordingsTableProps> = ({
   channels, 
   onEdit, 
   onEditTask, 
-  onDelete 
+  onDelete,
+  onAdd,
+  showAddButton
 }) => {
   if (!recordings || recordings.length === 0) {
     return (
@@ -29,6 +33,11 @@ const RecordingsTable: React.FC<RecordingsTableProps> = ({
           <i className="bi bi-calendar-x text-muted" style={{ fontSize: '3rem' }}></i>
           <h4 className="mt-3">No recordings scheduled</h4>
           <p className="text-muted">Start by adding a new recording.</p>
+          {showAddButton && (
+            <Button variant="primary" onClick={onAdd}>
+              <i className="bi bi-plus-lg me-1"></i> Add New Recording
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -40,6 +49,11 @@ const RecordingsTable: React.FC<RecordingsTableProps> = ({
         <h5 className="mb-0">
           <i className="bi bi-calendar-event me-2"></i>Upcoming Recordings
         </h5>
+        {showAddButton && (
+          <Button variant="light" onClick={onAdd}>
+            <i className="bi bi-plus-lg me-1"></i> Add New Recording
+          </Button>
+        )}
       </div>
       <div className="card-body p-0">
         <div className="table-responsive">

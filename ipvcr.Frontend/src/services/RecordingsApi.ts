@@ -1,4 +1,4 @@
-import { HomeRecordingsViewModel, ScheduledRecording, TaskDefinitionModel } from '../types/recordings';
+import { HomeRecordingsViewModel, ScheduledRecording, SchedulerSettings, TaskDefinitionModel } from '../types/recordings';
 
 // Base API URL - adjust if needed
 const API_BASE_URL = 'http://localhost:5000/api/recordings';
@@ -111,10 +111,22 @@ export const recordingsApi = {
   },
 
   // Get settings
-  getSettings: async () => {
+  getSettings: async (): Promise<SchedulerSettings> => {
     const response = await fetch(`${API_BASE_URL}/settings`, getCommonOptions());
     if (!response.ok) throw new Error('Failed to fetch settings');
     return await response.json();
+  },
+
+  // Update settings
+  updateSettings: async (settings: SchedulerSettings): Promise<void> => {
+    const options = withCsrf({
+      ...getCommonOptions(),
+      method: 'PUT',
+      body: JSON.stringify(settings)
+    });
+    
+    const response = await fetch(`${API_BASE_URL}/settings`, options);
+    if (!response.ok) throw new Error('Failed to update settings');
   },
 
   // Upload M3U playlist
@@ -149,7 +161,7 @@ export const recordingsApi = {
     return {
       recordings,
       channels,
-      recordingPath: settings.recordingPath || '/recordings'
+      recordingPath: settings.mediaPath || '/recordings'
     };
   }
 };

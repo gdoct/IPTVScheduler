@@ -54,7 +54,10 @@ public class RecordingApiController : ControllerBase
         {
             return BadRequest(ModelState);
         }
-
+        if (recording.Id == Guid.Empty)
+        {
+            recording.Id = Guid.NewGuid();
+        }
         if (_context.Recordings.Any(r => r.Id == recording.Id))
         {
             _logger.LogDebug("Recording {recordingId} already exists, removing it first.", recording.Id);
@@ -69,6 +72,10 @@ public class RecordingApiController : ControllerBase
     [HttpPut("{id}")]
     public IActionResult Update(Guid id, [FromBody] ScheduledRecording recording)
     {
+        if (id == Guid.Empty)
+        {
+            return BadRequest("ID cannot be empty");
+        }
         if (id != recording.Id)
         {
             return BadRequest("ID mismatch");
@@ -186,7 +193,39 @@ public class RecordingApiController : ControllerBase
             return BadRequest("Please upload a valid M3U file.");
         }
 
-        var uploadPath = "/data";
+        var uploadPath = _settingsManager.Settings.DataPath;
+        if (string.IsNullOrEmpty(uploadPath))
+        {
+            return BadRequest("Upload path is not configured.");
+        }
+        if (!Directory.Exists(uploadPath))
+        {
+            return BadRequest("Upload path does not exist.");
+        }
+        if (!Directory.Exists(uploadPath) || !new DirectoryInfo(uploadPath).Attributes.HasFlag(FileAttributes.Directory))
+        {
+            return BadRequest("Upload path is not a directory.");
+        }
+        if (!uploadPath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+        {
+            uploadPath += Path.DirectorySeparatorChar;
+        }
+        // test if we can write to the upload folder
+        var testFilePath = Path.Combine(uploadPath, $"{Guid.NewGuid()}.bin");
+        try
+        {
+            using (var stream = new FileStream(testFilePath, FileMode.Create))
+            {
+                await stream.WriteAsync(new byte[0], 0, 0);
+            }
+            System.IO.File.Delete(testFilePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Upload path is not writable.");
+            return BadRequest("Upload path is not writable.");
+        }
+
         var filePath = Path.Combine(uploadPath, file.FileName);
 
         try

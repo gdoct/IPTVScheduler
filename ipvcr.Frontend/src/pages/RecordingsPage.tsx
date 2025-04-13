@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, Card, Container } from 'react-bootstrap';
+import { Alert, Card, Container } from 'react-bootstrap';
 import RecordingForm from '../components/RecordingForm';
 import RecordingsTable from '../components/RecordingsTable';
 import TaskEditor from '../components/TaskEditor';
@@ -89,7 +89,7 @@ const RecordingsPage: React.FC = () => {
   // Handler for saving a recording (create or update)
   const handleSaveRecording = async (recording: ScheduledRecording) => {
     try {
-      if (recording.id) {
+      if (recording.id && recording.id !== '00000000-0000-0000-0000-000000000000') {
         await recordingsApi.updateRecording(recording.id, recording);
       } else {
         await recordingsApi.createRecording(recording);
@@ -122,7 +122,7 @@ const RecordingsPage: React.FC = () => {
           src="/ipvcr.png" 
           className="img-fluid w-60" 
           alt="IPVCR Hero Image" 
-          style={{ objectFit: 'cover', maxHeight: '400px', width: '60%' }}
+          style={{ objectFit: 'cover', maxHeight: '250px', width: '40%' }}
         />
       </div>
 
@@ -161,14 +161,8 @@ const RecordingsPage: React.FC = () => {
       {/* Recordings section */}
       <div className="row">
         <div className="col-12">
-          <div className="d-flex justify-content-end mb-3">
-            {data.channels.length > 0 && (
-              <Button variant="primary" onClick={handleAddRecording}>
-                <i className="bi bi-plus-lg me-1"></i> Add New Recording
-              </Button>
-            )}
-          </div>
-
+          {/* Removing the button from here */}
+          
           {loading ? (
             <div className="text-center py-5">
               <div className="spinner-border text-primary" role="status">
@@ -183,6 +177,8 @@ const RecordingsPage: React.FC = () => {
               onEdit={handleEditRecording}
               onEditTask={handleEditTask}
               onDelete={handleDeleteRecording}
+              onAdd={handleAddRecording} 
+              showAddButton={data.channels.length > 0}  
             />
           )}
         </div>

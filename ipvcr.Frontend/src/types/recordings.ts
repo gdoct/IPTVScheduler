@@ -1,5 +1,6 @@
 // Recording related types
 
+
 export interface ScheduledRecording {
   id: string;
   name: string;
@@ -33,6 +34,12 @@ export interface HomeRecordingsViewModel {
 export interface TaskEditModel {
   id: string;
   taskfile: string;
+}
+
+export interface SchedulerSettings {
+  mediaPath: string;
+  dataPath: string;
+  m3uPlaylistPath: string;
 }
 
 // Helper function to obfuscate channel URI

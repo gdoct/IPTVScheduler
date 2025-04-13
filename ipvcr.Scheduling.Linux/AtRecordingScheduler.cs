@@ -86,7 +86,7 @@ public class AtRecordingScheduler : ITaskScheduler
             $@"# it will be deleted after execution" + Environment.NewLine + Environment.NewLine +
             $@"# this task is scheduled to be executed at {task.StartTime} or {task.StartTime.UtcDateTime}" + Environment.NewLine +
             $"{task.Command}" + Environment.NewLine + 
-            "rm -f {scriptfilename}" + Environment.NewLine;
+            $"rm -f {scriptfilename}" + Environment.NewLine;
         _filesystem.File.WriteAllText(scriptfilename, scriptContent);
         // make the script executable
         var (_, error, exitCode) = _processRunner.RunProcess("chmod", $"+x {scriptfilename}");
