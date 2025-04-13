@@ -6,6 +6,9 @@ import TaskEditor from '../components/TaskEditor';
 import { recordingsApi } from '../services/RecordingsApi';
 import { HomeRecordingsViewModel, ScheduledRecording, TaskDefinitionModel } from '../types/recordings';
 
+// Refresh interval in milliseconds (30 seconds)
+const REFRESH_INTERVAL = 30000;
+
 const RecordingsPage: React.FC = () => {
   // State management
   const [data, setData] = useState<HomeRecordingsViewModel>({
@@ -22,14 +25,27 @@ const RecordingsPage: React.FC = () => {
   const [selectedRecording, setSelectedRecording] = useState<ScheduledRecording | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskDefinitionModel | null>(null);
 
-  // Load data on component mount
+  // Load data on component mount and set up refresh interval
   useEffect(() => {
+    // Initial data fetch
     fetchData();
+    
+    // Set up interval for periodic refresh
+    const intervalId = setInterval(() => {
+      fetchData();
+    }, REFRESH_INTERVAL);
+    
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   // Fetch all required data
   const fetchData = async () => {
-    setLoading(true);
+    setLoading(prevLoading => {
+      // Only show loading indicator on initial load, not on background refreshes
+      return prevLoading && data.recordings.length === 0;
+    });
+    
     try {
       const viewModel = await recordingsApi.getHomeRecordingsViewModel();
       setData(viewModel);
@@ -64,12 +80,25 @@ const RecordingsPage: React.FC = () => {
   const handleDeleteRecording = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this recording?')) {
       try {
+        // First update the UI by removing the item from local state
+        // This gives immediate feedback to the user
+        setData(prevData => ({
+          ...prevData,
+          recordings: prevData.recordings.filter(recording => recording.id !== id)
+        }));
+        
+        // Then send the delete request to the server
         await recordingsApi.deleteRecording(id);
-        // Refresh data after delete
-        fetchData();
+        
+        // No need to call fetchData() immediately after deletion
+        // as this may cause race conditions with caching
+        // We've already updated the UI and the next scheduled refresh will sync with the server
       } catch (err) {
         console.error('Error deleting recording:', err);
         setError('Failed to delete recording');
+        
+        // If deletion fails, refresh the data to restore the correct state
+        fetchData();
       }
     }
   };
