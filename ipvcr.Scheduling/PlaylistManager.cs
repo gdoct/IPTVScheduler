@@ -7,6 +7,7 @@ using ipvcr.Scheduling.Shared;
 public interface IPlaylistManager
 {
     List<ChannelInfo> GetPlaylistItems();
+    int ChannelCount { get; }
     Task LoadFromFileAsync(string filePath);
 }
 
@@ -84,12 +85,15 @@ public class PlaylistManager : IPlaylistManager
         _m3uPlaylistPath = playlistPath;
         _m3uPlaylistPath = playlistPath;
     }
+
+    public int ChannelCount => _playlistItems.Count;
+
     public List<ChannelInfo> GetPlaylistItems()
     {
         // return a copy of the collection
         lock (_lock)
         {
-            return new(_playlistItems);
+            return _playlistItems;
         }
     }
 }

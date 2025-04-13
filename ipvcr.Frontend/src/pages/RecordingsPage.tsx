@@ -10,7 +10,7 @@ const RecordingsPage: React.FC = () => {
   // State management
   const [data, setData] = useState<HomeRecordingsViewModel>({
     recordings: [],
-    channels: [],
+    channelsCount: 0,
     recordingPath: ''
   });
   const [loading, setLoading] = useState<boolean>(true);
@@ -135,7 +135,7 @@ const RecordingsPage: React.FC = () => {
       )}
 
       {/* No channels warning */}
-      {data.channels.length === 0 ? (
+      {data.channelsCount === 0 ? (
         <Alert variant="warning">
           <i className="bi bi-exclamation-triangle-fill me-2"></i>
           No channels available! Use the settings page to upload a m3u file.
@@ -149,7 +149,7 @@ const RecordingsPage: React.FC = () => {
                   <i className="bi bi-info-circle text-primary me-2 fs-4"></i>
                   <div>
                     <div><strong>Recording path:</strong> {data.recordingPath}</div>
-                    <div><strong>Channel count:</strong> {data.channels.length}</div>
+                    <div><strong>Channel count:</strong> {data.channelsCount}</div>
                   </div>
                 </div>
               </Card.Body>
@@ -161,8 +161,6 @@ const RecordingsPage: React.FC = () => {
       {/* Recordings section */}
       <div className="row">
         <div className="col-12">
-          {/* Removing the button from here */}
-          
           {loading ? (
             <div className="text-center py-5">
               <div className="spinner-border text-primary" role="status">
@@ -173,12 +171,11 @@ const RecordingsPage: React.FC = () => {
           ) : (
             <RecordingsTable
               recordings={data.recordings}
-              channels={data.channels}
               onEdit={handleEditRecording}
               onEditTask={handleEditTask}
               onDelete={handleDeleteRecording}
               onAdd={handleAddRecording} 
-              showAddButton={data.channels.length > 0}  
+              showAddButton={data.channelsCount > 0}  
             />
           )}
         </div>
@@ -190,7 +187,6 @@ const RecordingsPage: React.FC = () => {
         onHide={() => setShowRecordingForm(false)}
         onSave={handleSaveRecording}
         recording={selectedRecording}
-        channels={data.channels}
         recordingPath={data.recordingPath}
       />
 

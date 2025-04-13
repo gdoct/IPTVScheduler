@@ -27,7 +27,7 @@ export interface TaskDefinitionModel {
 
 export interface HomeRecordingsViewModel {
   recordings: ScheduledRecording[];
-  channels: ChannelInfo[];
+  channelsCount: number;  // Only count, not the full list
   recordingPath: string;
 }
 

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Col, Form, InputGroup, Modal, Row } from 'react-bootstrap';
+import React, { useEffect, useRef, useState } from 'react';
+import { Button, Col, Form, InputGroup, ListGroup, Modal, Row } from 'react-bootstrap';
+import { searchChannels } from '../services/api';
 import { ChannelInfo, formatFileDate, formatNiceDate, ScheduledRecording } from '../types/recordings';
 
 interface RecordingFormProps {
@@ -7,7 +8,7 @@ interface RecordingFormProps {
   onHide: () => void;
   onSave: (recording: ScheduledRecording) => void;
   recording?: ScheduledRecording | null;
-  channels: ChannelInfo[];
+  channels?: ChannelInfo[]; // Making channels optional
   recordingPath: string;
 }
 
@@ -26,24 +27,58 @@ const RecordingForm: React.FC<RecordingFormProps> = ({
     id: '00000000-0000-0000-0000-000000000000',
     name: '',
     description: '',
-    channelUri: channels.length > 0 ? channels[0].uri : '',
-    channelName: channels.length > 0 ? parseChannelName(channels[0].name) : '',
+    channelUri: '',
+    channelName: '',
     startTime: getTomorrowDatetime(),
     endTime: getTomorrowDatetimePlusHour(),
     filename: ''
   });
-
-  const [channelLogo, setChannelLogo] = useState<string>(
-    channels.length > 0 ? channels[0].logo : ''
-  );
+  
+  const [channelLogo, setChannelLogo] = useState<string>('');
+  const [channelQuery, setChannelQuery] = useState<string>('');
+  const [searchResults, setSearchResults] = useState<ChannelInfo[]>([]);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Update form when recording changes or modal opens
   useEffect(() => {
     if (recording) {
       setFormData(recording);
-      const selectedChannel = channels.find(c => c.uri === recording.channelUri);
-      if (selectedChannel) {
-        setChannelLogo(selectedChannel.logo);
+      setChannelQuery(recording.channelName);
+      
+      // For editing, try to find the channel logo if available or fetch it
+      if (channels) {
+        const selectedChannel = channels.find(c => c.uri === recording.channelUri);
+        if (selectedChannel) {
+          setChannelLogo(selectedChannel.logo);
+        }
+      } else {
+        // If channels not provided, fetch the single channel data using search
+        const fetchChannelInfo = async () => {
+          if (recording.channelName) {
+            setIsSearching(true);
+            try {
+              // Search with exact channel name
+              const results = await searchChannels(recording.channelName);
+              
+              // Find exact match by URI
+              const matchedChannel = results.find(c => c.uri === recording.channelUri);
+              if (matchedChannel) {
+                setChannelLogo(matchedChannel.logo);
+              } else if (results.length > 0) {
+                // If no exact match, try to use the first result
+                setChannelLogo(results[0].logo);
+              }
+            } catch (error) {
+              console.error('Error fetching channel info:', error);
+            } finally {
+              setIsSearching(false);
+            }
+          }
+        };
+        
+        fetchChannelInfo();
       }
     } else {
       // Reset form to default values
@@ -51,15 +86,14 @@ const RecordingForm: React.FC<RecordingFormProps> = ({
         id: '00000000-0000-0000-0000-000000000000',
         name: '',
         description: '',
-        channelUri: channels.length > 0 ? channels[0].uri : '',
-        channelName: channels.length > 0 ? parseChannelName(channels[0].name) : '',
+        channelUri: '',
+        channelName: '',
         startTime: getTomorrowDatetime(),
         endTime: getTomorrowDatetimePlusHour(),
         filename: ''
       });
-      if (channels.length > 0) {
-        setChannelLogo(channels[0].logo);
-      }
+      setChannelQuery('');
+      setChannelLogo('');
     }
   }, [recording, show, channels]);
 
@@ -87,45 +121,98 @@ const RecordingForm: React.FC<RecordingFormProps> = ({
     return fullChannelName.trim();
   }
 
-  // Handler for input changes - Updated to include HTMLTextAreaElement for Form.Control
+  // Handle channel search with debounce
+  const handleChannelSearch = (query: string) => {
+    setChannelQuery(query);
+    
+    // Always show dropdown if we have a query
+    if (query) {
+      setShowDropdown(true);
+    } else {
+      setShowDropdown(false);
+      setSearchResults([]);
+      return;
+    }
+    
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // Set a new timeout for debouncing
+    searchTimeoutRef.current = setTimeout(async () => {
+      if (query) {
+        setIsSearching(true);
+        try {
+          // Use the full query for search regardless of length
+          console.log(`Searching channels with query: "${query}"`);
+          const results = await searchChannels(query);
+          setSearchResults(results);
+        } catch (error) {
+          console.error('Error searching channels:', error);
+          setSearchResults([]);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    }, 300); // 300ms debounce
+  };
+
+  // Handle channel selection
+  const handleChannelSelect = (channel: ChannelInfo) => {
+    setFormData(prev => ({
+      ...prev,
+      channelUri: channel.uri,
+      channelName: parseChannelName(channel.name)
+    }));
+    setChannelQuery(parseChannelName(channel.name));
+    setChannelLogo(channel.logo);
+    setShowDropdown(false);
+    
+    // Update filename and description when channel changes
+    updateFilenameAndDescription(
+      formData.name || '', 
+      formData.startTime || '', 
+      parseChannelName(channel.name)
+    );
+  };
+
+  // Handler for input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
-    // Special handling for channel selection
-    if (name === 'channelUri') {
-      const selectedChannel = channels.find(c => c.uri === value);
-      if (selectedChannel) {
-        setChannelLogo(selectedChannel.logo);
-        setFormData(prev => ({
-          ...prev,
-          channelUri: value,
-          channelName: parseChannelName(selectedChannel.name)
-        }));
-      }
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
     
     // Update filename and description when necessary fields change
-    if (['name', 'startTime', 'channelUri'].includes(name)) {
-      updateFilenameAndDescription();
+    if (['name', 'startTime'].includes(name)) {
+      updateFilenameAndDescription(
+        name === 'name' ? value : (formData.name || ''),
+        name === 'startTime' ? value : (formData.startTime || ''),
+        formData.channelName || ''
+      );
     }
   };
 
   // Update filename and description based on form data
-  const updateFilenameAndDescription = () => {
-    if (formData.name && formData.startTime && formData.channelName) {
+  const updateFilenameAndDescription = (
+    name: string,
+    startTimeStr: string, 
+    channelName: string
+  ) => {
+    if (name && startTimeStr && channelName) {
       // Generate filename
-      const startDate = new Date(formData.startTime);
+      const startDate = new Date(startTimeStr);
       const startTimeFormatted = formatFileDate(startDate) + 
-        formData.startTime.split('T')[1].replace(':', '').substring(0, 4);
+        startTimeStr.split('T')[1].replace(':', '').substring(0, 4);
       
-      const sanitizedName = formData.name.replace(/ /g, '_').toLowerCase();
+      const sanitizedName = name.replace(/ /g, '_').toLowerCase();
       const filename = `${recordingPath}/${sanitizedName}_${startTimeFormatted}.mp4`;
       
       // Generate description
       const niceStartTime = formatNiceDate(startDate);
-      const description = `${formData.name} - recorded from ${formData.channelName} at ${niceStartTime}`;
+      const description = `${name} - recorded from ${channelName} at ${niceStartTime}`;
       
       setFormData(prev => ({
         ...prev,
@@ -173,12 +260,19 @@ const RecordingForm: React.FC<RecordingFormProps> = ({
           
           <Row className="mb-3">
             <Col md={3} className="text-center">
+              {channelLogo !== '' && (
               <img 
                 src={channelLogo} 
-                alt="Channel Logo"
+                alt=""
                 className="img-fluid rounded mb-2" 
-                style={{ maxHeight: '100px', maxWidth: '100px', objectFit: 'contain' }} 
+                style={{ maxHeight: '100px', maxWidth: '100%', objectFit: 'contain' }} 
               />
+              )}
+              {channelLogo === '' && (
+                <div className="bg-light rounded d-flex align-items-center justify-content-center mb-2" style={{ height: '100px', width: '100px' }}>
+                  <i className="bi bi-tv text-muted" style={{ fontSize: '2.5rem' }}></i>
+                </div>
+              )}
             </Col>
             <Col md={9}>
               <Form.Group className="mb-3">
@@ -191,35 +285,83 @@ const RecordingForm: React.FC<RecordingFormProps> = ({
                   required
                 />
               </Form.Group>
-              
               <Form.Group className="mb-3">
                 <Form.Label className="fw-bold">Description</Form.Label>
                 <Form.Control
-                  type="text"
-                  className="bg-light text-muted"
+                  as="textarea"
+                  rows={2}
+                  name="description"
                   value={formData.description || ''}
-                  disabled
+                  onChange={handleInputChange}
+                  readOnly
+                  className="bg-light text-muted"
                 />
               </Form.Group>
             </Col>
           </Row>
-
-          <Row>
+          
+          <Row className="mb-3">
             <Col md={6}>
-              <Form.Group className="mb-3">
+              <Form.Group className="mb-3 position-relative">
                 <Form.Label className="fw-bold">Channel</Form.Label>
-                <Form.Select
-                  name="channelUri"
-                  value={formData.channelUri || ''}
-                  onChange={handleInputChange}
-                  required
-                >
-                  {channels.map(channel => (
-                    <option key={channel.uri} value={channel.uri}>
-                      {channel.name}
-                    </option>
-                  ))}
-                </Form.Select>
+                <InputGroup>
+                  {channelLogo && (
+                    <InputGroup.Text className="px-2">
+                      <img 
+                        src={channelLogo} 
+                        alt="" 
+                        style={{ height: '24px', width: '24px', objectFit: 'contain' }}
+                      />
+                    </InputGroup.Text>
+                  )}
+                  <Form.Control 
+                    type="text"
+                    placeholder="Search for a channel..."
+                    value={channelQuery}
+                    onChange={(e) => handleChannelSearch(e.target.value)}
+                    onFocus={() => channelQuery && setShowDropdown(true)}
+                    required
+                  />
+                  {isSearching && (
+                    <InputGroup.Text>
+                      <div className="spinner-border spinner-border-sm" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                    </InputGroup.Text>
+                  )}
+                </InputGroup>
+                
+                {showDropdown && (
+                  <ListGroup 
+                    className="position-absolute w-100 mt-1 z-3 shadow channel-dropdown" 
+                    style={{ maxHeight: '200px', overflowY: 'auto' }}
+                  >
+                    {searchResults.length === 0 ? (
+                      <ListGroup.Item className="text-muted">
+                        {isSearching ? 'Searching...' : 'No channels found'}
+                      </ListGroup.Item>
+                    ) : (
+                      searchResults.map((channel) => (
+                        <ListGroup.Item 
+                          key={channel.uri}
+                          action
+                          onClick={() => handleChannelSelect(channel)}
+                          className="d-flex align-items-center"
+                        >
+                          {channel.logo && (
+                            <img 
+                              src={channel.logo} 
+                              alt="Logo" 
+                              className="me-2" 
+                              style={{ height: '24px', width: '24px', objectFit: 'contain' }}
+                            />
+                          )}
+                          <span>{channel.name}</span>
+                        </ListGroup.Item>
+                      ))
+                    )}
+                  </ListGroup>
+                )}
               </Form.Group>
             </Col>
             <Col md={6}>
