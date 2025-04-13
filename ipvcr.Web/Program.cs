@@ -57,15 +57,29 @@ public class Program
         }
 
         app.UseHttpsRedirection();
+        
+        // Serve static files from wwwroot with default documents
+        app.UseDefaultFiles(); // Add this line before UseStaticFiles
         app.UseStaticFiles();
+        
+        // Development-only CORS policy
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseCors(policy =>
+                policy.WithOrigins("http://localhost:3000")
+                      .AllowAnyHeader()
+                      .AllowAnyMethod()
+                      .AllowCredentials());
+        }
 
         app.UseRouting();
-
         app.UseAuthorization();
 
-        app.MapControllerRoute(
-            name: "default",
-            pattern: "{controller=Home}/{action=Index}/{id?}");
+        // API controller routes
+        app.MapControllers();
+            
+        // Handle SPA fallback for all non-API routes
+        app.MapFallbackToFile("index.html");
 
         app.Run();
     }

@@ -1,8 +1,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
-# Install required packages
+# Install required packages and Node.js for frontend build
 RUN apt-get update && \
-    apt-get install -y at ffmpeg && \
+    apt-get install -y at ffmpeg curl && \
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -19,10 +21,25 @@ COPY ["ipvcr.Web/ipvcr.Web.csproj", "ipvcr.Web/"]
 
 RUN dotnet restore "ipvcr.sln"
 
+# Copy frontend package.json and install dependencies
+COPY ["ipvcr.Frontend/package.json", "ipvcr.Frontend/package-lock.json*", "ipvcr.Frontend/"]
+WORKDIR /source/ipvcr.Frontend
+RUN npm install
+
 # Copy all source code
+WORKDIR /source
 COPY . .
 
-# Build the solution
+# Build the frontend
+WORKDIR /source/ipvcr.Frontend
+RUN npm run build
+
+# Create wwwroot directory and copy the React build output
+RUN mkdir -p /source/ipvcr.Web/wwwroot
+RUN cp -r /source/ipvcr.Frontend/build/* /source/ipvcr.Web/wwwroot/
+
+# Build the .NET solution
+WORKDIR /source
 RUN dotnet build "ipvcr.sln" -c Release -o /app/build
 RUN dotnet publish "ipvcr.Web/ipvcr.Web.csproj" -c Release -o /app/publish
 
@@ -30,15 +47,16 @@ RUN dotnet publish "ipvcr.Web/ipvcr.Web.csproj" -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
-# Set timezone
-ENV TZ=Europe/Amsterdam
-RUN apt-get update && \
-    apt-get install -y tzdata && \
-    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
-    echo $TZ > /etc/timezone
+# # OPTIONAL: Set timezone
+# ENV TZ=Europe/Amsterdam
+# RUN apt-get update && \
+#     apt-get install -y tzdata && \
+#     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+#     echo $TZ > /etc/timezone
 
 # Install required packages in final image
-RUN apt-get install -y at ffmpeg && \
+RUN apt-get update && \
+    apt-get install -y at ffmpeg && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
