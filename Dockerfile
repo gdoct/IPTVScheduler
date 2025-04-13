@@ -30,12 +30,12 @@ RUN dotnet publish "ipvcr.Web/ipvcr.Web.csproj" -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
-# Set timezone
-ENV TZ=Europe/Amsterdam
-RUN apt-get update && \
-    apt-get install -y tzdata && \
-    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
-    echo $TZ > /etc/timezone
+# # Set timezone
+# ENV TZ=Europe/Amsterdam
+RUN apt-get update 
+#     apt-get install -y tzdata && \
+#     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+#     echo $TZ > /etc/timezone
 
 # Install required packages in final image
 RUN apt-get install -y at ffmpeg && \

@@ -215,15 +215,15 @@
                                     <div class="col-md-6">
                                         <div class="form-group mb-3">
                                             <label for="StartTime" class="form-label fw-bold">Start Time</label>
-                                            <input type="datetime-local" class="form-control" id="StartTime" name="StartTime"
-                                                value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm")" required />
+                                            <input type="datetime-local" class="form-control" id="StartTime" name="StartTime" required />
+                                            <input type="hidden" id="StartTimeOffset" name="StartTimeOffset" />
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group mb-3">
                                             <label for="EndTime" class="form-label fw-bold">End Time</label>
-                                            <input type="datetime-local" class="form-control" id="EndTime" name="EndTime"
-                                                value="@DateTime.Now.AddHours(25).ToString("yyyy-MM-ddTHH:mm")" required />
+                                            <input type="datetime-local" class="form-control" id="EndTime" name="EndTime" required />
+                                            <input type="hidden" id="EndTimeOffset" name="EndTimeOffset" />
                                         </div>
                                     </div>
                                 </div>
@@ -321,6 +321,19 @@
         // Hide modal when page loads
         modal.hide();
 
+        // Set timezone offset values for datetime fields
+        document.getElementById('TimezoneOffset').value = timezoneOffset;
+        document.getElementById('StartTimeOffset').value = timezoneOffset;
+        document.getElementById('EndTimeOffset').value = timezoneOffset;
+        
+        // Initialize datetime fields with timezone-aware values
+        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const tomorrowPlusHour = new Date(Date.now() + 25 * 60 * 60 * 1000);
+        
+        // Format datetime-local inputs with the correct local time
+        document.getElementById('StartTime').value = tomorrow.toISOString().slice(0, 16);
+        document.getElementById('EndTime').value = tomorrowPlusHour.toISOString().slice(0, 16);
+
         // Clear form when modal is closed
         $('#recordingFormModal').on('hidden.bs.modal', function () {
             $(this).find('form').trigger('reset');
@@ -335,6 +348,8 @@
             // set endtime to starttime + 1 hour
             document.getElementById('EndTime').value = new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString().slice(0, 16);
             document.getElementById('TimezoneOffset').value = timezoneOffset;
+            document.getElementById('StartTimeOffset').value = timezoneOffset;
+            document.getElementById('EndTimeOffset').value = timezoneOffset;
             document.getElementById('FilenameLabel').innerText = '';
             document.getElementById('DescriptionLabel').innerText = '';
             updateChannelLogo();

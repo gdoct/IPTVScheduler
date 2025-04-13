@@ -8,14 +8,14 @@ public class ScheduledRecording
     public string Filename { get; set; } = string.Empty;
     public string ChannelUri { get; set; } = string.Empty;
     public string ChannelName { get; set; } = string.Empty;
-    public DateTime StartTime { get; set; } = DateTime.Now.AddDays(1);
-    public DateTime EndTime { get; set; } = DateTime.Now.AddDays(1).AddHours(1);
+    public DateTimeOffset StartTime { get; set; } = DateTimeOffset.Now.AddDays(1);
+    public DateTimeOffset EndTime { get; set; } = DateTimeOffset.Now.AddDays(1).AddHours(1);
     public ScheduledRecording()
     {
 
     }
 
-    public ScheduledRecording(Guid id, string name, string description, string filename, string channelUri, string channelName, DateTime startTime, DateTime endTime)
+    public ScheduledRecording(Guid id, string name, string description, string filename, string channelUri, string channelName, DateTimeOffset startTime, DateTime endTime)
     {
         Id = id;
         Name = name;
