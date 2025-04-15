@@ -4,7 +4,7 @@
 cd "$(dirname "$0")/ipvcr.Frontend"
 
 # Install dependencies if needed
-# npm install
+npm install
 
 # Build the React app
 npm run build
@@ -18,4 +18,4 @@ rm -rf ../ipvcr.Web/wwwroot/*
 # Copy the built React app to wwwroot (not in react-app subdirectory)
 cp -r build/* ../ipvcr.Web/wwwroot/
 
-echo "React app built and copied to ipvcr.Web/wwwroot successfully!"
+echo "React app built and copied to ipvcr.Web/wwwroot successfully"

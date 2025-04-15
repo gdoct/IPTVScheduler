@@ -6,11 +6,13 @@ A simple web VCR in a docker image
 
 ## Features
 
-- Web-based interface for managing IPTV recordings
-- Schedule recordings by time or program
-- Support for IPTV streams
-- Automatic recording management
+- React-based web interface for managing IPTV recordings
+- Schedule recordings by time and channel.
+- Allows timezone offsets between user and server.
+- Records IPTV streams (http) through ```ffmpeg```
+- Schedules recordings through ```at```
 - Easy configuration through the web interface
+- Support for large channel lists ( > 100 mb)
 
 ## Screenshot
 
@@ -20,7 +22,8 @@ A simple web VCR in a docker image
 The docker image requires write access to two mounted folders.
  - media : where the recordings are stored
  - data : where it stores its data and settings
-The application requires a m3u file with iptv channels. This file can be copied to the mounted data volume, or uploaded through the web interface. Be aware that large m3u files (>10 mb) have not been tested and currently slow down the application because all channels are rendered into the page's 'channels' dropdown.
+
+The application requires a m3u file with iptv channels. This file can be copied to the mounted data volume, or uploaded through the web interface. The application supports very large m3u files.
 
 ## Docker Deployment
 
@@ -38,21 +41,19 @@ At the first run, make sure to configure the m3u file.
 
 ## Development
 
-This is a .NET project. To build the solution:
+This is a .NET project targeting Linux or WSL. To clone and build the solution:
 
 ```
-dotnet build ipvcr.sln
-```
-
-To run the web interface locally:
-
-```
+git clone https://github.com/gdoct/ipvcr.git
+cd ipvcr
+./build-frontend.sh
+dotnet build
 dotnet run --project ipvcr.Web
 ```
 
 ## Docker Compose
 
-You can also use Docker Compose to run the application:
+You can also use Docker Compose to run this application:
 
 ```
 version: '3'
