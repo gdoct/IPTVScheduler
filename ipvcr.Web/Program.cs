@@ -1,5 +1,7 @@
+using ipvcr.Auth;
 using ipvcr.Scheduling;
 using ipvcr.Scheduling.Shared;
+using Microsoft.AspNetCore.Authentication;
 using System.IO.Abstractions;
 
 namespace ipvcr.Web;
@@ -46,6 +48,16 @@ public class Program
         var settingsManager = new SettingsManager(new FileSystem());
         builder.Services.AddSingleton<ISettingsManager>(settingsManager);
         builder.Services.AddSingleton<IPlaylistManager>((_) => new PlaylistManager(settingsManager, new FileSystem()));
+        builder.Services.AddSingleton<ITokenManager, TokenManager>();
+
+        // Add authentication with a default scheme
+        builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = "TokenAuth";
+            options.DefaultChallengeScheme = "TokenAuth";
+        })
+        .AddScheme<AuthenticationSchemeOptions, TokenAuthenticationHandler>("TokenAuth", options => { });
+        
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -73,8 +85,9 @@ public class Program
         }
 
         app.UseRouting();
+        app.UseTokenAuthentication(); // Custom middleware for token authentication
+        app.UseAuthentication(); // Ensure this is called after UseRouting and before UseAuthorization
         app.UseAuthorization();
-
         // API controller routes
         app.MapControllers();
             

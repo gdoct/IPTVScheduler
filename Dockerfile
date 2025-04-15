@@ -10,6 +10,7 @@ WORKDIR /source
 
 # Copy the solution file and restore dependencies
 COPY ["ipvcr.sln", "."]
+COPY ["ipvcr.Auth/ipvcr.Auth.csproj", "ipvcr.Auth/"]
 COPY ["ipvcr.Scheduling/ipvcr.Scheduling.csproj", "ipvcr.Scheduling/"]
 COPY ["ipvcr.Scheduling.Linux/ipvcr.Scheduling.Linux.csproj", "ipvcr.Scheduling.Linux/"]
 COPY ["ipvcr.Scheduling.Linux.Tests/ipvcr.Scheduling.Linux.Tests.csproj", "ipvcr.Scheduling.Linux.Tests/"]

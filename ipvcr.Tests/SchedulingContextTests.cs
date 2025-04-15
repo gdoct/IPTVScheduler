@@ -8,7 +8,7 @@ public class SchedulingContextTests
 {
     [Fact]
     // test that the enumeration only offers recordings, even if more are present in the task manager's list
-    public void Recordings_OnlyReturnsRecordings()
+    public void SchedulingContext_GetRecordings_OnlyReturnsRecordings()
     {
         // Arrange
         var taskScheduler = new Mock<ITaskScheduler>();
@@ -29,7 +29,7 @@ public class SchedulingContextTests
     }
 
     [Fact]
-    public void AddRecording_SchedulesTask()
+    public void SchedulingContext_AddRecording_SchedulesTask()
     {
         // Arrange
         var taskScheduler = new Mock<ITaskScheduler>();
@@ -44,7 +44,7 @@ public class SchedulingContextTests
     }
 
     [Fact]
-    public void RemoveRecording_UnschedulesTask()
+    public void SchedulingContext_RemoveRecording_UnschedulesTask()
     {
         // Arrange
         var taskScheduler = new Mock<ITaskScheduler>();
@@ -57,5 +57,40 @@ public class SchedulingContextTests
 
         // Assert
         taskScheduler.Verify(s => s.CancelTask(recording.Id));
+    }
+
+    
+    [Fact]
+    public void SchedulingContext_GetTaskDefinition_ReturnsCorrectDefinition()
+    {
+        // Arrange
+        var taskScheduler = new Mock<ITaskScheduler>();
+        var context = new RecordingSchedulingContext(taskScheduler.Object);
+        var recordingId = Guid.NewGuid();
+        var expectedDefinition = "ffmpeg -i http://example.com/stream -t 3600 -c copy -f mp4 output.mp4";
+
+        taskScheduler.Setup(s => s.GetTaskDefinition(recordingId)).Returns(expectedDefinition);
+
+        // Act
+        var result = context.GetTaskDefinition(recordingId);
+
+        // Assert
+        Assert.Equal(expectedDefinition, result);
+    }
+
+    [Fact]
+    public void SchedulingContext_UpdateTaskDefinition_UpdatesDefinition()
+    {
+        // Arrange
+        var taskScheduler = new Mock<ITaskScheduler>();
+        var context = new RecordingSchedulingContext(taskScheduler.Object);
+        var recordingId = Guid.NewGuid();
+        var newDefinition = "ffmpeg -i http://example.com/stream -t 7200 -c copy -f mp4 output.mp4";
+
+        // Act
+        context.UpdateTaskDefinition(recordingId, newDefinition);
+
+        // Assert
+        taskScheduler.Verify(s => s.UpdateTaskDefinition(recordingId, newDefinition));
     }
 }

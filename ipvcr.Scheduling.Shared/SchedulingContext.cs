@@ -10,11 +10,9 @@ public interface IRecordingSchedulingContext
     void RemoveRecording(Guid recordingId);
 }
 
-public class RecordingSchedulingContext : IRecordingSchedulingContext
+public class RecordingSchedulingContext(ITaskScheduler taskScheduler) : IRecordingSchedulingContext
 {
-    public RecordingSchedulingContext(ITaskScheduler taskScheduler) => Scheduler = taskScheduler ?? throw new ArgumentNullException(nameof(taskScheduler));
-
-    private ITaskScheduler Scheduler { get; init; }
+    private ITaskScheduler Scheduler { get; init; } = taskScheduler; 
 
     public IEnumerable<ScheduledRecording> Recordings => Scheduler
                             .FetchScheduledTasks()

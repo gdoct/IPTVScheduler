@@ -9,7 +9,7 @@ namespace ipvcr.Tests;
 
 public class SettingsManagerTests
 {
-    private const string SettingsFilePath = "/etc/iptvscheduler/settings.json";
+    private string SettingsFilePath = "/etc/iptvscheduler/settings.json";
 
     [Fact]
     public void LoadSettings_FileDoesNotExist_ReturnsDefaultSettings()

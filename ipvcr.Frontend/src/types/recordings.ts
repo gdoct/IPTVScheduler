@@ -40,6 +40,7 @@ export interface SchedulerSettings {
   mediaPath: string;
   dataPath: string;
   m3uPlaylistPath: string;
+  adminUsername: string;
 }
 
 // Helper function to obfuscate channel URI
