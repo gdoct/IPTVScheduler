@@ -9,7 +9,7 @@ namespace ipvcr.Tests;
 
 public class SettingsManagerTests
 {
-    private const string SettingsFilePath = "/etc/iptvscheduler/settings.json";
+    private string SettingsFilePath = "/data/settings.json";
 
     [Fact]
     public void LoadSettings_FileDoesNotExist_ReturnsDefaultSettings()
@@ -55,6 +55,9 @@ public class SettingsManagerTests
 
     private static SettingsManager CreateSettingsManager(MockFileSystem mockFileSystem)
     {
+        // Ensure the /data directory exists
+        mockFileSystem.AddDirectory("/data");
+        
         var mockFileSystemWrapper = new Mock<IFileSystem>();
         mockFileSystemWrapper.Setup(fs => fs.File).Returns(mockFileSystem.File);
         mockFileSystemWrapper.Setup(fs => fs.Directory).Returns(mockFileSystem.Directory);
@@ -101,9 +104,15 @@ public class SettingsManagerTests
         var settingsManager = CreateSettingsManager(mockFileSystem);
 
         // Act & Assert
-        var empty = new SchedulerSettings();
+        // Create an expected settings object with default values
+        var expected = new SchedulerSettings
+        {
+            AdminUsername = SchedulerSettings.DEFAULT_USERNAME,
+            // The password hash is not returned in Settings property
+            AdminPasswordHash = string.Empty
+        };
         var res = settingsManager.Settings;
-        Assert.Equivalent(empty, res);
+        Assert.Equivalent(expected, res);
     }
 
     [Fact]
@@ -249,5 +258,38 @@ public class SettingsManagerTests
         var savedJson = mockFileSystem.File.ReadAllText(SettingsFilePath);
         var savedSettings = JsonSerializer.Deserialize<SchedulerSettings>(savedJson);
         Assert.Equal(settings.MediaPath, savedSettings?.MediaPath);
+    }
+
+    [Fact]
+    public void SettingsManager_NewSettings_HasAdminPasswordSet()
+    {
+        // Arrange
+        var mockFileSystem = new MockFileSystem();
+        var settings = new SchedulerSettings { MediaPath = "/new/path" };
+        mockFileSystem.AddFile(SettingsFilePath, new MockFileData(JsonSerializer.Serialize(settings)));
+        var settingsManager = CreateSettingsManager(mockFileSystem);
+        var hash = settingsManager.GetAdminPasswordHash();
+        var expected = SchedulerSettings.DEFAULT_PASSWORD;
+        Assert.Equal(expected, hash);
+    }
+
+    [Fact]
+    public void SettingsManager_UpdatePassword()
+    {
+        // Arrange
+        var mockFileSystem = new MockFileSystem();
+        var settings = new SchedulerSettings { MediaPath = "/new/path" };
+        mockFileSystem.AddFile(SettingsFilePath, new MockFileData(JsonSerializer.Serialize(settings)));
+        var settingsManager = CreateSettingsManager(mockFileSystem);
+        var hash = settingsManager.GetAdminPasswordHash();
+        var expected = SchedulerSettings.DEFAULT_PASSWORD;
+        Assert.Equal(expected, hash);
+
+        settingsManager.UpdateAdminPassword("unittest");
+        var newhash2 = settingsManager.GetAdminPasswordHash();
+        Assert.NotEqual(hash, newhash2);
+        Assert.Equal("unittest", System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(newhash2)));
+
+        Assert.Throws<ArgumentException>(() => settingsManager.UpdateAdminPassword(string.Empty));
     }
 }

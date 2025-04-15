@@ -144,6 +144,7 @@ public class PlaylistManagerTests
         await playlistManager.LoadFromFileAsync(newPlaylistPath);
         var lst = new List<ChannelInfo>();
         Assert.Equal(3, playlistManager.GetPlaylistItems().Count);
+        Assert.Equal(3, playlistManager.ChannelCount);
     }
 
     [Fact]

@@ -1,12 +1,16 @@
 using ipvcr.Scheduling;
 using ipvcr.Scheduling.Shared;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
 
 namespace ipvcr.Web.Controllers;
 
+[Authorize]
 [Route("api/recordings")]
 [ApiController]
+[Produces("application/json")]
+[Consumes("application/json")]
 public class RecordingApiController : ControllerBase
 {
     private readonly ILogger<RecordingApiController> _logger;
@@ -179,9 +183,9 @@ public class RecordingApiController : ControllerBase
     // GET: api/recordings/channels
     [HttpGet()]
     [Route("channelcount")]
-    public ActionResult<IEnumerable<ChannelInfo>> ChannelCount()
+    public JsonResult ChannelCount()
     {
-        return Ok(_playlistManager.ChannelCount);
+        return new JsonResult(_playlistManager.ChannelCount);
     }
     
     // GET: api/recordings/channels/search?query={query}
@@ -218,6 +222,7 @@ public class RecordingApiController : ControllerBase
 
     // POST: api/recordings/upload-m3u
     [HttpPost("upload-m3u")]
+    [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadM3u(IFormFile file)
     {
         if (file == null || file.Length == 0)

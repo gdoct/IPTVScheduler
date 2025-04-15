@@ -1,4 +1,5 @@
 using System.IO.Abstractions;
+using System.Text.Encodings.Web;
 using ipvcr.Scheduling.Shared;
 using static ipvcr.Scheduling.Shared.ISettingsManager;
 
@@ -9,7 +10,7 @@ public class SettingsManager : ISettingsManager
 {
     public event EventHandler<SettingsChangedEventArgs>? SettingsChanged;
 
-    const string SETTINGS_FILENAME = "/etc/iptvscheduler/settings.json";
+    const string SETTINGS_FILENAME = "settings.json";
 
     public SettingsManager(IFileSystem filesystem)
     {
@@ -25,34 +26,87 @@ public class SettingsManager : ISettingsManager
     {
         get
         {
-            return _settings;
+            return new SchedulerSettings
+            {
+                MediaPath = _settings.MediaPath,
+                DataPath = _settings.DataPath,
+                M3uPlaylistPath = _settings.M3uPlaylistPath,
+                RemoveTaskAfterExecution = _settings.RemoveTaskAfterExecution,
+                AdminUsername = _settings.AdminUsername,
+                AdminPasswordHash = string.Empty
+            };;
         }
         set
         {
-            SaveSettings(value);
+            var changedSettings = new SchedulerSettings
+            {
+                MediaPath = value.MediaPath,
+                DataPath = value.DataPath,
+                M3uPlaylistPath = value.M3uPlaylistPath,
+                RemoveTaskAfterExecution = value.RemoveTaskAfterExecution,
+                AdminUsername = value.AdminUsername,
+                AdminPasswordHash = _settings.AdminPasswordHash
+            };
+            SaveSettings(changedSettings);
             SettingsChanged?.Invoke(this, new SettingsChangedEventArgs(value));
         }
     }
+
+    public string GetAdminPasswordHash()
+    {
+        return _settings.AdminPasswordHash;
+    }
+
+    public void UpdateAdminPassword(string newPassword)
+    {
+        if (string.IsNullOrWhiteSpace(newPassword))
+        {
+            throw new ArgumentException("New password cannot be null or empty.", nameof(newPassword));
+        }
+
+        _settings.AdminPasswordHash = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(newPassword));
+        var settings = _settings;
+        SaveSettings(settings);
+    }
+
     private SchedulerSettings LoadSettings()
     {
         // deserialize SchedulerSettings from json file SETTINGS_FILENAME
         lock (_lock)
         {
-            if (!_filesystem.File.Exists(SETTINGS_FILENAME))
+            var fullSettingsPath = Path.Combine("/data", SETTINGS_FILENAME);
+
+            if (!_filesystem.File.Exists(fullSettingsPath))
             {
-                return new SchedulerSettings();
+                var defaultSettings = new SchedulerSettings
+                {
+                    AdminUsername = SchedulerSettings.DEFAULT_USERNAME,
+                    AdminPasswordHash = SchedulerSettings.DEFAULT_PASSWORD
+                };
+                _settings = defaultSettings;
+                SaveSettingsToFile(System.Text.Json.JsonSerializer.Serialize(defaultSettings));
+                return defaultSettings;
             }
 
             try
             {
-                var json = _filesystem.File.ReadAllText(SETTINGS_FILENAME);
+                var json = _filesystem.File.ReadAllText(fullSettingsPath);
                 if (string.IsNullOrWhiteSpace(json))
                 {
                     return new SchedulerSettings();
                 }
 
-                return System.Text.Json.JsonSerializer.Deserialize<SchedulerSettings>(json)
+                var deserialized = System.Text.Json.JsonSerializer.Deserialize<SchedulerSettings>(json)
                        ?? new SchedulerSettings();
+                if (string.IsNullOrWhiteSpace(deserialized.AdminUsername))
+                {
+                    deserialized.AdminUsername = SchedulerSettings.DEFAULT_USERNAME;
+                }
+                if (string.IsNullOrWhiteSpace(deserialized.AdminPasswordHash))
+                {
+                    deserialized.AdminPasswordHash = SchedulerSettings.DEFAULT_PASSWORD;
+                }
+                return deserialized;
             }
             catch (UnauthorizedAccessException)
             {
@@ -73,8 +127,17 @@ public class SettingsManager : ISettingsManager
     {
         lock (_lock)
         {
-            _settings = settings;
-            SaveSettingsToFile(System.Text.Json.JsonSerializer.Serialize(settings));
+            var changedSettings = new SchedulerSettings
+            {
+                MediaPath = settings.MediaPath,
+                DataPath = settings.DataPath,
+                M3uPlaylistPath = settings.M3uPlaylistPath,
+                RemoveTaskAfterExecution = settings.RemoveTaskAfterExecution,
+                AdminUsername = settings.AdminUsername,
+                AdminPasswordHash = _settings.AdminPasswordHash
+            };
+            _settings = changedSettings;
+            SaveSettingsToFile(System.Text.Json.JsonSerializer.Serialize(changedSettings));
         }
     }
     private void SaveSettingsToFile(string jsonSettings)
@@ -85,14 +148,15 @@ public class SettingsManager : ISettingsManager
         // if file is not writable, throw exception
         // if file is not readable, throw exception
         // if file is not a valid json, throw exception
+        var fullSettingsPath = Path.Combine("/data", SETTINGS_FILENAME);
         try
         {
-            if (!_filesystem.File.Exists(SETTINGS_FILENAME))
+            if (!_filesystem.File.Exists(fullSettingsPath))
             {
-                using var fileStream = _filesystem.File.Create(SETTINGS_FILENAME);
+                using var fileStream = _filesystem.File.Create(fullSettingsPath);
             }
 
-            _filesystem.File.WriteAllText(SETTINGS_FILENAME, jsonSettings);
+            _filesystem.File.WriteAllText(fullSettingsPath, jsonSettings);
         }
         catch (UnauthorizedAccessException)
         {

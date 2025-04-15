@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Button, Card, Container, Form, Table } from 'react-bootstrap';
+import { Alert, Button, Card, Container, Form, InputGroup, Table } from 'react-bootstrap';
+import { AuthService } from '../services/AuthService';
 import { recordingsApi } from '../services/RecordingsApi';
 import { SchedulerSettings } from '../types/recordings';
 
@@ -8,12 +9,15 @@ const SettingsPage: React.FC = () => {
   const [settings, setSettings] = useState<SchedulerSettings>({
     mediaPath: '',
     dataPath: '',
-    m3uPlaylistPath: ''
+    m3uPlaylistPath: '',
+    adminUsername: ''
   });
+  const [adminPassword, setAdminPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
+  const [changingPassword, setChangingPassword] = useState<boolean>(false);
   
   // Reference to file input
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -31,7 +35,8 @@ const SettingsPage: React.FC = () => {
       setSettings({
         mediaPath: data.mediaPath || '',
         dataPath: data.dataPath || '',
-        m3uPlaylistPath: data.m3uPlaylistPath || ''
+        m3uPlaylistPath: data.m3uPlaylistPath || '',
+        adminUsername: data.adminUsername || ''
       });
       setError(null);
     } catch (err) {
@@ -45,10 +50,14 @@ const SettingsPage: React.FC = () => {
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setSettings(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    if (name === 'adminPassword') {
+      setAdminPassword(value);
+    } else {
+      setSettings(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   // Handle form submission
@@ -68,6 +77,42 @@ const SettingsPage: React.FC = () => {
       console.error('Error saving settings:', err);
       setError('Failed to save settings');
       setSuccess(null);
+    }
+  };
+
+  // Handle password change
+  const handlePasswordChange = async () => {
+    if (!adminPassword) {
+      setError('Please enter a new password');
+      return;
+    }
+    
+    setChangingPassword(true);
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || '/api'}/login/changepassword`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AuthService.getToken()}`
+        },
+        body: JSON.stringify({
+          username: settings.adminUsername,
+          password: adminPassword
+        })
+      });
+      
+      if (response.ok) {
+        setSuccess('Password changed successfully');
+        setAdminPassword(''); // Clear password field after successful change
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update password');
+      }
+    } catch (err) {
+      console.error('Error changing password:', err);
+      setError('Failed to update password');
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -145,13 +190,13 @@ const SettingsPage: React.FC = () => {
                 <Table>
                   <thead>
                     <tr>
-                      <th>Field</th>
+                      <th>Setting</th>
                       <th>Value</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td>MediaPath</td>
+                      <td>Media Path</td>
                       <td>
                         <Form.Control
                           type="text"
@@ -162,7 +207,7 @@ const SettingsPage: React.FC = () => {
                       </td>
                     </tr>
                     <tr>
-                      <td>DataPath</td>
+                      <td>Data Path</td>
                       <td>
                         <Form.Control
                           type="text"
@@ -173,7 +218,7 @@ const SettingsPage: React.FC = () => {
                       </td>
                     </tr>
                     <tr>
-                      <td>M3uPlaylistPath</td>
+                      <td>M3u Playlist Path</td>
                       <td>
                         <Form.Control
                           type="text"
@@ -183,10 +228,52 @@ const SettingsPage: React.FC = () => {
                         />
                       </td>
                     </tr>
+                    <tr>
+                      <td>Admin Username</td>
+                      <td>
+                        <Form.Control
+                          type="text"
+                          name="adminUsername"
+                          value={settings.adminUsername}
+                          onChange={handleInputChange}
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Admin Password</td>
+                      <td>
+                        <InputGroup>
+                          <Form.Control
+                            type="password"
+                            name="adminPassword"
+                            placeholder="Enter new password"
+                            value={adminPassword}
+                            onChange={handleInputChange}
+                          />
+                          <Button 
+                            variant="outline-secondary" 
+                            onClick={handlePasswordChange}
+                            disabled={changingPassword}
+                          >
+                            {changingPassword ? (
+                              <>
+                                <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                Changing...
+                              </>
+                            ) : (
+                              <>Change Password</>
+                            )}
+                          </Button>
+                        </InputGroup>
+                        <Form.Text className="text-muted">
+                          This won't be saved with other settings. Use the Change Password button to update it.
+                        </Form.Text>
+                      </td>
+                    </tr>
                   </tbody>
                 </Table>
-                <Button type="submit" variant="success">
-                  <i className="bi bi-save me-2"></i>Save
+                <Button type="submit" variant="success" disabled={loading || uploading}>
+                  <i className="bi bi-save me-2"></i>Save Settings
                 </Button>
               </Form>
             </Card.Body>

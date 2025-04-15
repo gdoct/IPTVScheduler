@@ -41,10 +41,25 @@ const RecordingForm: React.FC<RecordingFormProps> = ({
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Utility function to format date for the date picker
+  const formatDateForDatePicker = (dateString: string) => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   // Update form when recording changes or modal opens
   useEffect(() => {
     if (recording) {
-      setFormData(recording);
+      setFormData({
+        ...recording,
+        startTime: formatDateForDatePicker(recording.startTime),
+        endTime: formatDateForDatePicker(recording.endTime),
+      });
       setChannelQuery(recording.channelName);
       
       // For editing, try to find the channel logo if available or fetch it
