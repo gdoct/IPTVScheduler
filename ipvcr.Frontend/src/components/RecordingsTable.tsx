@@ -77,7 +77,7 @@ const RecordingsTable: React.FC<RecordingsTableProps> = ({
           <i className="bi bi-calendar-x text-muted" style={{ fontSize: '3rem' }}></i>
           <h4 className="mt-3">No recordings scheduled</h4>
           <p className="text-muted">Start by adding a new recording.</p>
-          { (
+          {showAddButton && (
             <Button variant="primary" onClick={onAdd}>
               <i className="bi bi-plus-lg me-1"></i> Add New Recording
             </Button>
@@ -93,7 +93,7 @@ const RecordingsTable: React.FC<RecordingsTableProps> = ({
         <h5 className="mb-0">
           <i className="bi bi-calendar-event me-2"></i>Upcoming Recordings
         </h5>
-        { (
+        {showAddButton && (
           <Button variant="light" onClick={onAdd}>
             <i className="bi bi-plus-lg me-1"></i> Add New Recording
           </Button>
@@ -153,7 +153,7 @@ const RecordingsTable: React.FC<RecordingsTableProps> = ({
                   </td>
                   <td className="align-middle text-center">
                     <ButtonGroup size="sm">
-                      <Button variant="outline-primary" title="Edit" onClick={() => handleEdit(item.id)}>
+                      <Button variant="outline-primary" title="Edit" onClick={() => onEdit(item.id)}>
                         <i className="bi bi-pencil"></i>
                       </Button>
                       <Button variant="outline-secondary" title="Edit Code" onClick={() => onEditTask(item.id)}>
