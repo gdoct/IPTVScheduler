@@ -897,7 +897,7 @@ public class AtRecordingSchedulerTests
         fs.Setup(f => f.Directory.Exists(It.IsAny<string>())).Returns(true);
         
         // Setup WriteAllText to capture the script content
-        string capturedContent = null;
+        string capturedContent = string.Empty;
         fs.Setup(f => f.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
           .Callback<string, string>((_, content) => capturedContent = content);
           
@@ -945,7 +945,7 @@ public class AtRecordingSchedulerTests
         fs.Setup(f => f.Directory.Exists(It.IsAny<string>())).Returns(true);
         
         // Setup WriteAllText to capture the script content
-        string capturedContent = null;
+        string capturedContent = string.Empty;
         fs.Setup(f => f.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
           .Callback<string, string>((_, content) => capturedContent = content);
           
