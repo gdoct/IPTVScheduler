@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Security.Claims;
 using System.Text.Encodings.Web;
 
 namespace ipvcr.Auth;
 
+#pragma warning disable CS0618 // Type or member ISystemClock is obsolete
 public class TokenAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
     private readonly ITokenManager _tokenManager;
@@ -43,3 +43,4 @@ public class TokenAuthenticationHandler : AuthenticationHandler<AuthenticationSc
         return Task.FromResult(AuthenticateResult.Success(ticket));
     }
 }
+#pragma warning restore CS0618 // Type or member is obsolete

@@ -9,7 +9,7 @@ namespace ipvcr.Tests;
 
 public class SettingsManagerTests
 {
-    private string SettingsFilePath = "/etc/iptvscheduler/settings.json";
+    private string SettingsFilePath = "/data/settings.json";
 
     [Fact]
     public void LoadSettings_FileDoesNotExist_ReturnsDefaultSettings()
@@ -55,6 +55,9 @@ public class SettingsManagerTests
 
     private static SettingsManager CreateSettingsManager(MockFileSystem mockFileSystem)
     {
+        // Ensure the /data directory exists
+        mockFileSystem.AddDirectory("/data");
+        
         var mockFileSystemWrapper = new Mock<IFileSystem>();
         mockFileSystemWrapper.Setup(fs => fs.File).Returns(mockFileSystem.File);
         mockFileSystemWrapper.Setup(fs => fs.Directory).Returns(mockFileSystem.Directory);
@@ -101,9 +104,15 @@ public class SettingsManagerTests
         var settingsManager = CreateSettingsManager(mockFileSystem);
 
         // Act & Assert
-        var empty = new SchedulerSettings();
+        // Create an expected settings object with default values
+        var expected = new SchedulerSettings
+        {
+            AdminUsername = SchedulerSettings.DEFAULT_USERNAME,
+            // The password hash is not returned in Settings property
+            AdminPasswordHash = string.Empty
+        };
         var res = settingsManager.Settings;
-        Assert.Equivalent(empty, res);
+        Assert.Equivalent(expected, res);
     }
 
     [Fact]

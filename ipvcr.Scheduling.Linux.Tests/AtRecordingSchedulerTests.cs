@@ -36,10 +36,14 @@ public class AtRecordingSchedulerTests
         // Arrange
         var processrunner = new Mock<IProcessRunner>(MockBehavior.Strict);
         var fs = new Mock<IFileSystem>(MockBehavior.Strict);
-        var settings = new SchedulerSettings { MediaPath = "/new/path" };
+        var settings = new SchedulerSettings { 
+            MediaPath = "/new/path",
+            DataPath = "/data"
+        };
         var settingsmgr = new Mock<ISettingsManager>(MockBehavior.Strict);
         settingsmgr.SetupGet(m => m.Settings).Returns(settings);
         processrunner.Setup(mock => mock.RunProcess("which", It.IsAny<string>())).Returns(("path", string.Empty, 0));
+        
         var scheduler = AtRecordingScheduler.CreateWithProcessRunner(processrunner.Object, fs.Object, settingsmgr.Object);
         var recording = new ScheduledRecording
         {
@@ -54,33 +58,41 @@ public class AtRecordingSchedulerTests
 
         processrunner.Setup(m => m.RunProcess("atq", string.Empty)).Returns(("", "", 0));
         Assert.Empty(scheduler.FetchScheduledTasks());
+        
         // Act
+        fs.Setup(fs => fs.Directory.Exists("/data/tasks")).Returns(true);
         processrunner.Setup(m => m.RunProcess("chmod", It.IsAny<string>())).Returns(("", "", 0));
         processrunner.Setup(m => m.RunProcess("/bin/bash", It.IsAny<string>())).Returns(("", "", 0));
         fs.Setup(fs => fs.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
         fs.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
         fs.Setup(fs => fs.File.Delete(It.IsAny<string>()));
-        fs.Setup(fs => fs.Directory.Exists(It.IsAny<string>())).Returns(true);
+        
 #if WINDOWS
         Assert.Throws<DirectoryNotFoundException>(() => scheduler.ScheduleTask(task));
 #else
         scheduler.ScheduleTask(task);
+        
         // Assert
-        processrunner.Setup(m => m.RunProcess("atq", string.Empty)).Returns(("3\tThu Apr  3 15:30:00 2025 a guido", "", 0));
-
-        // "export TASK_JOB_ID='{task.Id}';\r\nexport TASK_DEFINITION='{{\"Id\":\"{task.Id}\",\"Name\":\"whatever\",\"Command\":\"\",\"StartTime\":\"2026-03-27T15:01:12.0384718+01:00\",\"TaskType\":1}}'\r\necho \"ffmpeg -i http://whatever -t 60 -c copy -f mp4 whatever.mp4\" | at 15:01 03-27-2026\"", "", 0
-        var cmd = task.Command;
-        var taskid = task.Id.ToString();
-        var taskdefinition = System.Text.Json.JsonSerializer.Serialize(recording);
-        var expected = $"TASK_ID=\"{taskid}\"\nTASK_DEFINITION='{taskdefinition}'\necho \"{cmd}\" | at {task.StartTime:HH:mm MM/dd/yyyy}";
-
-        processrunner.Setup(m => m.RunProcess("at", $"-c 3")).Returns((expected, "", 0));
+        string taskDefinition = System.Text.Json.JsonSerializer.Serialize(recording);
+        processrunner.Setup(m => m.RunProcess("atq", string.Empty))
+            .Returns(("3\tThu Apr  3 15:30:00 2025 a guido", "", 0));
+            
+        // The format matches what the AtRecordingScheduler._taskDefinitionRegex looks for
+        processrunner.Setup(m => m.RunProcess("at", $"-c 3"))
+            .Returns((
+                $"#!/bin/bash\nexport TASK_DEFINITION='{taskDefinition}'", 
+                "", 
+                0
+            ));
+        
         Assert.Single(scheduler.FetchScheduledTasks());
 
-        processrunner.Setup(m => m.RunProcess("atrm", It.IsAny<string>())).Returns(("", "", 0));
-        scheduler.CancelTask(task.Id);
+        processrunner.Setup(m => m.RunProcess("atrm", "3")).Returns(("", "", 0));
+        scheduler.CancelTask(recording.Id);
+        
         processrunner.Setup(m => m.RunProcess("atq", string.Empty)).Returns(("", "", 0));
         Assert.Empty(scheduler.FetchScheduledTasks());
+        
         processrunner.VerifyAll();
 #endif
     }
@@ -198,7 +210,13 @@ public class AtRecordingSchedulerTests
         var processrunner = new Mock<IProcessRunner>(MockBehavior.Strict);
         var fs = new Mock<IFileSystem>(MockBehavior.Strict);
         processrunner.Setup(mock => mock.RunProcess("which", It.IsAny<string>())).Returns(("path", string.Empty, 0));
-        var scheduler = AtRecordingScheduler.CreateWithProcessRunner(processrunner.Object, fs.Object, Mock.Of<ISettingsManager>());
+        
+        // Create settings manager with correct DataPath
+        var settings = new SchedulerSettings { DataPath = "/data" };
+        var settingsmgr = new Mock<ISettingsManager>(MockBehavior.Strict);
+        settingsmgr.SetupGet(m => m.Settings).Returns(settings);
+        
+        var scheduler = AtRecordingScheduler.CreateWithProcessRunner(processrunner.Object, fs.Object, settingsmgr.Object);
 
         var recording = new ScheduledRecording
         {
@@ -209,18 +227,21 @@ public class AtRecordingSchedulerTests
             Filename = "whatever.mp4",
             Name = "whatever"
         };
-        var task = recording.ToScheduledTask();
-
+        
         // Assert
-        processrunner.Setup(m => m.RunProcess("atq", string.Empty)).Returns(("3\tThu Apr  3 15:30:00 2025 a guido", "", 0));
+        processrunner.Setup(m => m.RunProcess("atq", string.Empty))
+            .Returns(("3\tThu Apr  3 15:30:00 2025 a guido", "", 0));
 
-        // "export TASK_JOB_ID='{task.Id}';\r\nexport TASK_DEFINITION='{{\"Id\":\"{task.Id}\",\"Name\":\"whatever\",\"Command\":\"\",\"StartTime\":\"2026-03-27T15:01:12.0384718+01:00\",\"TaskType\":1}}'\r\necho \"ffmpeg -i http://whatever -t 60 -c copy -f mp4 whatever.mp4\" | at 15:01 03-27-2026\"", "", 0
-        var cmd = task.Command;
-        var taskid = task.Id.ToString();
+        // Format the task definition exactly as expected by the regex in AtRecordingScheduler 
+        // TASK_DEFINITION='{"json data here"}'
         var taskdefinition = System.Text.Json.JsonSerializer.Serialize(recording);
-        var expected = $"TASK_ID=\"{taskid}\"\nTASK_DEFINITION='{taskdefinition}'\necho \"{cmd}\" | at {task.StartTime:HH:mm MM/dd/yyyy}";
-
-        processrunner.Setup(m => m.RunProcess("at", $"-c 3")).Returns((expected, "", 0));
+        processrunner.Setup(m => m.RunProcess("at", $"-c 3"))
+            .Returns((
+                $"#!/bin/bash\nexport TASK_DEFINITION='{taskdefinition}'", 
+                "", 
+                0
+            ));
+        
         var coll = scheduler.FetchScheduledTasks();
         Assert.Single(coll);
     }
@@ -389,7 +410,7 @@ public class AtRecordingSchedulerTests
         var processrunner = new Mock<IProcessRunner>(MockBehavior.Strict);
         var fs = new Mock<IFileSystem>(MockBehavior.Strict);
         processrunner.Setup(mock => mock.RunProcess("which", It.IsAny<string>())).Returns(("path", string.Empty, 0));
-        var settings = new SchedulerSettings { DataPath = "/new/path" };
+        var settings = new SchedulerSettings { DataPath = "/data" };
         var settingsmgr = new Mock<ISettingsManager>(MockBehavior.Strict);
         settingsmgr.SetupGet(m => m.Settings).Returns(settings);
 
@@ -404,24 +425,27 @@ public class AtRecordingSchedulerTests
             Filename = "whatever.mp4",
             Name = "whatever"
         };
-        var task = recording.ToScheduledTask();
 
         // Assert
-        processrunner.Setup(m => m.RunProcess("atq", string.Empty)).Returns(("3\tThu Apr  3 15:30:00 2025 a guido", "", 0));
+        processrunner.Setup(m => m.RunProcess("atq", string.Empty))
+            .Returns(("3\tThu Apr  3 15:30:00 2025 a guido", "", 0));
 
-        var cmd = task.Command;
-        var taskid = task.Id.ToString();
+        // Format the task definition exactly as expected by the regex in AtRecordingScheduler
         var taskdefinition = System.Text.Json.JsonSerializer.Serialize(recording);
-        var expected = $"TASK_ID=\"{taskid}\"\nTASK_DEFINITION='{taskdefinition}'\necho \"{cmd}\" | at {task.StartTime:HH:mm MM/dd/yyyy}";
-
-        processrunner.Setup(m => m.RunProcess("at", $"-c 3")).Returns((expected, "", 0));
-        processrunner.Setup(m => m.RunProcess("atrm", It.IsAny<string>())).Returns(("", "", 0));
+        processrunner.Setup(m => m.RunProcess("at", $"-c 3"))
+            .Returns((
+                $"#!/bin/bash\nexport TASK_DEFINITION='{taskdefinition}'", 
+                "", 
+                0
+            ));
+        
+        processrunner.Setup(m => m.RunProcess("atrm", "3")).Returns(("", "", 0));
 
         fs.Setup(fs => fs.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
         fs.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
         fs.Setup(fs => fs.File.Delete(It.IsAny<string>()));
 
-        scheduler.CancelTask(task.Id);
+        scheduler.CancelTask(recording.Id);
         processrunner.VerifyAll();
     }
 
@@ -494,11 +518,13 @@ public class AtRecordingSchedulerTests
     {
         var processrunner = new Mock<IProcessRunner>(MockBehavior.Strict);
         var fs = new Mock<IFileSystem>(MockBehavior.Strict);
-        var settings = new SchedulerSettings { MediaPath = "/new/path" };
+        var settings = new SchedulerSettings { DataPath = "/data" };
         var settingsmgr = new Mock<ISettingsManager>(MockBehavior.Strict);
         settingsmgr.SetupGet(m => m.Settings).Returns(settings);
+        var logger = new Mock<ILogger<AtRecordingScheduler>>();
+        
         processrunner.Setup(mock => mock.RunProcess("which", It.IsAny<string>())).Returns(("path", string.Empty, 0));
-        var scheduler = AtRecordingScheduler.CreateWithProcessRunner(processrunner.Object, fs.Object, settingsmgr.Object, Mock.Of<ILogger<AtRecordingScheduler>>());
+        var scheduler = AtRecordingScheduler.CreateWithProcessRunner(processrunner.Object, fs.Object, settingsmgr.Object, logger.Object);
 
         var recording = new ScheduledRecording
         {
@@ -512,19 +538,25 @@ public class AtRecordingSchedulerTests
         var task = recording.ToScheduledTask();
 
         // Assert
-        processrunner.Setup(m => m.RunProcess("atq", string.Empty)).Returns(("3\tThu Apr  3 15:30:00 2025 a guido", "", 0));
-        fs.Setup(fs => fs.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
+        processrunner.Setup(m => m.RunProcess("atq", string.Empty))
+            .Returns(("3\tThu Apr  3 15:30:00 2025 a guido", "", 0));
+
+        var taskdefinition = System.Text.Json.JsonSerializer.Serialize(recording);
+        processrunner.Setup(m => m.RunProcess("at", $"-c 3"))
+            .Returns((
+                $"TASK_DEFINITION='{taskdefinition}'", 
+                "", 
+                0
+            ));
+
         fs.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
         fs.Setup(fs => fs.File.Delete(It.IsAny<string>()));
-
-        var cmd = task.Command;
-        var taskid = task.Id.ToString();
-        var taskdefinition = System.Text.Json.JsonSerializer.Serialize(recording);
-        var expected = $"TASK_ID=\"{taskid}\"\nTASK_DEFINITION='{taskdefinition}'\necho \"{cmd}\" | at {task.StartTime:HH:mm MM/dd/yyyy}";
-
-        processrunner.Setup(m => m.RunProcess("at", $"-c 3")).Returns((expected, "", 0));
-        processrunner.Setup(m => m.RunProcess("atrm", It.IsAny<string>())).Returns(("", "error", 2));
-        Assert.Throws<InvalidOperationException>(() => scheduler.CancelTask(task.Id));
+        
+        // This is the mock that should be verified - setting up atrm to fail
+        processrunner.Setup(m => m.RunProcess("atrm", "3")).Returns(("", "error", 2));
+        
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => scheduler.CancelTask(recording.Id));
         processrunner.VerifyAll();
     }
 
@@ -948,39 +980,38 @@ public class AtRecordingSchedulerTests
         
         var scheduler = AtRecordingScheduler.CreateWithProcessRunner(processrunner.Object, fs.Object, settingsmgr.Object, logger.Object);
         
-        var taskId = Guid.NewGuid();
+        var recording = new ScheduledRecording
+        {
+            Id = Guid.NewGuid(),
+            StartTime = DateTime.Now.AddYears(1),
+            ChannelUri = "http://whatever",
+            EndTime = DateTime.Now.AddYears(1).AddMinutes(1),
+            Filename = "whatever.mp4",
+            Name = "whatever"
+        };
+        
+        var taskId = recording.Id;
         var filePath = Path.Combine("/data", "tasks", $"{taskId}.sh");
         
         // Setup mocks to simulate failure during deletion
         fs.Setup(f => f.File.Exists(filePath)).Returns(true);
         fs.Setup(f => f.File.Delete(filePath)).Throws(new IOException("Permission denied while deleting file"));
         
-        // We'll test SafeDeleteFile through CancelTask, which calls it internally
-        // Setup necessary mocks for CancelTask to reach SafeDeleteFile
-        var task = new ScheduledRecording
-        {
-            Id = taskId,
-            StartTime = DateTime.Now.AddYears(1),
-            ChannelUri = "http://whatever",
-            EndTime = DateTime.Now.AddYears(1).AddMinutes(1),
-            Filename = "whatever.mp4",
-            Name = "whatever"
-        }.ToScheduledTask();
-        task.TaskId = 123;
-        
         // Setup mocks for FetchScheduledTasks
         processrunner.Setup(m => m.RunProcess("atq", string.Empty))
             .Returns(("3\tThu Apr  3 15:30:00 2025 a guido", "", 0));
             
+        // Format the task definition exactly as the AtRecordingScheduler expects it
+        var taskDefinition = System.Text.Json.JsonSerializer.Serialize(recording);
         processrunner.Setup(m => m.RunProcess("at", $"-c 3"))
             .Returns((
-                $"TASK_ID=\"{taskId}\"\nTASK_DEFINITION='{System.Text.Json.JsonSerializer.Serialize(task)}'", 
+                $"TASK_DEFINITION='{taskDefinition}'", 
                 "", 
                 0
             ));
             
         // Setup mock for atrm called by CancelTask
-        processrunner.Setup(m => m.RunProcess("atrm", It.IsAny<string>())).Returns(("", "", 0));
+        processrunner.Setup(m => m.RunProcess("atrm", "3")).Returns(("", "", 0));
 
         // Act - We expect no exception to be thrown from SafeDeleteFile itself
         scheduler.CancelTask(taskId);
@@ -1013,38 +1044,37 @@ public class AtRecordingSchedulerTests
         
         var scheduler = AtRecordingScheduler.CreateWithProcessRunner(processrunner.Object, fs.Object, settingsmgr.Object, logger.Object);
         
-        var taskId = Guid.NewGuid();
-        var filePath = Path.Combine("/data", "tasks", $"{taskId}.sh");
-        
-        // Setup mock to simulate file not existing
-        fs.Setup(f => f.File.Exists(filePath)).Returns(false);
-        
-        // We'll test SafeDeleteFile through CancelTask, which calls it internally
-        // Setup necessary mocks for CancelTask to reach SafeDeleteFile
-        var task = new ScheduledRecording
+        var recording = new ScheduledRecording
         {
-            Id = taskId,
+            Id = Guid.NewGuid(),
             StartTime = DateTime.Now.AddYears(1),
             ChannelUri = "http://whatever",
             EndTime = DateTime.Now.AddYears(1).AddMinutes(1),
             Filename = "whatever.mp4",
             Name = "whatever"
-        }.ToScheduledTask();
-        task.TaskId = 123;
+        };
+        
+        var taskId = recording.Id;
+        var filePath = Path.Combine("/data", "tasks", $"{taskId}.sh");
+        
+        // Setup mock to simulate file not existing
+        fs.Setup(f => f.File.Exists(filePath)).Returns(false);
         
         // Setup mocks for FetchScheduledTasks
         processrunner.Setup(m => m.RunProcess("atq", string.Empty))
             .Returns(("3\tThu Apr  3 15:30:00 2025 a guido", "", 0));
             
+        // Format the task definition exactly as the AtRecordingScheduler expects it
+        var taskDefinition = System.Text.Json.JsonSerializer.Serialize(recording);
         processrunner.Setup(m => m.RunProcess("at", $"-c 3"))
             .Returns((
-                $"TASK_ID=\"{taskId}\"\nTASK_DEFINITION='{System.Text.Json.JsonSerializer.Serialize(task)}'", 
+                $"TASK_DEFINITION='{taskDefinition}'", 
                 "", 
                 0
             ));
             
         // Setup mock for atrm called by CancelTask
-        processrunner.Setup(m => m.RunProcess("atrm", It.IsAny<string>())).Returns(("", "", 0));
+        processrunner.Setup(m => m.RunProcess("atrm", "3")).Returns(("", "", 0));
 
         // Act
         scheduler.CancelTask(taskId);
