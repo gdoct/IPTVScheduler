@@ -259,4 +259,37 @@ public class SettingsManagerTests
         var savedSettings = JsonSerializer.Deserialize<SchedulerSettings>(savedJson);
         Assert.Equal(settings.MediaPath, savedSettings?.MediaPath);
     }
+
+    [Fact]
+    public void SettingsManager_NewSettings_HasAdminPasswordSet()
+    {
+        // Arrange
+        var mockFileSystem = new MockFileSystem();
+        var settings = new SchedulerSettings { MediaPath = "/new/path" };
+        mockFileSystem.AddFile(SettingsFilePath, new MockFileData(JsonSerializer.Serialize(settings)));
+        var settingsManager = CreateSettingsManager(mockFileSystem);
+        var hash = settingsManager.GetAdminPasswordHash();
+        var expected = SchedulerSettings.DEFAULT_PASSWORD;
+        Assert.Equal(expected, hash);
+    }
+
+    [Fact]
+    public void SettingsManager_UpdatePassword()
+    {
+        // Arrange
+        var mockFileSystem = new MockFileSystem();
+        var settings = new SchedulerSettings { MediaPath = "/new/path" };
+        mockFileSystem.AddFile(SettingsFilePath, new MockFileData(JsonSerializer.Serialize(settings)));
+        var settingsManager = CreateSettingsManager(mockFileSystem);
+        var hash = settingsManager.GetAdminPasswordHash();
+        var expected = SchedulerSettings.DEFAULT_PASSWORD;
+        Assert.Equal(expected, hash);
+
+        settingsManager.UpdateAdminPassword("unittest");
+        var newhash2 = settingsManager.GetAdminPasswordHash();
+        Assert.NotEqual(hash, newhash2);
+        Assert.Equal("unittest", System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(newhash2)));
+
+        Assert.Throws<ArgumentException>(() => settingsManager.UpdateAdminPassword(string.Empty));
+    }
 }
