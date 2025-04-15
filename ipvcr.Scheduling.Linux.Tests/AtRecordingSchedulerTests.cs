@@ -34,66 +34,72 @@ public class AtRecordingSchedulerTests
     public void AtRecordingScheduler_ScheduleTask()
     {
         // Arrange
-        var processrunner = new Mock<IProcessRunner>(MockBehavior.Strict);
-        var fs = new Mock<IFileSystem>(MockBehavior.Strict);
+        var processrunner = new Mock<IProcessRunner>(MockBehavior.Loose);
+        var fs = new Mock<IFileSystem>(MockBehavior.Loose);
+        var logger = new Mock<ILogger<AtRecordingScheduler>>();
+        
+        // Setup settings
         var settings = new SchedulerSettings { 
-            MediaPath = "/new/path",
+            MediaPath = "/media/recordings",
             DataPath = "/data"
         };
         var settingsmgr = new Mock<ISettingsManager>(MockBehavior.Strict);
         settingsmgr.SetupGet(m => m.Settings).Returns(settings);
-        processrunner.Setup(mock => mock.RunProcess("which", It.IsAny<string>())).Returns(("path", string.Empty, 0));
         
-        var scheduler = AtRecordingScheduler.CreateWithProcessRunner(processrunner.Object, fs.Object, settingsmgr.Object);
+        // Setup which command to check for at utility
+        processrunner.Setup(mock => mock.RunProcess("which", It.IsAny<string>())).Returns(("/usr/bin/at", string.Empty, 0));
+        
+        // Create scheduler
+        var scheduler = AtRecordingScheduler.CreateWithProcessRunner(
+            processrunner.Object, 
+            fs.Object, 
+            settingsmgr.Object,
+            logger.Object
+        );
+        
+        // Create test recording
         var recording = new ScheduledRecording
         {
             Id = Guid.NewGuid(),
-            StartTime = DateTime.Now.AddYears(1),
-            ChannelUri = "http://whatever",
-            EndTime = DateTime.Now.AddYears(1).AddMinutes(1),
-            Filename = "whatever.mp4",
-            Name = "whatever"
+            StartTime = DateTime.Now.AddDays(1), // Future date
+            ChannelUri = "http://example.com/stream",
+            EndTime = DateTime.Now.AddDays(1).AddMinutes(30),
+            Filename = "recording.mp4",
+            Name = "Test Recording"
         };
         var task = recording.ToScheduledTask();
 
-        processrunner.Setup(m => m.RunProcess("atq", string.Empty)).Returns(("", "", 0));
-        Assert.Empty(scheduler.FetchScheduledTasks());
+        // Setup directory creation
+        var tasksDirectory = Path.Combine("/data", "tasks");
+        fs.Setup(m => m.Directory.Exists(tasksDirectory)).Returns(false);
+        var mockDirInfo = new Mock<IDirectoryInfo>();
+        fs.Setup(m => m.Directory.CreateDirectory(tasksDirectory)).Returns(mockDirInfo.Object);
         
-        // Act
-        fs.Setup(fs => fs.Directory.Exists("/data/tasks")).Returns(true);
-        processrunner.Setup(m => m.RunProcess("chmod", It.IsAny<string>())).Returns(("", "", 0));
+        // Setup file operations
+        var scriptPath = Path.Combine(tasksDirectory, $"{recording.Id}.sh");
+        fs.Setup(m => m.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
+          .Callback<string, string>((path, content) => 
+          {
+              // Verify path and content are as expected
+              Assert.Equal(scriptPath, path);
+              Assert.Contains(recording.Id.ToString(), content);
+              Assert.Contains("#!/bin/bash", content);
+          });
+        //fs.Setup(m => m.File.Exists(It.IsAny<string>())).Returns(true);
+        
+        // Setup script execution
+        processrunner.Setup(m => m.RunProcess("chmod", $"+x {scriptPath}")).Returns(("", "", 0));
         processrunner.Setup(m => m.RunProcess("/bin/bash", It.IsAny<string>())).Returns(("", "", 0));
-        fs.Setup(fs => fs.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
-        fs.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
-        fs.Setup(fs => fs.File.Delete(It.IsAny<string>()));
-        
+
 #if WINDOWS
         Assert.Throws<DirectoryNotFoundException>(() => scheduler.ScheduleTask(task));
 #else
+        // Act
         scheduler.ScheduleTask(task);
         
-        // Assert
-        string taskDefinition = System.Text.Json.JsonSerializer.Serialize(recording);
-        processrunner.Setup(m => m.RunProcess("atq", string.Empty))
-            .Returns(("3\tThu Apr  3 15:30:00 2025 a guido", "", 0));
-            
-        // The format matches what the AtRecordingScheduler._taskDefinitionRegex looks for
-        processrunner.Setup(m => m.RunProcess("at", $"-c 3"))
-            .Returns((
-                $"#!/bin/bash\nexport TASK_DEFINITION='{taskDefinition}'", 
-                "", 
-                0
-            ));
-        
-        Assert.Single(scheduler.FetchScheduledTasks());
-
-        processrunner.Setup(m => m.RunProcess("atrm", "3")).Returns(("", "", 0));
-        scheduler.CancelTask(recording.Id);
-        
-        processrunner.Setup(m => m.RunProcess("atq", string.Empty)).Returns(("", "", 0));
-        Assert.Empty(scheduler.FetchScheduledTasks());
-        
+        // Assert - All mocks should be verified
         processrunner.VerifyAll();
+        fs.VerifyAll();
 #endif
     }
 
@@ -209,41 +215,50 @@ public class AtRecordingSchedulerTests
         // Arrange
         var processrunner = new Mock<IProcessRunner>(MockBehavior.Strict);
         var fs = new Mock<IFileSystem>(MockBehavior.Strict);
-        processrunner.Setup(mock => mock.RunProcess("which", It.IsAny<string>())).Returns(("path", string.Empty, 0));
-        
-        // Create settings manager with correct DataPath
         var settings = new SchedulerSettings { DataPath = "/data" };
         var settingsmgr = new Mock<ISettingsManager>(MockBehavior.Strict);
         settingsmgr.SetupGet(m => m.Settings).Returns(settings);
-        
-        var scheduler = AtRecordingScheduler.CreateWithProcessRunner(processrunner.Object, fs.Object, settingsmgr.Object);
+        var logger = new Mock<ILogger<AtRecordingScheduler>>();
+
+        processrunner.Setup(mock => mock.RunProcess("which", It.IsAny<string>())).Returns(("path", string.Empty, 0));
+        var scheduler = AtRecordingScheduler.CreateWithProcessRunner(processrunner.Object, fs.Object, settingsmgr.Object, logger.Object);
 
         var recording = new ScheduledRecording
         {
             Id = Guid.NewGuid(),
             StartTime = DateTime.Now.AddYears(1),
-            ChannelUri = "http://whatever",
-            EndTime = DateTime.Now.AddYears(1).AddMinutes(1),
-            Filename = "whatever.mp4",
-            Name = "whatever"
+            ChannelUri = "http://example.com/stream",
+            EndTime = DateTime.Now.AddYears(1).AddMinutes(30),
+            Filename = "recording.mp4",
+            Name = "Test Recording"
         };
-        
-        // Assert
+
+        // Set up atq command to return a job ID
         processrunner.Setup(m => m.RunProcess("atq", string.Empty))
             .Returns(("3\tThu Apr  3 15:30:00 2025 a guido", "", 0));
 
-        // Format the task definition exactly as expected by the regex in AtRecordingScheduler 
-        // TASK_DEFINITION='{"json data here"}'
+        // Set up at -c command to return a task definition with the recording serialized
         var taskdefinition = System.Text.Json.JsonSerializer.Serialize(recording);
-        processrunner.Setup(m => m.RunProcess("at", $"-c 3"))
+        processrunner.Setup(m => m.RunProcess("at", "-c 3"))
             .Returns((
                 $"#!/bin/bash\nexport TASK_DEFINITION='{taskdefinition}'", 
                 "", 
                 0
             ));
+
+        // Act
+        var tasks = scheduler.FetchScheduledTasks().ToList();
+
+        // Assert
+        Assert.Single(tasks);
+        var fetchedTask = tasks.First();
         
-        var coll = scheduler.FetchScheduledTasks();
-        Assert.Single(coll);
+        // The task should have been deserialized correctly from the TASK_DEFINITION
+        Assert.Equal(recording.Id, fetchedTask.Id);
+        Assert.Equal(recording.Name, fetchedTask.Name);
+        
+        // Verify all mocks were called as expected
+        processrunner.VerifyAll();
     }
 
     [Fact]

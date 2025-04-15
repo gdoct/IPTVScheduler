@@ -19,7 +19,8 @@ public class AtRecordingScheduler : ITaskScheduler
     private static readonly char[] _newlineSeparator = new[] { '\n' };
     // This regex now requires a tab character after the job ID which is the standard format from atq
     private static readonly Regex _atqJobIdRegex = new(@"^(\d+)\t", RegexOptions.Compiled);
-    private static readonly Regex _taskDefinitionRegex = new(@"TASK_DEFINITION=({.*?})", RegexOptions.Compiled | RegexOptions.Singleline);
+    // Adjusted the regex to ensure it matches the expected format of the serialized task
+    private static readonly Regex _taskDefinitionRegex = new(@"TASK_DEFINITION='({.*?})'", RegexOptions.Compiled | RegexOptions.Singleline);
 
     private AtRecordingScheduler(IProcessRunner processRunner, IFileSystem fileSystem, ISettingsManager settingsManager, ILogger<AtRecordingScheduler>? logger = null)
     {
