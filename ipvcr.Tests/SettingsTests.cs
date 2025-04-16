@@ -292,4 +292,26 @@ public class SettingsManagerTests
 
         Assert.Throws<ArgumentException>(() => settingsManager.UpdateAdminPassword(string.Empty));
     }
+
+    [Fact]
+    public void Constructor_SetsDefaultUserAndPassword_WhenFileHasEmptyValues()
+    {
+        // Arrange
+        var testJson = """
+        {
+            "AdminUsername": "",
+            "AdminPasswordHash": ""
+        }
+        """;
+        var mockFileSystem = new MockFileSystem();
+        var filePath = "/data/settings.json";
+        mockFileSystem.AddFile(filePath, new MockFileData(testJson));
+
+        // Act
+        var manager = new SettingsManager(mockFileSystem);
+
+        // Assert
+        Assert.Equal(SchedulerSettings.DEFAULT_USERNAME, manager.Settings.AdminUsername);
+        Assert.Equal(SchedulerSettings.DEFAULT_PASSWORD, manager.GetAdminPasswordHash());
+    }
 }

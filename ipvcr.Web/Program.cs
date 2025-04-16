@@ -1,5 +1,6 @@
 using ipvcr.Auth;
 using ipvcr.Scheduling;
+using ipvcr.Scheduling.Linux;
 using ipvcr.Scheduling.Shared;
 using Microsoft.AspNetCore.Authentication;
 using System.IO.Abstractions;
@@ -43,12 +44,15 @@ public class Program
         // Add services to the container.
         builder.Services.AddControllersWithViews();
         var platform = Environment.OSVersion.Platform;
-        builder.Services.AddTransient<IRecordingSchedulingContext>((_) => new RecordingSchedulingContext(SchedulerFactory.GetScheduler(platform)));
 
-        var settingsManager = new SettingsManager(new FileSystem());
-        builder.Services.AddSingleton<ISettingsManager>(settingsManager);
-        builder.Services.AddSingleton<IPlaylistManager>((_) => new PlaylistManager(settingsManager, new FileSystem()));
+        builder.Services.AddSingleton<IFileSystem, FileSystem>();
+        builder.Services.AddSingleton<ISettingsManager, SettingsManager>();
+        builder.Services.AddSingleton<IPlaylistManager, PlaylistManager>();
         builder.Services.AddSingleton<ITokenManager, TokenManager>();
+
+        builder.Services.AddTransient<IProcessRunner, ProcessRunner>();
+        builder.Services.AddTransient<IRecordingSchedulingContext, RecordingSchedulingContext>(); 
+        builder.Services.AddTransient<ITaskScheduler, AtScheduler>();
 
         // Add authentication with a default scheme
         builder.Services.AddAuthentication(options =>
