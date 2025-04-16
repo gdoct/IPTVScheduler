@@ -111,6 +111,26 @@ public class TaskScriptManagerTests
     }
 
     [Fact]
+    public void TaskScriptManager_ExtractJsonFromTask_NoDefinition_Throws()
+    {
+        // Arrange
+        var fileSystem = _mocks.Create<IFileSystem>();
+        var settingsManager = _mocks.Create<ISettingsManager>();
+        settingsManager.SetupGet(s => s.Settings).Returns(new SchedulerSettings { DataPath = "/data/path" });
+        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsManager.Object);
+        var taskId = Guid.NewGuid();
+        var task = new ScheduledTask(taskId, "name", "TestTask", DateTimeOffset.Now, "{}");
+        var file = _mocks.Create<IFile>();
+        fileSystem.SetupGet(fs => fs.File).Returns(file.Object);
+        file.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+        file.Setup(f => f.ReadAllText(It.IsAny<string>())).Returns("#!/bin/bash\nexport TASK_DEFINITIdON=\n");
+        // Act
+        Assert.Throws<InvalidOperationException>(() => taskScriptManager.ExtractJsonFromTask(taskId, "TASK_DEFINITION"));
+        // Assert
+        _mocks.VerifyAll();
+    }
+
+    [Fact]
     public void TaskScriptManager_ReadTaskScript_ThrowsIfFileNotFound()
     {
         // Arrange

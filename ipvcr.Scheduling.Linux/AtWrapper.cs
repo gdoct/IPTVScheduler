@@ -31,10 +31,7 @@ public partial class AtWrapper(IFileSystem fileSystem, IProcessRunner processRun
                 if (match.Success)
                 {
                     string jobIdString = match.Groups[1].Value;
-                    if (Int32.TryParse(jobIdString, out int jobNr))
-                    {
-                        return jobNr;
-                    }
+                    return Int32.Parse(jobIdString);
                 }
             }
         }
@@ -97,27 +94,24 @@ public partial class AtWrapper(IFileSystem fileSystem, IProcessRunner processRun
         }
         var taskDefinition = _taskScriptManager.ExtractJsonFromTask(taskId, "TASK_DEFINITION");
         var innerTask = _taskScriptManager.ExtractJsonFromTask(taskId, "TASK_INNER_DEFINITION");
-        if (taskDefinition != null)
+        try
         {
-            try
-            {
-                // Deserialize the task definition
-                var task = JsonSerializer.Deserialize<ScheduledTask>(taskDefinition);
+            // Deserialize the task definition
+            var task = JsonSerializer.Deserialize<ScheduledTask>(taskDefinition);
 
-                if (task != null)
-                {
-                    // Set the task ID and inner task definition
-                    task.InnerScheduledTask = innerTask;
-                    // Return the deserialized task
-#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
-                    return (jobId, task);
-#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
-                }
-            }
-            catch (JsonException e)
+            if (task != null)
             {
-                throw new InvalidOperationException($"Failed to deserialize task for job {jobId} : {e.ToString()}");
+                // Set the task ID and inner task definition
+                task.InnerScheduledTask = innerTask;
+                // Return the deserialized task
+#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
+                return (jobId, task);
+#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
             }
+        }
+        catch (JsonException e)
+        {
+            throw new InvalidOperationException($"Failed to deserialize task for job {jobId} : {e.ToString()}");
         }
         throw new InvalidOperationException($"Failed to parse task definition for job {jobId}");
     }

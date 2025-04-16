@@ -22,6 +22,21 @@ const SettingsPage: React.FC = () => {
   // Reference to file input
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Validate token on page load
+  useEffect(() => {
+    const validateTokenOnLoad = async () => {
+      try {
+        // This will automatically redirect to login if token is invalid
+        await AuthService.validateToken();
+      } catch (error) {
+        console.error('Token validation error:', error);
+        // The validateToken function will handle redirection if token is invalid
+      }
+    };
+    
+    validateTokenOnLoad();
+  }, []);
+
   // Load settings on component mount
   useEffect(() => {
     fetchSettings();
