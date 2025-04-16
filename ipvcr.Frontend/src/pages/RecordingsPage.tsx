@@ -7,7 +7,7 @@ import { recordingsApi } from '../services/RecordingsApi';
 import { HomeRecordingsViewModel, ScheduledRecording, TaskDefinitionModel } from '../types/recordings';
 
 // Refresh interval in milliseconds (30 seconds)
-const REFRESH_INTERVAL = 30000;
+const REFRESH_INTERVAL = 300000;
 
 const RecordingsPage: React.FC = () => {
   // State management

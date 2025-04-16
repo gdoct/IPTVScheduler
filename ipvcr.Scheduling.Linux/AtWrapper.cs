@@ -1,23 +1,43 @@
+using System.IO.Abstractions;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks.Dataflow;
 using ipvcr.Scheduling.Shared;
 
 namespace ipvcr.Scheduling.Linux;
 
-public class AtWrapper(IProcessRunner processRunner, ISettingsManager settingsManager) : CommandWrapperBase(processRunner, settingsManager, AT_COMMAND)
+public partial class AtWrapper(IFileSystem fileSystem, IProcessRunner processRunner, ISettingsManager settingsManager) : CommandWrapperBase(processRunner, settingsManager, AT_COMMAND)
 {
     private const string AT_DATE_FORMAT = "HH:mm MM/dd/yyyy";
     private const string AT_COMMAND = "at";
-
+    private readonly TaskScriptManager _taskScriptManager = new TaskScriptManager(fileSystem, settingsManager);
     public int ScheduleTask(ScheduledTask task)
     {
         Environment.SetEnvironmentVariable("TASK_ID", task.Id.ToString());
         var taskjson = System.Text.Json.JsonSerializer.Serialize(task);
-        Environment.SetEnvironmentVariable("TASK_DEFINITION", taskjson);
+        //Environment.SetEnvironmentVariable("TASK_DEFINITION", taskjson);
         string startTimeFormatted = task.StartTime.ToLocalTime().ToString(AT_DATE_FORMAT);
         string atCommand = $"echo \"{base.GetScriptFilename(task)}\" | at {startTimeFormatted}";
         var (output, error, exitCode) = base.ExecuteShellCommand(atCommand);
-
+        //var expected = "warning: commands will be executed using /bin/sh\njob 66 at Thu Apr 17 14:54:00 2025\n\n";
+        var lines = error.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        if (lines.Length > 0)
+        {
+            // The first line is the warning message, the second line is the job ID
+            foreach (var line in lines)
+            {
+                var jobIdRegex = new Regex(@"job (\d+) at", RegexOptions.Compiled);
+                var match = jobIdRegex.Match(line);
+                if (match.Success)
+                {
+                    string jobIdString = match.Groups[1].Value;
+                    if (Int32.TryParse(jobIdString, out int jobNr))
+                    {
+                        return jobNr;
+                    }
+                }
+            }
+        }
         if (exitCode != 0)
         {
             throw new InvalidOperationException($"Failed to schedule task: {error}");
@@ -32,6 +52,31 @@ public class AtWrapper(IProcessRunner processRunner, ISettingsManager settingsMa
         }
     }
 
+    private string ExtractTaskId(string scriptContent)
+    {
+        // example script content:
+        // #!/bin/sh
+        // # atrun uid=1002 gid=1002
+        // ..snip
+        // TASK_ID=430e5177-2442-4edb-8176-1d60ce5b5dda; export TASK_ID
+        // ..snip
+        // /data/tasks/430e5177-2442-4edb-8176-1d60ce5b5dda.sh
+        var lines = scriptContent.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var line in lines)
+        {
+            if (line.StartsWith("TASK_ID="))
+            {
+                var match = Regex.Match(line, @"TASK_ID=([a-f0-9\-]+)", RegexOptions.Compiled);
+                if (match.Success)
+                {
+                    var taskId = match.Groups[1].Value;
+                    return taskId;
+                }
+            }
+        }
+        throw new InvalidOperationException("Task ID not found in output.");
+    }
+
     public (int id, ScheduledTask task) GetTaskDetails(int jobId)
     {
         var (output, error, exitCode) = base.ExecuteCommand($"-c {jobId}");
@@ -41,28 +86,40 @@ public class AtWrapper(IProcessRunner processRunner, ISettingsManager settingsMa
             throw new InvalidOperationException($"Failed to get job details for job {jobId}: {error}");
         }
 
-        // The output of `at -c <job_id>` typically contains the job ID and the script content.
-        // from the output read the value of the shell variable TASK_DEFINITION
-        // TASK_DEFINITION is a json serialized ScheduledTask object
-        // read this json and deserialize a ScheduledTask object
-        var taskDefinitionRegex = new Regex("TASK_DEFINITION='({.*?})'", RegexOptions.Compiled | RegexOptions.Singleline);
-        var match = taskDefinitionRegex.Match(output);
-        if (match.Success)
+        if (output.Length == 0)
         {
-            string taskJson = match.Groups[1].Value.Replace("\\", string.Empty);
-            try {
-                var task = System.Text.Json.JsonSerializer.Deserialize<ScheduledTask>(taskJson);
-// this will never return null. otherwise it's fine to throw.
+            throw new InvalidOperationException($"No output from at -c for job {jobId}");
+        }
+        var taskguid = ExtractTaskId(output);
+        if (!Guid.TryParse(taskguid, out var taskId))
+        {
+            throw new InvalidOperationException($"Failed to parse task ID from output: {output}");
+        }
+        var taskDefinition = _taskScriptManager.ExtractJsonFromTask(taskId, "TASK_DEFINITION");
+        var innerTask = _taskScriptManager.ExtractJsonFromTask(taskId, "TASK_INNER_DEFINITION");
+        if (taskDefinition != null)
+        {
+            try
+            {
+                // Deserialize the task definition
+                var task = JsonSerializer.Deserialize<ScheduledTask>(taskDefinition);
+
+                if (task != null)
+                {
+                    // Set the task ID and inner task definition
+                    task.InnerScheduledTask = innerTask;
+                    // Return the deserialized task
 #pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
-                return (jobId, task);
+                    return (jobId, task);
 #pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
-            } catch {
-                throw new InvalidOperationException($"Failed to deserialize task for job {jobId}");
+                }
+            }
+            catch (JsonException e)
+            {
+                throw new InvalidOperationException($"Failed to deserialize task for job {jobId} : {e.ToString()}");
             }
         }
-        else
-        {
-            throw new InvalidOperationException($"Failed to parse task definition for job {jobId}");
-        }
+        throw new InvalidOperationException($"Failed to parse task definition for job {jobId}");
     }
+
 }
