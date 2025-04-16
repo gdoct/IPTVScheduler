@@ -46,15 +46,15 @@ public class AtSchedulerTests
         processRunner.Setup(pr => pr.RunProcess("atq", It.IsAny<string>()))
             .Returns((expectedOutput, "", 0));
         var taskId = Guid.NewGuid();
-        processRunner.Setup(p => p.RunProcess("at", "-c 1")).Returns(($"TASK_ID={taskId}", "", 0));
-        processRunner.Setup(p => p.RunProcess("at", "-c 2")).Returns(($"TASK_ID={taskId}", "", 0));
+        processRunner.Setup(p => p.RunProcess("at", "-c 1")).Returns(($"TASK_ID={taskId}\n", "", 0));
+        processRunner.Setup(p => p.RunProcess("at", "-c 2")).Returns(($"TASK_ID={taskId}\n", "", 0));
         // Act
-        var tasks = scheduler.FetchScheduledTasks();
         var fileMock = MockRepository.Create<IFile>();
         fileSystem.SetupGet(fs => fs.File).Returns(fileMock.Object);
         fileMock.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
         fileMock.Setup(f => f.ReadAllText(It.IsAny<string>())).Returns($"export TASK_DEFINITION={taskJson}\nexport TASK_INNER_DEFINITION=\n");
         // Assert
+        var tasks = scheduler.FetchScheduledTasks().ToList();
         Assert.NotNull(tasks);
         var count = tasks.Count();
         MockRepository.VerifyAll();
@@ -90,7 +90,7 @@ public class AtSchedulerTests
         Assert.Empty(tasks);
     }
 
-   // [Fact]
+    [Fact]
     public void AtScheduler_CancelTask_Valid()
     {
         // Arrange
@@ -110,12 +110,13 @@ public class AtSchedulerTests
             .Returns((jobId.ToString() + "\tinfo more info", "", 0));
 
         var id = Guid.NewGuid();
-        processRunner.Setup(p => p.RunProcess("at", "-c " + jobId)).Returns(($"export TASK_ID={id}", "", 0));
+        processRunner.Setup(p => p.RunProcess("at", "-c " + jobId)).Returns(($"TASK_ID={id}\n", "", 0));
         processRunner.Setup(p => p.RunProcess("atrm", jobId.ToString())).Returns(("", "", 0));
         fileSystem.Setup(fs => fs.Directory.Exists(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(fs => fs.File.Move(It.IsAny<string>(), It.IsAny<string>()));
-        fileSystem.Setup(f => f.File.ReadAllText(It.IsAny<string>())).Returns($"export TASK_ID={id}\nexport TASK_DEFINITION=\nexport TASK_INNER_DEFINITION=\n");
+        fileSystem.Setup(fs => fs.File.Delete(It.IsAny<string>()));
+        fileSystem.Setup(f => f.File.ReadAllText(It.IsAny<string>())).Returns($"export TASK_ID={id}\n" + "export TASK_DEFINITION=" + taskJson + "\nexport TASK_INNER_DEFINITION={}\n");
 
         // Act
         scheduler.CancelTask(taskId);
@@ -162,7 +163,7 @@ public class AtSchedulerTests
         Assert.Throws<InvalidOperationException>(() => scheduler.GetTaskDefinition(taskId));
     }
 
-  //  [Fact]
+    [Fact]
     public void AtScheduler_GetTaskDefinition_ReturnsInnerScheduledTask()
     {
         // Arrange
@@ -181,16 +182,22 @@ public class AtSchedulerTests
         processRunner.Setup(pr => pr.RunProcess("atq", It.IsAny<string>()))
             .Returns((jobId.ToString() + "\tinfo more info", "", 0));
 
-        processRunner.Setup(p => p.RunProcess("at", "-c " + jobId)).Returns(($"TASK_DEFINITION='{taskJson}'", "", 0));
+        processRunner.Setup(p => p.RunProcess("at", "-c " + jobId)).Returns(($"TASK_ID={taskId}\n", "", 0));
+        fileSystem.Setup(fs => fs.Directory.Exists(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(fs => fs.File.Move(It.IsAny<string>(), It.IsAny<string>()));
+        fileSystem.Setup(fs => fs.File.Delete(It.IsAny<string>()));
+        string expected = $"export TASK_ID={taskId}\n" + "export TASK_DEFINITION=" + taskJson + "\nexport TASK_INNER_DEFINITION={}\n";
+        fileSystem.Setup(f => f.File.ReadAllText(It.IsAny<string>())).Returns(expected);
 
         // Act
         var result = scheduler.GetTaskDefinition(taskId);
 
         // Assert
-        Assert.Equal(task.InnerScheduledTask, result);
+        Assert.Equal(result, expected);
     }
 
-   // [Fact]
+    [Fact]
     public void AtScheduler_UpdateTaskDefinition_Valid()
     {
         // Arrange
@@ -215,7 +222,13 @@ public class AtSchedulerTests
         file.Setup(f => f.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
         file.Setup(f => f.SetAttributes(It.IsAny<string>(), It.IsAny<FileAttributes>())).Verifiable();
 
-        processRunner.Setup(p => p.RunProcess("at", "-c " + jobId)).Returns(($"TASK_DEFINITION='{taskJson}'", "", 0));
+        processRunner.Setup(p => p.RunProcess("at", "-c " + jobId)).Returns(($"TASK_ID={taskId}\n", "", 0));
+        fileSystem.Setup(fs => fs.Directory.Exists(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(fs => fs.File.Move(It.IsAny<string>(), It.IsAny<string>()));
+        fileSystem.Setup(fs => fs.File.Delete(It.IsAny<string>()));
+        string expected = $"export TASK_ID={taskId}\n" + "export TASK_DEFINITION=" + taskJson + "\nexport TASK_INNER_DEFINITION={}\n";
+        fileSystem.Setup(f => f.File.ReadAllText(It.IsAny<string>())).Returns(expected);
 
         // Act
         scheduler.UpdateTaskDefinition(taskId, taskJson);
