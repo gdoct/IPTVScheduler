@@ -77,7 +77,7 @@ export TASK_DEFINITION='{task.InnerScheduledTask}'
 
 {task.Command}
 
-rm -f ""{task.Id}.sh""""";
+rm -f ""{task.Id}.sh""";
         }
         else
         {
