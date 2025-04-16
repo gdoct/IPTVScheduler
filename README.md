@@ -13,6 +13,7 @@ A simple web VCR in a docker image
 - Schedules recordings through ```at```
 - Easy configuration through the web interface
 - Support for large channel lists ( > 100 mb)
+- Requires authentication
 
 ## Screenshot
 
@@ -37,7 +38,11 @@ To run the docker using bridged networking and redirect the default ports, use t
 docker run --name ipvcr -p 5000:5000 -d -v /path/to/media:/media -v /path/to/data:/data ghcr.io/gdoct/ipvcr:latest
 ```
 
-At the first run, make sure to configure the m3u file.
+## First run
+1. Log on with the default username **admin** and password **ipvcr**
+2. Proceed to the settings page (cogwheel in the upper right corner)
+3. Upload a m3u file
+4. Change the admin password
 
 ## Development
 
@@ -50,6 +55,8 @@ cd ipvcr
 dotnet build
 dotnet run --project ipvcr.Web
 ```
+
+To contribute, just create an issue or a pull request
 
 ## Docker Compose
 
