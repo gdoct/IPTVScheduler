@@ -144,6 +144,9 @@ public class TaskScriptManagerTests
         directory.Setup(f => f.CreateDirectory(It.IsAny<string>())).Returns(Mock.Of<IDirectoryInfo>());
         file.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
         file.Setup(f => f.Move(It.IsAny<string>(), It.IsAny<string>())).Verifiable();
+
+        file.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+        file.Setup(f => f.Delete(It.IsAny<string>())).Verifiable();
         // Act
         taskScriptManager.MoveScriptToFailed(taskId);
         // Assert

@@ -7,5 +7,5 @@ public class ScheduledTask(Guid id, string name, string command, DateTimeOffset 
     public string Name { get; init; } = name;
     public string Command { get; init; } = command;
     public DateTimeOffset StartTime { get; init; } = startTime; // this is in server time
-    public string InnerScheduledTask { get; init; } = innerScheduledTask;
+    public string InnerScheduledTask { get; set; } = innerScheduledTask;
 }

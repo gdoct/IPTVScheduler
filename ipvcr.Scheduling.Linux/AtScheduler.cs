@@ -5,7 +5,7 @@ namespace ipvcr.Scheduling.Linux;
 
 public class AtScheduler(IFileSystem fileSystem, IProcessRunner processRunner, ISettingsManager settingsManager) : ITaskScheduler
 {
-    private readonly AtWrapper _atWrapper = new AtWrapper(processRunner, settingsManager);
+    private readonly AtWrapper _atWrapper = new AtWrapper(fileSystem, processRunner, settingsManager);
     private readonly AtqWrapper _atqWrapper = new AtqWrapper(processRunner, settingsManager);
     private readonly AtrmWrapper _atrmWrapper = new AtrmWrapper(processRunner, settingsManager);
     private readonly TaskScriptManager _taskScriptManager = new TaskScriptManager(fileSystem, settingsManager);
@@ -41,7 +41,7 @@ public class AtScheduler(IFileSystem fileSystem, IProcessRunner processRunner, I
             throw new InvalidOperationException($"Task with ID {id} not found.");
         }
         
-        return task.Task.InnerScheduledTask;
+        return _taskScriptManager.ReadTaskScript(id);
     }
 
     public void ScheduleTask(ScheduledTask task)

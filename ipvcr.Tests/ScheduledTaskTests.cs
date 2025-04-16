@@ -28,6 +28,18 @@ public class ScheduledTaskTests
         Assert.Equal("http://chan.../1234", schedrec.Obfuscate());
     }
 
+    [Theory]
+    [InlineData("{\"Id\":\"855e1099-8046-4811-80c0-b64501ed8251\",\"TaskId\":0,\"Name\":\"wa\",\"Command\":\"ffmpeg -i http://mag.diamondtv.top/crS7aWh0/p47Taxa/2998 -t 3600 -c copy -f mp4 -metadata title=\\u0022wa\\u0022 -metadata description=\\u0022wa - recorded from RTL 4 at Apr 17 2025, 04:04 PM\\u0022 /media/wa_20250417_16041604.mp4\",\"StartTime\":\"2025-04-17T16:04:00+02:00\",\"InnerScheduledTask\":\"\"}"
+)]
+    public void ScheduledTaskDeserialize_Valid(string json)
+    {
+        var task = System.Text.Json.JsonSerializer.Deserialize<ScheduledTask>(json);
+        Assert.NotNull(task);
+        Assert.NotEmpty(task.Name);
+        Assert.NotEmpty(task.Command);
+        Assert.Empty(task.InnerScheduledTask);
+    }
+
     [Fact]
     public void ScheduledTask_ToAndFromScheduledRecording_ShouldSucceedConversion()
     {
