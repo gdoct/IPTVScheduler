@@ -5,6 +5,7 @@ import RecordingsTable from '../components/RecordingsTable';
 import TaskEditor from '../components/TaskEditor';
 import { recordingsApi } from '../services/RecordingsApi';
 import { HomeRecordingsViewModel, ScheduledRecording, TaskDefinitionModel } from '../types/recordings';
+import { AuthService } from '../services/AuthService';
 
 // Refresh interval in milliseconds (30 seconds)
 const REFRESH_INTERVAL = 300000;
@@ -24,6 +25,21 @@ const RecordingsPage: React.FC = () => {
   const [showTaskEditor, setShowTaskEditor] = useState<boolean>(false);
   const [selectedRecording, setSelectedRecording] = useState<ScheduledRecording | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskDefinitionModel | null>(null);
+
+  // Validate token on page load
+  useEffect(() => {
+    const validateTokenOnLoad = async () => {
+      try {
+        // This will automatically redirect to login if token is invalid
+        await AuthService.validateToken();
+      } catch (error) {
+        console.error('Token validation error:', error);
+        // The validateToken function will handle redirection if token is invalid
+      }
+    };
+    
+    validateTokenOnLoad();
+  }, []);
 
   // Load data on component mount and set up refresh interval
   useEffect(() => {
