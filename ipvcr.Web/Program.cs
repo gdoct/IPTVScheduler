@@ -16,27 +16,55 @@ public class Program
         var port = configuration.GetValue<int?>("Port") ?? 5000;
         var sslport = configuration.GetValue<int?>("SslPort") ?? 5001;
         var useSsl = configuration.GetValue<bool?>("UseSsl") ?? false; // Default to false if not set
-        var certpath = configuration.GetValue<string?>("CertPath") ?? string.Empty; // Default to empty if not set
-        builder.WebHost.UseUrls($"http://*:{port}");
+        // Create a settings manager instance early to access certificate path
+        var fileSystem = new System.IO.Abstractions.FileSystem();
+        var settingsManager = new SettingsManager(fileSystem);
+        var certpath = settingsManager.Settings.SslCertificatePath ?? string.Empty;
+        if (!string.IsNullOrEmpty(certpath) && !File.Exists(certpath))
+        {
+            var gen = new SelfSignedCertificateGenerator(new FileSystem());
+            gen.GenerateSelfSignedTlsCertificate(certpath, "ipvcr");
+            Console.WriteLine($"Generated self-signed certificate at: {certpath}");
+        }
+        // Register the pre-created instance in the DI container
+        builder.Services.AddSingleton<ISettingsManager>(settingsManager);
+
+        // Subscribe to settings changes to update certificate when it changes
+        settingsManager.SettingsChanged += (sender, args) =>
+        {
+            certpath = args.NewSettings.SslCertificatePath ?? string.Empty;
+            Console.WriteLine($"Certificate path updated to: {certpath}");
+        };
+
         if (useSsl && !string.IsNullOrEmpty(certpath) && File.Exists(certpath))
         {
-            // Use the provided certificate path for SSL
-            builder.WebHost.UseUrls($"https://*:{sslport}");
+            // Configure both HTTP and HTTPS endpoints using ConfigureKestrel
             builder.WebHost.ConfigureKestrel(serverOptions =>
             {
+                // HTTP endpoint
+                serverOptions.ListenAnyIP(port);
+                
+                // HTTPS endpoint with certificate
                 serverOptions.ListenAnyIP(sslport, listenOptions =>
                 {
-                    listenOptions.UseHttps(certpath);
+                    listenOptions.UseHttps(certpath, "ipvcr");
                 });
             });
         }
-        else if (useSsl)
+        else
         {
-            //throw new InvalidOperationException("SSL is enabled but no certificate path is provided.");
-            Console.WriteLine("SSL is enabled but no certificate path is provided. SSL will not be used.");
+            // Configure only HTTP endpoint
+            builder.WebHost.ConfigureKestrel(serverOptions =>
+            {
+                serverOptions.ListenAnyIP(port);
+            });
+            
+            if (useSsl)
+            {
+                //throw new InvalidOperationException("SSL is enabled but no certificate path is provided.");
+                Console.WriteLine("SSL is enabled but no certificate path is provided. SSL will not be used.");
+            }
         }
-
-
         // Configure logging
         builder.Logging.ClearProviders();
         builder.Logging.AddConsole();
@@ -51,7 +79,7 @@ public class Program
         builder.Services.AddSingleton<ITokenManager, TokenManager>();
 
         builder.Services.AddTransient<IProcessRunner, ProcessRunner>();
-        builder.Services.AddTransient<IRecordingSchedulingContext, RecordingSchedulingContext>(); 
+        builder.Services.AddTransient<IRecordingSchedulingContext, RecordingSchedulingContext>();
         builder.Services.AddTransient<ITaskScheduler, AtScheduler>();
 
         // Add authentication with a default scheme
@@ -61,7 +89,7 @@ public class Program
             options.DefaultChallengeScheme = "TokenAuth";
         })
         .AddScheme<AuthenticationSchemeOptions, TokenAuthenticationHandler>("TokenAuth", options => { });
-        
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -72,12 +100,13 @@ public class Program
             app.UseHsts();
         }
 
-        app.UseHttpsRedirection();
-        
+        // Comment out or remove this line to prevent HTTP to HTTPS redirection
+        // app.UseHttpsRedirection();
+
         // Serve static files from wwwroot with default documents
         app.UseDefaultFiles(); // Add this line before UseStaticFiles
         app.UseStaticFiles();
-        
+
         // Development-only CORS policy
         if (app.Environment.IsDevelopment())
         {
@@ -94,7 +123,7 @@ public class Program
         app.UseAuthorization();
         // API controller routes
         app.MapControllers();
-            
+
         // Handle SPA fallback for all non-API routes
         app.MapFallbackToFile("index.html");
 

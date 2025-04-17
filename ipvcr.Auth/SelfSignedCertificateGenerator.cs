@@ -56,6 +56,13 @@ namespace ipvcr.Auth
 
             // Export the certificate to a PFX file
             byte[] certificateBytes = certificate.Export(X509ContentType.Pfx, password);
+
+            // create output folder if it does not exist
+            var outputDirectory = _fileSystem.Path.GetDirectoryName(outputPath);
+            if (outputDirectory != null && !_fileSystem.Directory.Exists(outputDirectory))
+            {
+                _fileSystem.Directory.CreateDirectory(outputDirectory);
+            }
             _fileSystem.File.WriteAllBytes(outputPath, certificateBytes);
 
             return certificate;
