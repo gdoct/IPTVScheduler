@@ -94,6 +94,9 @@ public class SelfSignedCertificateGeneratorTests
     {
         // Arrange
         _fileSystemMock.Setup(fs => fs.File.WriteAllBytes(It.IsAny<string>(), It.IsAny<byte[]>()));
+        _fileSystemMock.Setup(fs => fs.Directory.CreateDirectory(It.IsAny<string>())).Returns(Mock.Of<IDirectoryInfo>());
+        _fileSystemMock.Setup(fs => fs.Directory.Exists(It.IsAny<string>())).Returns(false);
+        _fileSystemMock.Setup(fs => fs.Path.GetDirectoryName(It.IsAny<string>())).Returns("/test");
         var generator = new SelfSignedCertificateGenerator(_fileSystemMock.Object);
         var outputPath = "/test/certificate.pfx";
 
