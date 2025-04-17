@@ -25,7 +25,7 @@ public class LoginController : ControllerBase
     public IActionResult Login([FromBody] LoginRequest request)
     {
         if (request.Username == _settingsManager.Settings.AdminUsername
-         && _tokenManager.CreateHash(request.Password) == _settingsManager.GetAdminPasswordHash())
+         && _tokenManager.CreateHash(request.Password) == _settingsManager.GetAdminPassword())
         {
             var token = _tokenManager.CreateToken(request.Username);
             return Ok(new { Token = token });

@@ -1,3 +1,4 @@
+using ipvcr.Auth;
 using ipvcr.Scheduling;
 using ipvcr.Scheduling.Shared;
 using Moq;
@@ -109,7 +110,7 @@ public class SettingsManagerTests
         {
             AdminUsername = SchedulerSettings.DEFAULT_USERNAME,
             // The password hash is not returned in Settings property
-            AdminPasswordHash = string.Empty
+            AdminPassword = string.Empty
         };
         var res = settingsManager.Settings;
         Assert.Equivalent(expected, res);
@@ -268,7 +269,7 @@ public class SettingsManagerTests
         var settings = new SchedulerSettings { MediaPath = "/new/path" };
         mockFileSystem.AddFile(SettingsFilePath, new MockFileData(JsonSerializer.Serialize(settings)));
         var settingsManager = CreateSettingsManager(mockFileSystem);
-        var hash = settingsManager.GetAdminPasswordHash();
+        var hash = settingsManager.GetAdminPassword();
         var expected = SchedulerSettings.DEFAULT_PASSWORD;
         Assert.Equal(expected, hash);
     }
@@ -281,12 +282,12 @@ public class SettingsManagerTests
         var settings = new SchedulerSettings { MediaPath = "/new/path" };
         mockFileSystem.AddFile(SettingsFilePath, new MockFileData(JsonSerializer.Serialize(settings)));
         var settingsManager = CreateSettingsManager(mockFileSystem);
-        var hash = settingsManager.GetAdminPasswordHash();
+        var hash = settingsManager.GetAdminPassword();
         var expected = SchedulerSettings.DEFAULT_PASSWORD;
         Assert.Equal(expected, hash);
 
         settingsManager.UpdateAdminPassword("unittest");
-        var newhash2 = settingsManager.GetAdminPasswordHash();
+        var newhash2 = settingsManager.GetAdminPassword();
         Assert.NotEqual(hash, newhash2);
         Assert.Equal("unittest", System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(newhash2)));
 
@@ -300,7 +301,7 @@ public class SettingsManagerTests
         var testJson = """
         {
             "AdminUsername": "",
-            "AdminPasswordHash": ""
+            "AdminPassword": ""
         }
         """;
         var mockFileSystem = new MockFileSystem();
@@ -312,6 +313,18 @@ public class SettingsManagerTests
 
         // Assert
         Assert.Equal(SchedulerSettings.DEFAULT_USERNAME, manager.Settings.AdminUsername);
-        Assert.Equal(SchedulerSettings.DEFAULT_PASSWORD, manager.GetAdminPasswordHash());
+        Assert.Equal(SchedulerSettings.DEFAULT_PASSWORD, manager.GetAdminPassword());
+    }
+
+    [Fact]
+    public void SchedulerSettings_DefaultPasswordValueShouldBeCorrect()
+    {
+        // the default value for the AdminPasssword field is "ipvcr" hashed
+        // so if the hashing algorithm changes, this test fails until the default is updated
+        var settings = new SchedulerSettings();
+        var tokenManager = new TokenManager();
+        var hash = tokenManager.CreateHash("ipvcr");
+        var actual = settings.AdminPassword;
+        Assert.Equal(hash, actual);
     }
 }

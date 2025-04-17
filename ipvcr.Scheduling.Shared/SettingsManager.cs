@@ -1,6 +1,4 @@
 using System.IO.Abstractions;
-using System.Text.Encodings.Web;
-using ipvcr.Scheduling.Shared;
 using static ipvcr.Scheduling.Shared.ISettingsManager;
 
 namespace ipvcr.Scheduling.Shared;
@@ -33,7 +31,7 @@ public class SettingsManager : ISettingsManager
                 M3uPlaylistPath = _settings.M3uPlaylistPath,
                 RemoveTaskAfterExecution = _settings.RemoveTaskAfterExecution,
                 AdminUsername = _settings.AdminUsername,
-                AdminPasswordHash = string.Empty
+                AdminPassword = string.Empty
             };;
         }
         set
@@ -45,16 +43,16 @@ public class SettingsManager : ISettingsManager
                 M3uPlaylistPath = value.M3uPlaylistPath,
                 RemoveTaskAfterExecution = value.RemoveTaskAfterExecution,
                 AdminUsername = value.AdminUsername,
-                AdminPasswordHash = _settings.AdminPasswordHash
+                AdminPassword = _settings.AdminPassword
             };
             SaveSettings(changedSettings);
             SettingsChanged?.Invoke(this, new SettingsChangedEventArgs(value));
         }
     }
 
-    public string GetAdminPasswordHash()
+    public string GetAdminPassword()
     {
-        return _settings.AdminPasswordHash;
+        return _settings.AdminPassword;
     }
 
     public void UpdateAdminPassword(string newPassword)
@@ -64,7 +62,7 @@ public class SettingsManager : ISettingsManager
             throw new ArgumentException("New password cannot be null or empty.", nameof(newPassword));
         }
 
-        _settings.AdminPasswordHash = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(newPassword));
+        _settings.AdminPassword = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(newPassword));
         var settings = _settings;
         SaveSettings(settings);
     }
@@ -81,7 +79,7 @@ public class SettingsManager : ISettingsManager
                 var defaultSettings = new SchedulerSettings
                 {
                     AdminUsername = SchedulerSettings.DEFAULT_USERNAME,
-                    AdminPasswordHash = SchedulerSettings.DEFAULT_PASSWORD
+                    AdminPassword = SchedulerSettings.DEFAULT_PASSWORD
                 };
                 _settings = defaultSettings;
                 SaveSettingsToFile(System.Text.Json.JsonSerializer.Serialize(defaultSettings));
@@ -102,9 +100,9 @@ public class SettingsManager : ISettingsManager
                 {
                     deserialized.AdminUsername = SchedulerSettings.DEFAULT_USERNAME;
                 }
-                if (string.IsNullOrWhiteSpace(deserialized.AdminPasswordHash))
+                if (string.IsNullOrWhiteSpace(deserialized.AdminPassword))
                 {
-                    deserialized.AdminPasswordHash = SchedulerSettings.DEFAULT_PASSWORD;
+                    deserialized.AdminPassword = SchedulerSettings.DEFAULT_PASSWORD;
                 }
                 return deserialized;
             }
@@ -134,7 +132,7 @@ public class SettingsManager : ISettingsManager
                 M3uPlaylistPath = settings.M3uPlaylistPath,
                 RemoveTaskAfterExecution = settings.RemoveTaskAfterExecution,
                 AdminUsername = settings.AdminUsername,
-                AdminPasswordHash = _settings.AdminPasswordHash
+                AdminPassword = _settings.AdminPassword
             };
             _settings = changedSettings;
             SaveSettingsToFile(System.Text.Json.JsonSerializer.Serialize(changedSettings));
