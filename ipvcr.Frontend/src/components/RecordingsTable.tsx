@@ -59,7 +59,7 @@ const RecordingsTable: React.FC<RecordingsTableProps> = ({
           <h4 className="mt-3">No recordings scheduled</h4>
           <p className="text-muted">Start by adding a new recording.</p>
           {showAddButton && (
-            <Button variant="primary" onClick={onAdd}>
+            <Button variant="primary" onClick={onAdd} data-testid="add-recording-btn">
               <i className="bi bi-plus-lg me-1"></i> Add New Recording
             </Button>
           )}
@@ -75,7 +75,7 @@ const RecordingsTable: React.FC<RecordingsTableProps> = ({
           <i className="bi bi-calendar-event me-2"></i>Upcoming Recordings
         </h5>
         {showAddButton && (
-          <Button variant="light" onClick={onAdd}>
+          <Button variant="light" onClick={onAdd} data-testid="add-recording-btn">
             <i className="bi bi-plus-lg me-1"></i> Add New Recording
           </Button>
         )}

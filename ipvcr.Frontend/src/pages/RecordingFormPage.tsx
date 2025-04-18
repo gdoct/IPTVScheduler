@@ -318,6 +318,7 @@ const RecordingFormPage: React.FC = () => {
                         value={formData.name || ''}
                         onChange={handleInputChange}
                         required
+                        data-testid="recording-name-input"
                       />
                     </Form.Group>
                     <Form.Group className="mb-3">
@@ -356,6 +357,7 @@ const RecordingFormPage: React.FC = () => {
                           onChange={(e) => handleChannelSearch(e.target.value)}
                           onFocus={() => channelQuery && setShowDropdown(true)}
                           required
+                          data-testid="channel-search-input"
                         />
                         {isSearching && (
                           <InputGroup.Text>
@@ -370,6 +372,7 @@ const RecordingFormPage: React.FC = () => {
                         <ListGroup 
                           className="position-absolute w-100 mt-1 z-3 shadow channel-dropdown" 
                           style={{ maxHeight: '200px', overflowY: 'auto' }}
+                          data-testid="channel-dropdown"
                         >
                           {searchResults.length === 0 ? (
                             <ListGroup.Item className="text-muted">
@@ -382,6 +385,7 @@ const RecordingFormPage: React.FC = () => {
                                 action
                                 onClick={() => handleChannelSelect(channel)}
                                 className="d-flex align-items-center"
+                                data-testid={`channel-option-${channel.name.replace(/\s+/g, '-').toLowerCase()}`}
                               >
                                 {channel.logo && (
                                   <img 
@@ -453,6 +457,7 @@ const RecordingFormPage: React.FC = () => {
                     variant="primary" 
                     type="submit" 
                     disabled={!isFormValid}
+                    data-testid="save-recording-btn"
                   >
                     <i className="bi bi-save me-1"></i>Save
                   </Button>
