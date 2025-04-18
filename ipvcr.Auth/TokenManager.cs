@@ -89,7 +89,9 @@ public class TokenManager : ITokenManager
 
     public string CreateHash(string input)
     {
+        if (string.IsNullOrWhiteSpace(input))
+            return string.Empty;
         // Implement a proper hashing algorithm here
-        return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(input));
+        return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(input.PadLeft(16, '0')));
     }
 }

@@ -3,6 +3,7 @@ namespace ipvcr.Scheduling;
 using System.Collections.Generic;
 using System.IO.Abstractions;
 using ipvcr.Scheduling.Shared;
+using ipvcr.Scheduling.Shared.Settings;
 
 public interface IPlaylistManager
 {
@@ -18,23 +19,27 @@ public class PlaylistManager : IPlaylistManager
     private string? _m3uPlaylistPath;
     private object _lock = new object();
 
-    public PlaylistManager(ISettingsManager settingsManager, IFileSystem fileSystem)
+    public PlaylistManager(ISettingsService settingsManager, IFileSystem fileSystem)
     {
         _playlistItems = new List<ChannelInfo>();
         _filesystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
-        if (string.IsNullOrEmpty(settingsManager.Settings.M3uPlaylistPath))
+        if (string.IsNullOrEmpty(settingsManager.PlaylistSettings.M3uPlaylistPath))
         {
             throw new ArgumentException("M3uPlaylistPath cannot be null or empty.", nameof(settingsManager));
         }
-        if (_filesystem.File.Exists(settingsManager.Settings.M3uPlaylistPath))
+        if (_filesystem.File.Exists(settingsManager.PlaylistSettings.M3uPlaylistPath))
         {
-            LoadPlaylist(settingsManager.Settings.M3uPlaylistPath);
+            LoadPlaylist(settingsManager.PlaylistSettings.M3uPlaylistPath);
         }
-        settingsManager.SettingsChanged += async (sender, args) =>
+        settingsManager.SettingsChanged += (sender, args) =>
         {
-            if (string.Compare(args.NewSettings.M3uPlaylistPath, _m3uPlaylistPath, StringComparison.OrdinalIgnoreCase) != 0)
+            if (args.SettingsType == SettingsType.Playlist)
             {
-                await LoadPlaylistAsync(args.NewSettings.M3uPlaylistPath);
+                if (args.NewSettings is not PlaylistSettings newSettings)
+                {
+                    throw new ArgumentException("New settings must be of type PlaylistSettings.", nameof(args));
+                }
+                LoadPlaylist(newSettings.M3uPlaylistPath);
             }
         };
     }

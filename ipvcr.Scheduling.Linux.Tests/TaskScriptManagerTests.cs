@@ -3,6 +3,7 @@ namespace ipvcr.Scheduling.Linux.Tests;
 using System.IO.Abstractions;
 using ipvcr.Scheduling.Linux;
 using ipvcr.Scheduling.Shared;
+using ipvcr.Scheduling.Shared.Settings;
 using Moq;
 
 public class TaskScriptManagerTests
@@ -19,8 +20,8 @@ public class TaskScriptManagerTests
     {
         // Arrange
         var fileSystem = _mocks.Create<IFileSystem>();
-        var settingsManager = _mocks.Create<ISettingsManager>();
-        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsManager.Object);
+        var settingsService = _mocks.Create<ISettingsService>();
+        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsService.Object);
 
         // Act & Assert
         Assert.NotNull(taskScriptManager);
@@ -32,9 +33,9 @@ public class TaskScriptManagerTests
     {
         // Arrange
         var fileSystem = _mocks.Create<IFileSystem>();
-        var settingsManager = _mocks.Create<ISettingsManager>();
-        settingsManager.SetupGet(s => s.Settings).Returns(new SchedulerSettings { DataPath = "/data/path" });
-        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsManager.Object);
+        var settingsService = _mocks.Create<ISettingsService>();
+        settingsService.SetupGet(s => s.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/data/path" });
+        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsService.Object);
         var taskId = Guid.NewGuid();
 
         // Act
@@ -52,9 +53,9 @@ public class TaskScriptManagerTests
     {
         // Arrange
         var fileSystem = _mocks.Create<IFileSystem>();
-        var settingsManager = _mocks.Create<ISettingsManager>();
-        settingsManager.SetupGet(s => s.Settings).Returns(new SchedulerSettings { DataPath = "/data/path" });
-        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsManager.Object);
+        var settingsService = _mocks.Create<ISettingsService>();
+        settingsService.SetupGet(s => s.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/data/path" });
+        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsService.Object);
         var taskId = Guid.NewGuid();
         var task = new ScheduledTask(taskId, "name", "TestTask", DateTimeOffset.Now, "{}");
         var file = _mocks.Create<IFile>();
@@ -75,9 +76,9 @@ public class TaskScriptManagerTests
     {
         // Arrange
         var fileSystem = _mocks.Create<IFileSystem>();
-        var settingsManager = _mocks.Create<ISettingsManager>();
-        settingsManager.SetupGet(s => s.Settings).Returns(new SchedulerSettings { DataPath = "/data/path" });
-        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsManager.Object);
+        var settingsService = _mocks.Create<ISettingsService>();
+        settingsService.SetupGet(s => s.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/data/path" });
+        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsService.Object);
         var taskId = Guid.NewGuid();
         var task = new ScheduledTask(taskId, "name", "TestTask", DateTimeOffset.Now, "{}");
         var file = _mocks.Create<IFile>();
@@ -93,9 +94,9 @@ public class TaskScriptManagerTests
     {
         // Arrange
         var fileSystem = _mocks.Create<IFileSystem>();
-        var settingsManager = _mocks.Create<ISettingsManager>();
-        settingsManager.SetupGet(s => s.Settings).Returns(new SchedulerSettings { DataPath = "/data/path" });
-        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsManager.Object);
+        var settingsService = _mocks.Create<ISettingsService>();
+        settingsService.SetupGet(s => s.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/data/path" });
+        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsService.Object);
         var taskId = Guid.NewGuid();
         var task = new ScheduledTask(taskId, "name", "TestTask", DateTimeOffset.Now, "{}");
         var file = _mocks.Create<IFile>();
@@ -115,9 +116,9 @@ public class TaskScriptManagerTests
     {
         // Arrange
         var fileSystem = _mocks.Create<IFileSystem>();
-        var settingsManager = _mocks.Create<ISettingsManager>();
-        settingsManager.SetupGet(s => s.Settings).Returns(new SchedulerSettings { DataPath = "/data/path" });
-        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsManager.Object);
+        var settingsService = _mocks.Create<ISettingsService>();
+        settingsService.SetupGet(s => s.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/data/path" });
+        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsService.Object);
         var taskId = Guid.NewGuid();
         var task = new ScheduledTask(taskId, "name", "TestTask", DateTimeOffset.Now, "{}");
         var file = _mocks.Create<IFile>();
@@ -135,9 +136,9 @@ public class TaskScriptManagerTests
     {
         // Arrange
         var fileSystem = _mocks.Create<IFileSystem>();
-        var settingsManager = _mocks.Create<ISettingsManager>();
-        settingsManager.SetupGet(s => s.Settings).Returns(new SchedulerSettings { DataPath = "/data/path" });
-        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsManager.Object);
+        var settingsService = _mocks.Create<ISettingsService>();
+        settingsService.SetupGet(s => s.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/data/path" });
+        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsService.Object);
         var taskId = Guid.NewGuid();
         var file = _mocks.Create<IFile>();
         fileSystem.SetupGet(fs => fs.File).Returns(file.Object);
@@ -152,9 +153,9 @@ public class TaskScriptManagerTests
     {
         // Arrange
         var fileSystem = _mocks.Create<IFileSystem>();
-        var settingsManager = _mocks.Create<ISettingsManager>();
-        settingsManager.SetupGet(s => s.Settings).Returns(new SchedulerSettings { DataPath = "/data/path" });
-        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsManager.Object);
+        var settingsService = _mocks.Create<ISettingsService>();
+        settingsService.SetupGet(s => s.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/data/path" });
+        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsService.Object);
         var taskId = Guid.NewGuid();
         var file = _mocks.Create<IFile>();
         var directory = _mocks.Create<IDirectory>();
@@ -178,9 +179,9 @@ public class TaskScriptManagerTests
     {
         // Arrange
         var fileSystem = _mocks.Create<IFileSystem>();
-        var settingsManager = _mocks.Create<ISettingsManager>();
-        settingsManager.SetupGet(s => s.Settings).Returns(new SchedulerSettings { DataPath = "/data/path" });
-        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsManager.Object);
+        var settingsService = _mocks.Create<ISettingsService>();
+        settingsService.SetupGet(s => s.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/data/path" });
+        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsService.Object);
         var taskId = Guid.NewGuid();
         var file = _mocks.Create<IFile>();
         fileSystem.SetupGet(fs => fs.File).Returns(file.Object);

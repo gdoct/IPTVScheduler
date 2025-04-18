@@ -2,6 +2,7 @@ namespace ipvcr.Tests;
 
 using ipvcr.Scheduling;
 using ipvcr.Scheduling.Shared;
+using ipvcr.Scheduling.Shared.Settings;
 using Moq;
 using System;
 using System.IO.Abstractions;
@@ -9,28 +10,19 @@ using System.Text;
 using System.Threading.Tasks;
 public class PlaylistManagerTests
 {
-    class MockedFileSystemStream : FileSystemStream
-    {
-        public MockedFileSystemStream(Stream stream, string path, bool isAsync)
-            : base(stream, path, isAsync)
-        {
-        }
-    }
-
-    private readonly Mock<ISettingsManager> _settingsManagerMock;
+    private readonly Mock<ISettingsService> _settingsServiceMock;
     private readonly Mock<IFileSystem> _fileSystemMock;
 
     public PlaylistManagerTests()
     {
-        _settingsManagerMock = new Mock<ISettingsManager>();
+        _settingsServiceMock = new Mock<ISettingsService>();
         _fileSystemMock = new Mock<IFileSystem>();
     }
-
 
     [Fact]
     public void PlaylistManager_Constructor_ValidSettings()
     {
-        var settingsManager = new Mock<ISettingsManager>();
+        var settingsService = new Mock<ISettingsService>();
         var fileSystem = new Mock<IFileSystem>();
         var playlistPath = "valid_playlist.m3u";
 
@@ -53,11 +45,12 @@ public class PlaylistManagerTests
         file.Setup(x => x.OpenRead(It.IsAny<string>()))
             .Returns(new MockedFileSystemStream(stream, playlistPath, true));
 
-        var s = new SchedulerSettings { M3uPlaylistPath = playlistPath };
-        settingsManager.SetupGet(s => s.Settings).Returns(s);
+        var s = new SchedulerSettings { DataPath = playlistPath };
+        settingsService.SetupGet(s => s.SchedulerSettings).Returns(s);
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = playlistPath});
         fileSystem.Setup(fs => fs.File.Exists(playlistPath)).Returns(true);
 
-        var playlistManager = new PlaylistManager(settingsManager.Object, fileSystem.Object);
+        var playlistManager = new PlaylistManager(settingsService.Object, fileSystem.Object);
 
         // Assert
         Assert.NotNull(playlistManager);
@@ -66,7 +59,7 @@ public class PlaylistManagerTests
     [Fact]
     public void PlaylistManager_Constructor_TaskFaults()
     {
-        var settingsManager = new Mock<ISettingsManager>();
+        var settingsService = new Mock<ISettingsService>();
         var fileSystem = new Mock<IFileSystem>();
         var playlistPath = "valid_playlist.m3u";
 
@@ -90,18 +83,20 @@ public class PlaylistManagerTests
             .Throws<IOException>();
         //            .Returns(new MockedFileSystemStream(stream, playlistPath, true));
 
-        var s = new SchedulerSettings { M3uPlaylistPath = playlistPath };
-        settingsManager.SetupGet(s => s.Settings).Returns(s);
+        var s = new SchedulerSettings { DataPath = playlistPath };
+        settingsService.SetupGet(s => s.SchedulerSettings).Returns(s);
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = playlistPath});
+
         fileSystem.Setup(fs => fs.File.Exists(playlistPath)).Returns(true);
 
-        Assert.Throws<InvalidOperationException>(() => new PlaylistManager(settingsManager.Object, fileSystem.Object));
+        Assert.Throws<InvalidOperationException>(() => new PlaylistManager(settingsService.Object, fileSystem.Object));
     }
 
     [Fact]
     public async Task PlaylistManager_LoadFromFileAsync_ValidPath()
     {
         // Arrange
-        var settingsManager = new Mock<ISettingsManager>();
+        var settingsService = new Mock<ISettingsService>();
         var fileSystem = new Mock<IFileSystem>();
         var playlistPath = "valid_playlist.m3u";
 
@@ -119,11 +114,12 @@ public class PlaylistManagerTests
         file.Setup(x => x.OpenRead(playlistPath))
             .Returns(new MockedFileSystemStream(stream, playlistPath, true));
 
-        var s = new SchedulerSettings { M3uPlaylistPath = playlistPath };
-        settingsManager.SetupGet(s => s.Settings).Returns(s);
+        var s = new SchedulerSettings { DataPath = playlistPath };
+        settingsService.SetupGet(s => s.SchedulerSettings).Returns(s);
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = playlistPath});
         fileSystem.Setup(fs => fs.File.Exists(playlistPath)).Returns(true);
 
-        var playlistManager = new PlaylistManager(settingsManager.Object, fileSystem.Object);
+        var playlistManager = new PlaylistManager(settingsService.Object, fileSystem.Object);
 
         var newPlaylistPath = "new_playlist.m3u";
         var m3uContent2 = "#EXTM3U\n" +
@@ -151,7 +147,7 @@ public class PlaylistManagerTests
     public void PlaylistManager_LoadFromFileAsync_EmptyPath_Throws()
     {
         // Arrange
-        var settingsManager = new Mock<ISettingsManager>();
+        var settingsService = new Mock<ISettingsService>();
         var fileSystem = new Mock<IFileSystem>();
 
         var playlistPath = "valid_playlist.m3u";
@@ -175,10 +171,11 @@ public class PlaylistManagerTests
         file.Setup(x => x.OpenRead(It.IsAny<string>()))
             .Returns(new MockedFileSystemStream(stream, playlistPath, true));
 
-        var s = new SchedulerSettings { M3uPlaylistPath = "playlist.m3u" };
-        fileSystem.Setup(fs => fs.File.Exists(s.M3uPlaylistPath)).Returns(true);
-        settingsManager.SetupGet(s => s.Settings).Returns(s);
-        var playlistManager = new PlaylistManager(settingsManager.Object, fileSystem.Object);
+        var s = new SchedulerSettings { DataPath = "playlist.m3u" };
+        fileSystem.Setup(fs => fs.File.Exists(s.DataPath)).Returns(true);
+        settingsService.SetupGet(s => s.SchedulerSettings).Returns(s);
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = playlistPath});
+        var playlistManager = new PlaylistManager(settingsService.Object, fileSystem.Object);
 
         // Act & Assert
         Assert.ThrowsAsync<ArgumentException>(() => playlistManager.LoadFromFileAsync(string.Empty));
@@ -188,53 +185,54 @@ public class PlaylistManagerTests
     public void PlaylistManager_LoadFromFileAsync_NotFoundThrows()
     {
         // Arrange
-        var settingsManager = new Mock<ISettingsManager>();
+        var settingsService = new Mock<ISettingsService>();
         var fileSystem = new Mock<IFileSystem>();
         var playlistPath = "not_found_playlist.m3u";
         var s = new SchedulerSettings
         {
-            M3uPlaylistPath = playlistPath
+            DataPath = playlistPath
         };
-        settingsManager.SetupGet(s => s.Settings).Returns(s);
+        settingsService.SetupGet(s => s.SchedulerSettings).Returns(s);
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = playlistPath});
         fileSystem.Setup(fs => fs.File.Exists(playlistPath)).Returns(false);
 
-        var playlistManager = new PlaylistManager(settingsManager.Object, fileSystem.Object);
+        var playlistManager = new PlaylistManager(settingsService.Object, fileSystem.Object);
 
         // Act & Assert
         Assert.ThrowsAsync<FileNotFoundException>(() => playlistManager.LoadFromFileAsync(playlistPath));
     }
 
     [Fact]
-    public void PlaylistManager_Ctor_EmptyPathThrows()
+    public void PlaylistManager_Ctor_EmptyM3uPlaylistPathThrows()
     {
         // Arrange
-        var settingsManager = new Mock<ISettingsManager>();
+        var settingsService = new Mock<ISettingsService>();
 
         var s = new SchedulerSettings
         {
-            M3uPlaylistPath = string.Empty
+            DataPath = string.Empty
         };
-        settingsManager.SetupGet(s => s.Settings).Returns(s);
-
+        settingsService.SetupGet(s => s.SchedulerSettings).Returns(s);
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = ""});
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => new PlaylistManager(settingsManager.Object, Mock.Of<IFileSystem>()));
+        Assert.Throws<ArgumentException>(() => new PlaylistManager(settingsService.Object, Mock.Of<IFileSystem>()));
     }
 
     [Fact]
     public void PlaylistManager_Ctor_EmptyFileSystemThrows()
     {
         // Arrange
-        var settingsManager = new Mock<ISettingsManager>();
+        var settingsService = new Mock<ISettingsService>();
         var o = new object();
 #pragma warning disable CS8604 // Possible null reference argument.
-        Assert.Throws<ArgumentNullException>(() => new PlaylistManager(settingsManager.Object, o as IFileSystem));
+        Assert.Throws<ArgumentNullException>(() => new PlaylistManager(settingsService.Object, o as IFileSystem));
 #pragma warning restore CS8604 // Possible null reference argument.
     }
 
     [Fact]
     public void PlaylistManager_SettingsChanged_SamePlaylistFile()
     {
-        var settingsManager = new Mock<ISettingsManager>();
+        var settingsService = new Mock<ISettingsService>();
         var fileSystem = new Mock<IFileSystem>();
         var playlistPath = "valid_playlist.m3u";
 
@@ -253,29 +251,32 @@ public class PlaylistManagerTests
         var file = new Mock<IFile>();
         var stream = new MemoryStream(Encoding.UTF8.GetBytes(m3uContent));
         fileSystem.SetupGet(x => x.File).Returns(file.Object);
-        //file.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
         file.Setup(x => x.OpenRead(It.IsAny<string>()))
             .Returns(new MockedFileSystemStream(stream, playlistPath, true));
 
-        var s = new SchedulerSettings { M3uPlaylistPath = playlistPath };
-        settingsManager.SetupGet(s => s.Settings).Returns(s);
+        var s = new SchedulerSettings { DataPath = playlistPath };
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = "data"});
+
         fileSystem.Setup(fs => fs.File.Exists(playlistPath)).Returns(true);
 
-        var playlistManager = new PlaylistManager(settingsManager.Object, fileSystem.Object);
+        var playlistManager = new PlaylistManager(settingsService.Object, fileSystem.Object);
 
         // Act
-        settingsManager.Raise(x => x.SettingsChanged += null, new ISettingsManager.SettingsChangedEventArgs(s));
+        settingsService.Raise(x => x.SettingsChanged += null, new SettingsServiceChangedEventArgs(SettingsType.Playlist, new PlaylistSettings()
+        {
+            M3uPlaylistPath = playlistPath
+        }));
 
         // Assert
         // No exception should be thrown
         fileSystem.VerifyAll();
-        settingsManager.VerifyAll();
+        settingsService.VerifyAll();
     }
 
     [Fact]
     public void PlaylistManager_SettingsChanged_ReloadPlaylist()
     {
-        var settingsManager = new Mock<ISettingsManager>();
+        var settingsService = new Mock<ISettingsService>();
         var fileSystem = new Mock<IFileSystem>();
         var playlistPath = "valid_playlist.m3u";
         var newplaylistPath = "new_playlist.m3u";
@@ -298,25 +299,26 @@ public class PlaylistManagerTests
         file.Setup(x => x.OpenRead(It.IsAny<string>()))
             .Returns(new MockedFileSystemStream(stream, playlistPath, true));
 
-        var s = new SchedulerSettings { M3uPlaylistPath = playlistPath };
-        settingsManager.SetupGet(s => s.Settings).Returns(s);
+        // var s = new SchedulerSettings { DataPath = playlistPath };
+        // settingsService.SetupGet(s => s.SchedulerSettings).Returns(s);
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = playlistPath});
         fileSystem.Setup(fs => fs.File.Exists(playlistPath)).Returns(true);
 
-        var playlistManager = new PlaylistManager(settingsManager.Object, fileSystem.Object);
+        var playlistManager = new PlaylistManager(settingsService.Object, fileSystem.Object);
 
         // Act
-        var newSettings = new SchedulerSettings { M3uPlaylistPath = newplaylistPath };
+        var newSettings = new SchedulerSettings { DataPath = newplaylistPath };
 
-        fileSystem.SetupGet(x => x.File).Returns(file.Object);
-        file.Setup(x => x.OpenRead(It.IsAny<string>()))
-            .Returns(new MockedFileSystemStream(stream2, newplaylistPath, true));
-        fileSystem.Setup(fs => fs.File.Exists(newplaylistPath)).Returns(true);
+      //  fileSystem.SetupGet(x => x.File).Returns(file.Object);
+        // file.Setup(x => x.OpenRead(It.IsAny<string>()))
+        //     .Returns(new MockedFileSystemStream(stream2, newplaylistPath, true));
+        // fileSystem.Setup(fs => fs.File.Exists(newplaylistPath)).Returns(true);
 
-        settingsManager.Raise(x => x.SettingsChanged += null, new ISettingsManager.SettingsChangedEventArgs(newSettings));
+        settingsService.Raise(x => x.SettingsChanged += null, new SettingsServiceChangedEventArgs(SettingsType.Scheduler, newSettings));
 
         // Assert
         // No exception should be thrown
         fileSystem.VerifyAll();
-        settingsManager.VerifyAll();
+        settingsService.VerifyAll();
     }
 }

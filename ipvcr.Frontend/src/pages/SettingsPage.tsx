@@ -1,27 +1,78 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Button, Card, Container, Form, InputGroup, Table } from 'react-bootstrap';
+import React, { useEffect, useState } from 'react';
+import { Alert, Button, Card, Col, Container, Modal, Nav, Row, Tab } from 'react-bootstrap';
+import FfmpegSettingsComponent from '../components/settings/FfmpegSettingsComponent';
+import GeneralSettingsComponent from '../components/settings/GeneralSettingsComponent';
+import PlaylistSettingsComponent from '../components/settings/PlaylistSettingsComponent';
+import SystemSettingsComponent from '../components/settings/SystemSettingsComponent';
+import TlsSettingsComponent from '../components/settings/TlsSettingsComponent';
+import UserManagementSettingsComponent from '../components/settings/UserManagementSettingsComponent';
 import { AuthService } from '../services/AuthService';
-import { recordingsApi } from '../services/RecordingsApi';
-import { SchedulerSettings } from '../types/recordings';
+import { settingsApi } from '../services/SettingsApiService';
+import { AppSettings } from '../types/recordings';
+
+// Define a type for tab keys
+type TabKey = 'general' | 'playlist' | 'users' | 'ssl' | 'system' | 'ffmpeg';
 
 const SettingsPage: React.FC = () => {
-  // State for settings
-  const [settings, setSettings] = useState<SchedulerSettings>({
-    mediaPath: '',
-    dataPath: '',
-    m3uPlaylistPath: '',
-    adminUsername: ''
+  // State for settings with five categories
+  const [settings, setSettings] = useState<AppSettings>({
+    general: {
+      mediaPath: '',
+      dataPath: '',
+      m3uPlaylistPath: '',
+      removeTaskAfterExecution: true
+    },
+    playlist: {
+      m3uPlaylistPath: '',
+      playlistAutoUpdateInterval: 24,
+      autoReloadPlaylist: false,
+      filterEmptyGroups: true
+    },
+    userManagement: {
+      adminUsername: '',
+      allowUserRegistration: false,
+      maxUsersAllowed: 10
+    },
+    tls: {
+      useSsl: false,
+      certificatePath: '',
+      certificatePassword: ''
+    },
+    ffmpeg: {
+      fileType: 'mp4',
+      codec: 'libx264',
+      audioCodec: 'aac',
+      videoBitrate: '1000k',
+      audioBitrate: '128k',
+      resolution: '1280x720',
+      frameRate: '30',
+      aspectRatio: '16:9',
+      outputFormat: 'mp4'
+    }
   });
-  const [adminPassword, setAdminPassword] = useState<string>('');
+  
+  // Add state for original settings (to detect changes)
+  const [originalSettings, setOriginalSettings] = useState<AppSettings | null>(null);
+
+  // Add state for tracking which tabs have unsaved changes
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<Record<TabKey, boolean>>({
+    general: false,
+    playlist: false,
+    users: false,
+    ssl: false,
+    system: false,
+    ffmpeg: false
+  });
+
+  // State for confirm modal when there are unsaved changes
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingTabChange, setPendingTabChange] = useState<TabKey | null>(null);
+
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [uploading, setUploading] = useState<boolean>(false);
-  const [changingPassword, setChangingPassword] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<TabKey>('general');
   
-  // Reference to file input
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   // Validate token on page load
   useEffect(() => {
     const validateTokenOnLoad = async () => {
@@ -40,19 +91,16 @@ const SettingsPage: React.FC = () => {
   // Load settings on component mount
   useEffect(() => {
     fetchSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch settings from API
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      const data = await recordingsApi.getSettings();
-      setSettings({
-        mediaPath: data.mediaPath || '',
-        dataPath: data.dataPath || '',
-        m3uPlaylistPath: data.m3uPlaylistPath || '',
-        adminUsername: data.adminUsername || ''
-      });
+      const data = await settingsApi.getAllSettings();
+      setSettings(data);
+      setOriginalSettings(data);
       setError(null);
     } catch (err) {
       console.error('Error fetching settings:', err);
@@ -62,27 +110,148 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  // Handle input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle input changes for different setting categories
+  const handleGeneralInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setSettings(prev => ({
+      ...prev,
+      general: {
+        ...prev.general,
+        [name]: type === 'checkbox' ? checked : value
+      }
+    }));
+    setHasUnsavedChanges(prev => ({
+      ...prev,
+      general: true
+    }));
+  };
+
+  const handlePlaylistInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setSettings(prev => ({
+      ...prev,
+      playlist: {
+        ...prev.playlist,
+        [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value
+      }
+    }));
+    setHasUnsavedChanges(prev => ({
+      ...prev,
+      playlist: true
+    }));
+  };
+
+  const handleUserManagementInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setSettings(prev => ({
+      ...prev,
+      userManagement: {
+        ...prev.userManagement,
+        [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value
+      }
+    }));
+    setHasUnsavedChanges(prev => ({
+      ...prev,
+      users: true
+    }));
+  };
+
+  const handleTlsInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setSettings(prev => ({
+      ...prev,
+      tls: {
+        ...prev.tls,
+        [name]: type === 'checkbox' ? checked : value
+      }
+    }));
+    setHasUnsavedChanges(prev => ({
+      ...prev,
+      ssl: true
+    }));
+  };
+
+  const handleFfmpegInputChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (name === 'adminPassword') {
-      setAdminPassword(value);
-    } else {
-      setSettings(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
+    setSettings(prev => ({
+      ...prev,
+      ffmpeg: {
+        ...prev.ffmpeg,
+        [name]: value // Empty string ('') will be used for 'default' option
+      }
+    }));
+    setHasUnsavedChanges(prev => ({
+      ...prev,
+      ffmpeg: true
+    }));
   };
 
   // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmit = async () => {
     try {
-      await recordingsApi.updateSettings(settings);
-      setSuccess('Settings saved successfully');
+      setLoading(true);
+      
+      // Save only settings for the active tab
+      switch (activeTab) {
+        case 'general':
+          await settingsApi.updateSchedulerSettings({
+            mediaPath: settings.general.mediaPath,
+            dataPath: settings.general.dataPath,
+            m3uPlaylistPath: settings.general.m3uPlaylistPath,
+            removeTaskAfterExecution: settings.general.removeTaskAfterExecution
+          });
+          setHasUnsavedChanges(prev => ({ ...prev, general: false }));
+          setSuccess('General settings saved successfully');
+          break;
+          
+        case 'playlist':
+          await settingsApi.updatePlaylistSettings(settings.playlist);
+          setHasUnsavedChanges(prev => ({ ...prev, playlist: false }));
+          setSuccess('Playlist settings saved successfully');
+          break;
+          
+        case 'users':
+          await settingsApi.updateAdminPasswordSettings(settings.userManagement);
+          setHasUnsavedChanges(prev => ({ ...prev, users: false }));
+          setSuccess('User management settings saved successfully');
+          break;
+          
+        case 'ssl':
+          await settingsApi.updateSslSettings(settings.tls);
+          setHasUnsavedChanges(prev => ({ ...prev, ssl: false }));
+          setSuccess('SSL settings saved successfully');
+          break;
+          
+        case 'ffmpeg':
+          await settingsApi.updateFfmpegSettings(settings.ffmpeg);
+          setHasUnsavedChanges(prev => ({ ...prev, ffmpeg: false }));
+          setSuccess('FFmpeg settings saved successfully');
+          break;
+      }
+      
       setError(null);
+      
+      // Update the original settings for the current tab to reflect saved state
+      if (originalSettings) {
+        setOriginalSettings(prev => {
+          if (!prev) return settings;
+          
+          switch (activeTab) {
+            case 'general':
+              return { ...prev, general: { ...settings.general } };
+            case 'playlist':
+              return { ...prev, playlist: { ...settings.playlist } };
+            case 'users':
+              return { ...prev, userManagement: { ...settings.userManagement } };
+            case 'ssl':
+              return { ...prev, tls: { ...settings.tls } };
+            case 'ffmpeg':
+              return { ...prev, ffmpeg: { ...settings.ffmpeg } };
+            default:
+              return prev;
+          }
+        });
+      }
       
       // Reset success message after 3 seconds
       setTimeout(() => {
@@ -92,89 +261,53 @@ const SettingsPage: React.FC = () => {
       console.error('Error saving settings:', err);
       setError('Failed to save settings');
       setSuccess(null);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Handle password change
-  const handlePasswordChange = async () => {
-    if (!adminPassword) {
-      setError('Please enter a new password');
-      return;
-    }
+  const handleTabChange = (key: string | null) => {
+    if (!key) return;
     
-    setChangingPassword(true);
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || '/api'}/login/changepassword`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${AuthService.getToken()}`
-        },
-        body: JSON.stringify({
-          username: settings.adminUsername,
-          password: adminPassword
-        })
-      });
-      
-      if (response.ok) {
-        setSuccess('Password changed successfully');
-        setAdminPassword(''); // Clear password field after successful change
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update password');
-      }
-    } catch (err) {
-      console.error('Error changing password:', err);
-      setError('Failed to update password');
-    } finally {
-      setChangingPassword(false);
+    // Cast to TabKey since we know our tab keys are limited to our defined options
+    const newTabKey = key as TabKey;
+    
+    if (hasUnsavedChanges[activeTab]) {
+      setPendingTabChange(newTabKey);
+      setShowConfirmModal(true);
+    } else {
+      setActiveTab(newTabKey);
     }
   };
 
-  // Handle M3U file upload
-  const handleUploadM3U = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!fileInputRef.current || !fileInputRef.current.files || fileInputRef.current.files.length === 0) {
-      setError('Please select a file to upload');
-      return;
-    }
-    
-    const file = fileInputRef.current.files[0];
-    setUploading(true);
-    setError(null);
-    
-    try {
-      const result = await recordingsApi.uploadM3uPlaylist(file);
-      setSuccess(result.message || 'M3U file uploaded successfully');
-      
-      // Refresh settings to get updated M3U path
-      fetchSettings();
-      
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (err) {
-      console.error('Error uploading file:', err);
-      setError('Failed to upload M3U file');
-      setSuccess(null);
-    } finally {
-      setUploading(false);
-    }
+  // Make sure all useEffect hooks have proper dependencies
+  useEffect(() => {
+    fetchSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // This is intended to run only once on mount
+
+  const handleConfirmTabChange = () => {
+    setActiveTab(pendingTabChange || 'general');
+    setShowConfirmModal(false);
+    setPendingTabChange(null);
+  };
+
+  const handleCancelTabChange = () => {
+    setShowConfirmModal(false);
+    setPendingTabChange(null);
   };
 
   return (
     <Container fluid className="px-4">
-        <div className="hero-section mb-4">
+      <div className="d-flex align-items-center mb-4">
         <img 
           src="/ipvcr.png" 
-          className="img-fluid w-60" 
-          alt="IPVCR Hero Image" 
-          style={{ objectFit: 'cover', maxHeight: '250px', width: '40%' }}
+          className="img-fluid me-3" 
+          alt="IPVCR Logo" 
+          style={{ height: '60px' }}
         />
+        <h2 className="mb-0">System Settings</h2>
       </div>
-      <h2 className="mb-4">Settings</h2>
       
       {error && (
         <Alert variant="danger" onClose={() => setError(null)} dismissible>
@@ -198,135 +331,155 @@ const SettingsPage: React.FC = () => {
           <p className="mt-2">Loading settings...</p>
         </div>
       ) : (
-        <>
-          <Card className="mb-4">
-            <Card.Body>
-              <Form onSubmit={handleSubmit}>
-                <Table>
-                  <thead>
-                    <tr>
-                      <th>Setting</th>
-                      <th>Value</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Media Path</td>
-                      <td>
-                        <Form.Control
-                          type="text"
-                          name="mediaPath"
-                          value={settings.mediaPath}
-                          onChange={handleInputChange}
-                        />
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Data Path</td>
-                      <td>
-                        <Form.Control
-                          type="text"
-                          name="dataPath"
-                          value={settings.dataPath}
-                          onChange={handleInputChange}
-                        />
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>M3u Playlist Path</td>
-                      <td>
-                        <Form.Control
-                          type="text"
-                          name="m3uPlaylistPath"
-                          value={settings.m3uPlaylistPath}
-                          onChange={handleInputChange}
-                        />
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Admin Username</td>
-                      <td>
-                        <Form.Control
-                          type="text"
-                          name="adminUsername"
-                          value={settings.adminUsername}
-                          onChange={handleInputChange}
-                        />
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Admin Password</td>
-                      <td>
-                        <InputGroup>
-                          <Form.Control
-                            type="password"
-                            name="adminPassword"
-                            placeholder="Enter new password"
-                            value={adminPassword}
-                            onChange={handleInputChange}
-                          />
-                          <Button 
-                            variant="outline-secondary" 
-                            onClick={handlePasswordChange}
-                            disabled={changingPassword}
-                          >
-                            {changingPassword ? (
-                              <>
-                                <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                                Changing...
-                              </>
-                            ) : (
-                              <>Change Password</>
-                            )}
-                          </Button>
-                        </InputGroup>
-                        <Form.Text className="text-muted">
-                          This won't be saved with other settings. Use the Change Password button to update it.
-                        </Form.Text>
-                      </td>
-                    </tr>
-                  </tbody>
-                </Table>
-                <Button type="submit" variant="success" disabled={loading || uploading}>
-                  <i className="bi bi-save me-2"></i>Save Settings
-                </Button>
-              </Form>
-            </Card.Body>
-          </Card>
-
-          <h3>Upload M3U playlist</h3>
-          <Card>
-            <Card.Body>
-              <Form onSubmit={handleUploadM3U}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Select M3U playlist</Form.Label>
-                  <Form.Control
-                    type="file"
-                    ref={fileInputRef}
-                    accept=".m3u,.m3u8"
+        <Tab.Container id="settings-tabs" activeKey={activeTab} onSelect={handleTabChange}>
+          <Row>
+            <Col md={3} lg={2}>
+                <Card className="mb-4 mb-md-0">
+                <Card.Header className="bg-primary text-white">
+                  <i className="bi bi-gear-fill me-2"></i>
+                  Settings
+                </Card.Header>
+                <Card.Body className="p-0">
+                  <Nav variant="pills" className="flex-column">
+                  <Nav.Item>
+                    <Nav.Link eventKey="general" className="rounded-0 border-bottom text-start">
+                    <i className="bi bi-sliders me-2"></i>
+                    General
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="playlist" className="rounded-0 border-bottom text-start">
+                    <i className="bi bi-music-note-list me-2"></i>
+                    Playlist
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="ffmpeg" className="rounded-0 border-bottom text-start">
+                    <i className="bi bi-film me-2"></i>
+                    FFmpeg
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="users" className="rounded-0 border-bottom text-start">
+                    <i className="bi bi-people-fill me-2"></i>
+                    Security
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="ssl" className="rounded-0 border-bottom text-start">
+                    <i className="bi bi-shield-lock-fill me-2"></i>
+                    TLS Settings
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="system" className="rounded-0 text-start">
+                    <i className="bi bi-pc-display me-2"></i>
+                    System
+                    </Nav.Link>
+                  </Nav.Item>
+                  </Nav>
+                </Card.Body>
+                </Card>
+            </Col>
+            
+            <Col md={9} lg={10}>
+              <Tab.Content>
+                <Tab.Pane eventKey="general">
+                  <GeneralSettingsComponent 
+                    settings={settings.general} 
+                    handleInputChange={handleGeneralInputChange} 
                   />
-                </Form.Group>
-                <Button 
-                  type="submit" 
-                  variant="primary" 
-                  disabled={uploading}
-                >
-                  {uploading ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <i className="bi bi-cloud-upload me-2"></i>Upload
-                    </>
-                  )}
-                </Button>
-              </Form>
-            </Card.Body>
-          </Card>
-        </>
+                  <div className="d-flex justify-content-end">
+                    <Button variant="success" onClick={handleSubmit}>
+                      <i className="bi bi-save me-2"></i>Save Settings
+                    </Button>
+                  </div>
+                </Tab.Pane>
+                
+                <Tab.Pane eventKey="playlist">
+                  <PlaylistSettingsComponent 
+                    settings={settings.playlist}
+                    handleInputChange={handlePlaylistInputChange}
+                    setSuccess={setSuccess}
+                    setError={setError}
+                    refreshSettings={fetchSettings}
+                  />
+                  <div className="d-flex justify-content-end">
+                    <Button variant="success" onClick={handleSubmit}>
+                      <i className="bi bi-save me-2"></i>Save Settings
+                    </Button>
+                  </div>
+                </Tab.Pane>
+                
+                <Tab.Pane eventKey="users">
+                  <UserManagementSettingsComponent 
+                    settings={settings.userManagement}
+                    handleInputChange={handleUserManagementInputChange}
+                    setSuccess={setSuccess}
+                    setError={setError}
+                  />
+                  <div className="d-flex justify-content-end">
+                    <Button variant="success" onClick={handleSubmit}>
+                      <i className="bi bi-save me-2"></i>Save Settings
+                    </Button>
+                  </div>
+                </Tab.Pane>
+                
+                <Tab.Pane eventKey="ssl">
+                  <TlsSettingsComponent 
+                    settings={settings.tls}
+                    handleInputChange={handleTlsInputChange}
+                    setSuccess={setSuccess}
+                    setError={setError}
+                    refreshSettings={fetchSettings}
+                  />
+                  <div className="d-flex justify-content-end">
+                    <Button variant="success" onClick={handleSubmit}>
+                      <i className="bi bi-save me-2"></i>Save Settings
+                    </Button>
+                  </div>
+                </Tab.Pane>
+
+                <Tab.Pane eventKey="ffmpeg">
+                  <FfmpegSettingsComponent 
+                    settings={settings.ffmpeg}
+                    handleInputChange={handleFfmpegInputChange}
+                  />
+                  <div className="d-flex justify-content-end">
+                    <Button variant="success" onClick={handleSubmit}>
+                      <i className="bi bi-save me-2"></i>Save Settings
+                    </Button>
+                  </div>
+                </Tab.Pane>
+
+                <Tab.Pane eventKey="system">
+                  <SystemSettingsComponent 
+                    setSuccess={setSuccess}
+                    setError={setError}
+                  />
+                </Tab.Pane>
+              </Tab.Content>
+            </Col>
+          </Row>
+        </Tab.Container>
       )}
+
+      <Modal show={showConfirmModal} onHide={handleCancelTabChange}>
+        <Modal.Header closeButton>
+          <Modal.Title>Unsaved Changes</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          You have unsaved changes. Are you sure you want to switch tabs without saving?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCancelTabChange}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleConfirmTabChange}>
+            Confirm
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

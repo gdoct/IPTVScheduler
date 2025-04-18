@@ -1,14 +1,15 @@
 using System.IO.Abstractions;
 using ipvcr.Scheduling.Shared;
+using ipvcr.Scheduling.Shared.Settings;
 
 namespace ipvcr.Scheduling.Linux;
 
-public class AtScheduler(IFileSystem fileSystem, IProcessRunner processRunner, ISettingsManager settingsManager) : ITaskScheduler
+public class AtScheduler(IFileSystem fileSystem, IProcessRunner processRunner, ISettingsService settingsService) : ITaskScheduler
 {
-    private readonly AtWrapper _atWrapper = new AtWrapper(fileSystem, processRunner, settingsManager);
-    private readonly AtqWrapper _atqWrapper = new AtqWrapper(processRunner, settingsManager);
-    private readonly AtrmWrapper _atrmWrapper = new AtrmWrapper(processRunner, settingsManager);
-    private readonly TaskScriptManager _taskScriptManager = new TaskScriptManager(fileSystem, settingsManager);
+    private readonly AtWrapper _atWrapper = new AtWrapper(fileSystem, processRunner, settingsService);
+    private readonly AtqWrapper _atqWrapper = new AtqWrapper(processRunner, settingsService);
+    private readonly AtrmWrapper _atrmWrapper = new AtrmWrapper(processRunner, settingsService);
+    private readonly TaskScriptManager _taskScriptManager = new TaskScriptManager(fileSystem, settingsService);
 
     private IEnumerable<(int JobId, ScheduledTask Task)> Tasks => 
         _atqWrapper.GetScheduledTasks()

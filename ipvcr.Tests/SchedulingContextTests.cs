@@ -1,5 +1,6 @@
 // Purpose: This file contains the tests for the SchedulingContext class.
 using ipvcr.Scheduling;
+using ipvcr.Scheduling.Shared.Settings;
 using Moq;
 
 namespace ipvcr.Tests;
@@ -12,6 +13,8 @@ public class SchedulingContextTests
     {
         // Arrange
         var taskScheduler = new Mock<ITaskScheduler>();
+        var settingsService = new Mock<ISettingsService>();
+        settingsService.Setup(s => s.FfmpegSettings).Returns(new FfmpegSettings());
         var json = System.Text.Json.JsonSerializer.Serialize(new ScheduledRecording(Guid.NewGuid(), "Task 1", "", "filename", "http://whatevah", "", DateTime.Now, DateTime.Now.AddHours(1)));
         taskScheduler.Setup(s => s.FetchScheduledTasks()).Returns(
         [
@@ -19,7 +22,7 @@ public class SchedulingContextTests
             new ScheduledTask(Guid.NewGuid(), "Task 2", "ffmpeg -i http://example.com/stream -t 3600 -c copy -f mp4 output.mp4", DateTime.Now, json),
         ]);
 
-        var context = new RecordingSchedulingContext(taskScheduler.Object);
+        var context = new RecordingSchedulingContext(taskScheduler.Object, settingsService.Object);
 
         // Act
         var recordings = context.Recordings;
@@ -33,7 +36,9 @@ public class SchedulingContextTests
     {
         // Arrange
         var taskScheduler = new Mock<ITaskScheduler>();
-        var context = new RecordingSchedulingContext(taskScheduler.Object);
+        var settingsService = new Mock<ISettingsService>();
+        settingsService.Setup(s => s.FfmpegSettings).Returns(new FfmpegSettings());
+        var context = new RecordingSchedulingContext(taskScheduler.Object, settingsService.Object);
 
         // Act
         var recording = new ScheduledRecording(Guid.NewGuid(), "Task 1", "", "filename", "http://whatevah", "", DateTime.Now, DateTime.Now.AddHours(1));
@@ -48,7 +53,10 @@ public class SchedulingContextTests
     {
         // Arrange
         var taskScheduler = new Mock<ITaskScheduler>();
-        var context = new RecordingSchedulingContext(taskScheduler.Object);
+                var settingsService = new Mock<ISettingsService>();
+        settingsService.Setup(s => s.FfmpegSettings).Returns(new FfmpegSettings());
+
+        var context = new RecordingSchedulingContext(taskScheduler.Object, settingsService.Object);
         var recording = new ScheduledRecording(Guid.NewGuid(), "Task 1", "", "filename", "http://whatevah", "", DateTime.Now, DateTime.Now.AddHours(1));
 
         // Act
@@ -65,7 +73,10 @@ public class SchedulingContextTests
     {
         // Arrange
         var taskScheduler = new Mock<ITaskScheduler>();
-        var context = new RecordingSchedulingContext(taskScheduler.Object);
+                var settingsService = new Mock<ISettingsService>();
+        settingsService.Setup(s => s.FfmpegSettings).Returns(new FfmpegSettings());
+
+        var context = new RecordingSchedulingContext(taskScheduler.Object, settingsService.Object);
         var recordingId = Guid.NewGuid();
         var expectedDefinition = "ffmpeg -i http://example.com/stream -t 3600 -c copy -f mp4 output.mp4";
 
@@ -83,7 +94,10 @@ public class SchedulingContextTests
     {
         // Arrange
         var taskScheduler = new Mock<ITaskScheduler>();
-        var context = new RecordingSchedulingContext(taskScheduler.Object);
+        var settingsService = new Mock<ISettingsService>();
+        settingsService.Setup(s => s.FfmpegSettings).Returns(new FfmpegSettings());
+
+        var context = new RecordingSchedulingContext(taskScheduler.Object, settingsService.Object);
         var recordingId = Guid.NewGuid();
         var newDefinition = "ffmpeg -i http://example.com/stream -t 7200 -c copy -f mp4 output.mp4";
 

@@ -2,6 +2,7 @@ using System.IO.Abstractions;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using ipvcr.Scheduling.Shared;
+using ipvcr.Scheduling.Shared.Settings;
 
 namespace ipvcr.Scheduling.Linux;
 
@@ -16,13 +17,13 @@ public interface ITaskScriptManager
     string ExtractJsonFromTask(Guid taskId, string definition);
 }
 
-public class TaskScriptManager(IFileSystem fileSystem, ISettingsManager settingsManager) : ITaskScriptManager
+public class TaskScriptManager(IFileSystem fileSystem, ISettingsService settingsService) : ITaskScriptManager
 {
     private readonly IFileSystem _fileSystem = fileSystem;
-    private readonly ISettingsManager _settingsManager = settingsManager;
+    private readonly ISettingsService _settingsService = settingsService;
 
-    private string ScriptPath => Path.Combine(_settingsManager.Settings.DataPath, "tasks");
-    private string ScriptPathFailed => Path.Combine(_settingsManager.Settings.DataPath, "tasks", "failed");
+    private string ScriptPath => Path.Combine(_settingsService.SchedulerSettings.DataPath, "tasks");
+    private string ScriptPathFailed => Path.Combine(_settingsService.SchedulerSettings.DataPath, "tasks", "failed");
     public string TaskScriptPath(Guid taskId) => Path.Combine(ScriptPath, $"{taskId}.sh");
 
     public void WriteTaskScript(ScheduledTask task, bool removeAfterCompletion)

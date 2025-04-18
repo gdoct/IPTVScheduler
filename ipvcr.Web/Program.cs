@@ -1,7 +1,7 @@
 using ipvcr.Auth;
 using ipvcr.Scheduling;
 using ipvcr.Scheduling.Linux;
-using ipvcr.Scheduling.Shared;
+using ipvcr.Scheduling.Shared.Settings;
 using Microsoft.AspNetCore.Authentication;
 using System.IO.Abstractions;
 
@@ -9,34 +9,74 @@ namespace ipvcr.Web;
 
 public class Program
 {
+
+    public static async Task RestartAspNetAsync()
+    {
+        await Task.Delay(1000); // Delay to allow the response to be sent
+        
+        // Log the restart
+        Console.WriteLine("Application restart requested at: " + DateTime.Now);
+        
+        // Exit the application with success code
+        // The hosting environment (systemd, docker, etc.) should restart the process
+        Environment.Exit(0);
+    }
+
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
         var configuration = builder.Configuration; // Access the configuration
         var port = configuration.GetValue<int?>("Port") ?? 5000;
         var sslport = configuration.GetValue<int?>("SslPort") ?? 5001;
-        var useSsl = configuration.GetValue<bool?>("UseSsl") ?? false; // Default to false if not set
-        var certpath = configuration.GetValue<string?>("CertPath") ?? string.Empty; // Default to empty if not set
-        builder.WebHost.UseUrls($"http://*:{port}");
+        
+        // Create a settings manager instance early to access certificate path
+        var fileSystem = new FileSystem();
+        var schedulerSettingsManager = new SchedulerSettingsManager(fileSystem);
+        var tokenManager = new TokenManager();
+        var settingsService = new SettingsService(fileSystem, tokenManager);
+
+        var certpath = settingsService.SslSettings.CertificatePath ?? string.Empty;
+        var useSsl = settingsService.SslSettings.UseSsl;
+
+        // Check if the certificate file exists, if not, generate it
+        if (useSsl && !string.IsNullOrEmpty(certpath) && !File.Exists(certpath))
+        {
+            var gen = new SelfSignedCertificateGenerator(new FileSystem());
+            gen.GenerateSelfSignedTlsCertificate(certpath, settingsService.SslSettings.CertificatePassword);
+            Console.WriteLine($"Generated self-signed certificate at: {certpath}");
+        }
+        // Register the pre-created instance in the DI container
+        builder.Services.AddSingleton<ISettingsService>(settingsService);
+
         if (useSsl && !string.IsNullOrEmpty(certpath) && File.Exists(certpath))
         {
-            // Use the provided certificate path for SSL
-            builder.WebHost.UseUrls($"https://*:{sslport}");
+            // Configure both HTTP and HTTPS endpoints using ConfigureKestrel
             builder.WebHost.ConfigureKestrel(serverOptions =>
             {
+                // HTTP endpoint
+                serverOptions.ListenAnyIP(port);
+                
+                // HTTPS endpoint with certificate
                 serverOptions.ListenAnyIP(sslport, listenOptions =>
                 {
-                    listenOptions.UseHttps(certpath);
+                    listenOptions.UseHttps(certpath, settingsService.SslSettings.CertificatePassword);
                 });
             });
         }
-        else if (useSsl)
+        else
         {
-            //throw new InvalidOperationException("SSL is enabled but no certificate path is provided.");
-            Console.WriteLine("SSL is enabled but no certificate path is provided. SSL will not be used.");
+            // Configure only HTTP endpoint
+            builder.WebHost.ConfigureKestrel(serverOptions =>
+            {
+                serverOptions.ListenAnyIP(port);
+            });
+            
+            if (useSsl)
+            {
+                //throw new InvalidOperationException("SSL is enabled but no certificate path is provided.");
+                Console.WriteLine("SSL is enabled but no certificate path is provided. SSL will not be used.");
+            }
         }
-
-
         // Configure logging
         builder.Logging.ClearProviders();
         builder.Logging.AddConsole();
@@ -46,12 +86,11 @@ public class Program
         var platform = Environment.OSVersion.Platform;
 
         builder.Services.AddSingleton<IFileSystem, FileSystem>();
-        builder.Services.AddSingleton<ISettingsManager, SettingsManager>();
         builder.Services.AddSingleton<IPlaylistManager, PlaylistManager>();
-        builder.Services.AddSingleton<ITokenManager, TokenManager>();
+        builder.Services.AddSingleton<ITokenManager>(tokenManager);
 
         builder.Services.AddTransient<IProcessRunner, ProcessRunner>();
-        builder.Services.AddTransient<IRecordingSchedulingContext, RecordingSchedulingContext>(); 
+        builder.Services.AddTransient<IRecordingSchedulingContext, RecordingSchedulingContext>();
         builder.Services.AddTransient<ITaskScheduler, AtScheduler>();
 
         // Add authentication with a default scheme
@@ -61,7 +100,7 @@ public class Program
             options.DefaultChallengeScheme = "TokenAuth";
         })
         .AddScheme<AuthenticationSchemeOptions, TokenAuthenticationHandler>("TokenAuth", options => { });
-        
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -72,12 +111,13 @@ public class Program
             app.UseHsts();
         }
 
-        app.UseHttpsRedirection();
-        
+        // Comment out or remove this line to prevent HTTP to HTTPS redirection
+        // app.UseHttpsRedirection();
+
         // Serve static files from wwwroot with default documents
         app.UseDefaultFiles(); // Add this line before UseStaticFiles
         app.UseStaticFiles();
-        
+
         // Development-only CORS policy
         if (app.Environment.IsDevelopment())
         {
@@ -94,7 +134,7 @@ public class Program
         app.UseAuthorization();
         // API controller routes
         app.MapControllers();
-            
+
         // Handle SPA fallback for all non-API routes
         app.MapFallbackToFile("index.html");
 

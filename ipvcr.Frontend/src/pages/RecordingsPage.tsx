@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Card, Container } from 'react-bootstrap';
-import RecordingForm from '../components/RecordingForm';
+import { useLocation, useNavigate } from 'react-router-dom';
 import RecordingsTable from '../components/RecordingsTable';
+import { useRouterReset } from '../components/RouterReset';
 import TaskEditor from '../components/TaskEditor';
-import { recordingsApi } from '../services/RecordingsApi';
-import { HomeRecordingsViewModel, ScheduledRecording, TaskDefinitionModel } from '../types/recordings';
 import { AuthService } from '../services/AuthService';
+import { recordingsApi } from '../services/RecordingsApi';
+import { HomeRecordingsViewModel, TaskDefinitionModel } from '../types/recordings';
 
 // Refresh interval in milliseconds (30 seconds)
 const REFRESH_INTERVAL = 300000;
 
 const RecordingsPage: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { resetRouter } = useRouterReset();
+  
   // State management
   const [data, setData] = useState<HomeRecordingsViewModel>({
     recordings: [],
@@ -20,10 +25,8 @@ const RecordingsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Modal state
-  const [showRecordingForm, setShowRecordingForm] = useState<boolean>(false);
+  // Task editor modal state (we'll keep this as a modal for now)
   const [showTaskEditor, setShowTaskEditor] = useState<boolean>(false);
-  const [selectedRecording, setSelectedRecording] = useState<ScheduledRecording | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskDefinitionModel | null>(null);
 
   // Validate token on page load
@@ -53,7 +56,8 @@ const RecordingsPage: React.FC = () => {
     
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // fetchData is intentionally excluded to avoid unnecessary recreation of interval
 
   // Fetch all required data
   const fetchData = async () => {
@@ -74,49 +78,69 @@ const RecordingsPage: React.FC = () => {
     }
   };
 
-  // Handler for opening the recording form to create a new recording
+  // Handler for navigating to add recording page
   const handleAddRecording = () => {
-    setSelectedRecording(null);
-    setShowRecordingForm(true);
+    navigate('/recordings/new', { state: { recordingPath: data.recordingPath } });
   };
 
-  // Handler for editing an existing recording
-  const handleEditRecording = async (id: string) => {
-    try {
-      const recording = await recordingsApi.getRecording(id);
-      setSelectedRecording(recording);
-      setShowRecordingForm(true);
-    } catch (err) {
-      console.error('Error fetching recording:', err);
-      setError('Failed to load recording details');
-    }
+  // Handler for navigating to edit recording page
+  const handleEditRecording = (id: string) => {
+    navigate(`/recordings/${id}`, { state: { recordingPath: data.recordingPath } });
   };
 
-  // Handler for deleting a recording
+  // Enhanced handler for deleting a recording with a hard reset approach
   const handleDeleteRecording = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this recording?')) {
       try {
-        // First update the UI by removing the item from local state
-        // This gives immediate feedback to the user
-        setData(prevData => ({
-          ...prevData,
-          recordings: prevData.recordings.filter(recording => recording.id !== id)
-        }));
-        
-        // Then send the delete request to the server
+        console.log('Performing deletion of recording:', id);
+        // Call the API to delete the recording
         await recordingsApi.deleteRecording(id);
         
-        // No need to call fetchData() immediately after deletion
-        // as this may cause race conditions with caching
-        // We've already updated the UI and the next scheduled refresh will sync with the server
+        // Show immediate feedback by updating the UI
+        setData(prevData => ({
+          ...prevData,
+          recordings: prevData.recordings.filter(r => r.id !== id)
+        }));
+
+        // The hard reset approach - store current path then force a complete app reload
+        const currentPath = window.location.pathname;
+        
+        // Alert the user about the upcoming refresh (can be removed in production)
+        const alertMsg = document.createElement('div');
+        alertMsg.style.position = 'fixed';
+        alertMsg.style.top = '20px';
+        alertMsg.style.left = '50%';
+        alertMsg.style.transform = 'translateX(-50%)';
+        alertMsg.style.backgroundColor = '#28a745';
+        alertMsg.style.color = 'white';
+        alertMsg.style.padding = '10px 20px';
+        alertMsg.style.borderRadius = '4px';
+        alertMsg.style.zIndex = '9999';
+        alertMsg.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+        alertMsg.innerText = 'Deletion successful! Refreshing page...';
+        document.body.appendChild(alertMsg);
+        
+        // Give a short delay for visual feedback, then reload
+        setTimeout(() => {
+          // Use the history API to generate a clean state
+          window.history.replaceState({}, '', currentPath);
+          window.location.reload();
+        }, 800);
+        
       } catch (err) {
         console.error('Error deleting recording:', err);
         setError('Failed to delete recording');
-        
-        // If deletion fails, refresh the data to restore the correct state
-        fetchData();
       }
     }
+  };
+
+  // Diagnostic function to attempt recovery
+  const handleManualRouterReset = () => {
+    // Reset router state and force reload
+    resetRouter();
+    window.setTimeout(() => {
+      window.location.reload();
+    }, 50);
   };
 
   // Handler for editing a task
@@ -128,22 +152,6 @@ const RecordingsPage: React.FC = () => {
     } catch (err) {
       console.error('Error fetching task definition:', err);
       setError('Failed to load task definition');
-    }
-  };
-
-  // Handler for saving a recording (create or update)
-  const handleSaveRecording = async (recording: ScheduledRecording) => {
-    try {
-      if (recording.id && recording.id !== '00000000-0000-0000-0000-000000000000') {
-        await recordingsApi.updateRecording(recording.id, recording);
-      } else {
-        await recordingsApi.createRecording(recording);
-      }
-      setShowRecordingForm(false);
-      fetchData();
-    } catch (err) {
-      console.error('Error saving recording:', err);
-      setError('Failed to save recording');
     }
   };
 
@@ -166,7 +174,7 @@ const RecordingsPage: React.FC = () => {
         <img 
           src="/ipvcr.png" 
           className="img-fluid w-60" 
-          alt="IPVCR Hero Image" 
+          alt="IPVCR Logo" 
           style={{ objectFit: 'cover', maxHeight: '250px', width: '40%' }}
         />
       </div>
@@ -220,22 +228,13 @@ const RecordingsPage: React.FC = () => {
               onEditTask={handleEditTask}
               onDelete={handleDeleteRecording}
               onAdd={handleAddRecording} 
-              showAddButton={data.channelsCount > 0}  
+              showAddButton={data.channelsCount > 0}
             />
           )}
         </div>
       </div>
 
-      {/* Recording Form Modal */}
-      <RecordingForm
-        show={showRecordingForm}
-        onHide={() => setShowRecordingForm(false)}
-        onSave={handleSaveRecording}
-        recording={selectedRecording}
-        recordingPath={data.recordingPath}
-      />
-
-      {/* Task Editor Modal */}
+      {/* Task Editor Modal - keeping this as modal for now */}
       <TaskEditor
         show={showTaskEditor}
         onHide={() => setShowTaskEditor(false)}

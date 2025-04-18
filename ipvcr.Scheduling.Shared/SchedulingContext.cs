@@ -1,3 +1,5 @@
+using ipvcr.Scheduling.Shared.Settings;
+
 namespace ipvcr.Scheduling;
 
 public interface IRecordingSchedulingContext
@@ -10,15 +12,16 @@ public interface IRecordingSchedulingContext
     void RemoveRecording(Guid recordingId);
 }
 
-public class RecordingSchedulingContext(ITaskScheduler taskScheduler) : IRecordingSchedulingContext
+public class RecordingSchedulingContext(ITaskScheduler taskScheduler, ISettingsService settingsService) : IRecordingSchedulingContext
 {
+    private readonly ISettingsService SettingsService = settingsService;
     private ITaskScheduler Scheduler { get; init; } = taskScheduler; 
 
     public IEnumerable<ScheduledRecording> Recordings => Scheduler
                             .FetchScheduledTasks()
                             .Select(ScheduledRecording.FromScheduledTask);
 
-    public void AddRecording(ScheduledRecording recording) => Scheduler.ScheduleTask(recording.ToScheduledTask());
+    public void AddRecording(ScheduledRecording recording) => Scheduler.ScheduleTask(recording.ToScheduledTask(SettingsService.FfmpegSettings));
 
     public void RemoveRecording(Guid recordingId) => Scheduler.CancelTask(recordingId);
 

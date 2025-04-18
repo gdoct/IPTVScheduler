@@ -1,57 +1,64 @@
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import React, { useState } from 'react';
-import { Link, Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Link, Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
 import './App.css';
 import RequireAuth from './components/RequireAuth';
+import { RouterResetProvider } from './components/RouterReset';
 import LoginPage from './pages/LoginPage';
+import RecordingFormPage from './pages/RecordingFormPage';
 import RecordingsPage from './pages/RecordingsPage';
 import SettingsPage from './pages/SettingsPage';
-import { AuthService } from './services/AuthService';
 
 // Navigation component
 const Navigation: React.FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
+  // Direct logout function that uses setTimeout to ensure the token removal happens
+  // before any navigation is attempted
   const handleLogout = () => {
-    if (isLoggingOut) return; // Prevent multiple logout calls
-
-    setIsLoggingOut(true);
-    AuthService.logout();
-    navigate('/login', { replace: true });
+    // Remove token synchronously
+    localStorage.removeItem('auth_token');
+    
+    // Use setTimeout to ensure the token removal completes
+    // before attempting navigation
+    setTimeout(() => {
+      // Force a hard reload of the page to clear any React state
+      window.location.href = '/login';
+    }, 0);
+    
+    // Return false to prevent any default behavior
+    return false;
   };
   
   return (
     <header className="bg-dark text-white py-2">
       <div className="container-fluid d-flex justify-content-between align-items-center">
-      <Link 
-            to="/" 
-            className={`text-white me-3 ${location.pathname === '/' ? 'fw-bold' : ''}`}
-            style={{ textDecoration: 'none' }}
-          >
-            <i className="bi bi-house-door me-1"></i>
-            ipvcr
-          </Link>
+        <Link 
+          to="/" 
+          className={`text-white me-3 ${location.pathname === '/' ? 'fw-bold' : ''}`}
+          style={{ textDecoration: 'none' }}
+        >
+          <i className="bi bi-house-door me-1"></i>
+          ipvcr
+        </Link>
         <div className="d-flex">
           <Link 
-              to="/settings" 
-              className={`text-white ${location.pathname === '/settings' ? 'fw-bold' : ''}`}
-              style={{ textDecoration: 'none' }}
-            >
-              <i className="bi bi-gear me-1"></i>
+            to="/settings" 
+            className={`text-white ${location.pathname === '/settings' ? 'fw-bold' : ''}`}
+            style={{ textDecoration: 'none' }}
+          >
+            <i className="bi bi-gear me-1"></i>
           </Link>
           &nbsp;
           <RequireAuth>
-          <button 
-            className="btn btn-link text-white p-0 ms-3" 
-            style={{ textDecoration: 'none' }}
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-          >
-            <i className="bi bi-box-arrow-right"></i>
-          </button>
+            <button
+              onClick={handleLogout}
+              className="btn btn-link text-white p-0 ms-3"
+              style={{ textDecoration: 'none', border: 'none', background: 'none', cursor: 'pointer' }}
+            >
+              <i className="bi bi-box-arrow-right"></i>
+            </button>
           </RequireAuth>
         </div>
       </div>
@@ -61,9 +68,11 @@ const Navigation: React.FC = () => {
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <RouterResetProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </RouterResetProvider>
   );
 }
 
@@ -78,6 +87,8 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<RequireAuth><RecordingsPage /></RequireAuth>} />
           <Route path="/recordings" element={<RequireAuth><RecordingsPage /></RequireAuth>} />
+          <Route path="/recordings/new" element={<RequireAuth><RecordingFormPage /></RequireAuth>} />
+          <Route path="/recordings/:id" element={<RequireAuth><RecordingFormPage /></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
           <Route path="/login" element={<LoginPage />} />
         </Routes>

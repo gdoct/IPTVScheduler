@@ -1,5 +1,4 @@
 using ipvcr.Scheduling;
-using ipvcr.Scheduling.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
@@ -15,18 +14,15 @@ public class RecordingApiController : ControllerBase
 {
     private readonly ILogger<RecordingApiController> _logger;
     private readonly IRecordingSchedulingContext _context;
-    private readonly ISettingsManager _settingsManager;
     private readonly IPlaylistManager _playlistManager;
 
     public RecordingApiController(
         ILogger<RecordingApiController> logger,
         IRecordingSchedulingContext context,
-        ISettingsManager settingsManager,
         IPlaylistManager playlistManager)
     {
         _logger = logger;
         _context = context;
-        _settingsManager = settingsManager;
         _playlistManager = playlistManager;
     }
 
@@ -160,26 +156,6 @@ public class RecordingApiController : ControllerBase
         return NoContent();
     }
 
-    // GET: api/recordings/settings
-    [HttpGet("settings")]
-    public ActionResult<SchedulerSettings> GetSettings()
-    {
-        return Ok(_settingsManager.Settings);
-    }
-
-    // PUT: api/recordings/settings
-    [HttpPut("settings")]
-    public IActionResult UpdateSettings([FromBody] SchedulerSettings settings)
-    {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        _settingsManager.Settings = settings;
-        return NoContent();
-    }
-
     // GET: api/recordings/channels
     [HttpGet()]
     [Route("channelcount")]
@@ -217,78 +193,6 @@ public class RecordingApiController : ControllerBase
         {
             _logger.LogError(ex, "Error searching channels with query '{query}'", query);
             return StatusCode(500, "An error occurred while searching channels");
-        }
-    }
-
-    // POST: api/recordings/upload-m3u
-    [HttpPost("upload-m3u")]
-    [Consumes("multipart/form-data")]
-    public async Task<IActionResult> UploadM3u(IFormFile file)
-    {
-        if (file == null || file.Length == 0)
-        {
-            return BadRequest("Please upload a valid M3U file.");
-        }
-
-        var uploadPath = _settingsManager.Settings.DataPath;
-        if (string.IsNullOrEmpty(uploadPath))
-        {
-            return BadRequest("Upload path is not configured.");
-        }
-        if (!Directory.Exists(uploadPath))
-        {
-            return BadRequest("Upload path does not exist.");
-        }
-        if (!Directory.Exists(uploadPath) || !new DirectoryInfo(uploadPath).Attributes.HasFlag(FileAttributes.Directory))
-        {
-            return BadRequest("Upload path is not a directory.");
-        }
-        if (!uploadPath.EndsWith(Path.DirectorySeparatorChar.ToString()))
-        {
-            uploadPath += Path.DirectorySeparatorChar;
-        }
-        // test if we can write to the upload folder
-        var testFilePath = Path.Combine(uploadPath, $"{Guid.NewGuid()}.bin");
-        try
-        {
-            using (var stream = new FileStream(testFilePath, FileMode.Create))
-            {
-                await stream.WriteAsync(new byte[0], 0, 0);
-            }
-            System.IO.File.Delete(testFilePath);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Upload path is not writable.");
-            return BadRequest("Upload path is not writable.");
-        }
-
-        var filePath = Path.Combine(uploadPath, file.FileName);
-
-        try
-        {
-            if (!Directory.Exists(uploadPath))
-            {
-                Directory.CreateDirectory(uploadPath);
-            }
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            var settings = _settingsManager.Settings;
-            settings.M3uPlaylistPath = filePath;
-            _settingsManager.Settings = settings;
-
-            _logger.LogDebug("M3U file uploaded successfully to {filePath}", filePath);
-            
-            return Ok(new { message = "M3U file uploaded successfully" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error uploading M3U file.");
-            return StatusCode(500, "An error occurred while uploading the file.");
         }
     }
 

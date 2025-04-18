@@ -34,7 +34,7 @@ docker rmi ipvcr-web
 docker load -i ipvcr-web.img
 
 # deploy the new image to a new container
-docker run --name ipvcr-web --network host -d -v /media/series:/media -v /var/lib/iptvscheduler:/data ipvcr-web:latest
+docker run --name ipvcr-web --restart unless-stopped --network host -d -v /media/series:/media -v /var/lib/iptvscheduler:/data ipvcr-web:latest
 
 # remove the image from the remote server
 rm ipvcr-web.img

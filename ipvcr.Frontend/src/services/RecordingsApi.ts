@@ -1,6 +1,7 @@
 import { config } from '../config';
-import { HomeRecordingsViewModel, ScheduledRecording, SchedulerSettings, TaskDefinitionModel } from '../types/recordings';
+import { HomeRecordingsViewModel, ScheduledRecording, TaskDefinitionModel } from '../types/recordings';
 import { AuthService } from './AuthService';
+import { settingsApi } from './SettingsApiService';
 
 // Base API URL from config
 const RECORDINGAPI_BASE_URL = config.apiBaseUrl + "/recordings";
@@ -127,60 +128,20 @@ export const recordingsApi = {
     }
   },
 
-  // Get settings
-  getSettings: async (): Promise<SchedulerSettings> => {
-    const response = await fetch(`${RECORDINGAPI_BASE_URL}/settings`, getCommonOptions());
-    if (!response.ok) throw new Error('Failed to fetch settings');
-    return await response.json();
-  },
-
-  // Update settings
-  updateSettings: async (settings: SchedulerSettings): Promise<void> => {
-    const options = withCsrf({
-      ...getCommonOptions(),
-      method: 'PUT',
-      body: JSON.stringify(settings)
-    });
-
-    const response = await fetch(`${RECORDINGAPI_BASE_URL}/settings`, options);
-    if (!response.ok) throw new Error('Failed to update settings');
-  },
-
-  // Upload M3U playlist
-  uploadM3uPlaylist: async (file: File): Promise<{ message: string }> => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const options = withCsrf({
-      method: 'POST',
-      body: formData,
-      // Don't set Content-Type header when using FormData
-      headers: {
-        'RequestVerificationToken': getCsrfToken() || '',
-        'Authorization': `Bearer ${AuthService.getToken()}`, 
-      }
-    });
-
-    const response = await fetch(`${RECORDINGAPI_BASE_URL}/upload-m3u`, options);
-    if (!response.ok) throw new Error('Failed to upload M3U file: ' + response.statusText + response.json());
-
-    return await response.json();
-  },
-
   // Get home recordings view model (combines channels and recordings)
   getHomeRecordingsViewModel: async (): Promise<HomeRecordingsViewModel> => {
     // In a real implementation, this might be a single API call
     // Here we combine multiple calls for demonstration
-    const [recordings, channelsCount, settings] = await Promise.all([
+    const [recordings, channelsCount, schedulerSettings] = await Promise.all([
       recordingsApi.getAllRecordings(),
       recordingsApi.getChannelCount(),
-      recordingsApi.getSettings()
+      settingsApi.getSchedulerSettings()
     ]);
 
     return {
       recordings,
       channelsCount,
-      recordingPath: settings.mediaPath || '/recordings'
+      recordingPath: schedulerSettings.mediaPath || '/recordings'
     };
   }
 };

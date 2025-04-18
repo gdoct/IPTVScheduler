@@ -3,17 +3,6 @@ import { Badge, Button, ButtonGroup, Table } from 'react-bootstrap';
 import { getChannelLogo } from '../services/api';
 import { obfuscateChannelUri, ScheduledRecording } from '../types/recordings';
 
-// Utility function to format date for the date picker
-const formatDateForDatePicker = (dateString: string) => {
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
-
 interface RecordingsTableProps {
   recordings: ScheduledRecording[];
   onEdit: (id: string) => void;
@@ -60,15 +49,7 @@ const RecordingsTable: React.FC<RecordingsTableProps> = ({
     };
     
     fetchLogos();
-  }, [recordings]);
-
-  // Example usage in the component where the date is set
-  const handleEdit = (id: string) => {
-    const recording = recordings.find(r => r.id === id);
-    if (recording) {
-      onEdit(id); // Existing onEdit logic
-    }
-  };
+  }, [recordings, channelLogos]);
 
   if (!recordings || recordings.length === 0) {
     return (
@@ -78,7 +59,7 @@ const RecordingsTable: React.FC<RecordingsTableProps> = ({
           <h4 className="mt-3">No recordings scheduled</h4>
           <p className="text-muted">Start by adding a new recording.</p>
           {showAddButton && (
-            <Button variant="primary" onClick={onAdd}>
+            <Button variant="primary" onClick={onAdd} data-testid="add-recording-btn">
               <i className="bi bi-plus-lg me-1"></i> Add New Recording
             </Button>
           )}
@@ -94,7 +75,7 @@ const RecordingsTable: React.FC<RecordingsTableProps> = ({
           <i className="bi bi-calendar-event me-2"></i>Upcoming Recordings
         </h5>
         {showAddButton && (
-          <Button variant="light" onClick={onAdd}>
+          <Button variant="light" onClick={onAdd} data-testid="add-recording-btn">
             <i className="bi bi-plus-lg me-1"></i> Add New Recording
           </Button>
         )}
@@ -159,7 +140,11 @@ const RecordingsTable: React.FC<RecordingsTableProps> = ({
                       <Button variant="outline-secondary" title="Edit Code" onClick={() => onEditTask(item.id)}>
                         <i className="bi bi-braces"></i>
                       </Button>
-                      <Button variant="outline-danger" title="Delete" onClick={() => onDelete(item.id)}>
+                      <Button 
+                        variant="outline-danger" 
+                        title="Delete" 
+                        onClick={() => onDelete(item.id)}
+                      >
                         <i className="bi bi-trash"></i>
                       </Button>
                     </ButtonGroup>

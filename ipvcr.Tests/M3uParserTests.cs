@@ -7,16 +7,6 @@ namespace ipvcr.Tests
 {
     public class M3uParserTests
     {
-
-        class MockedFileSystemStream : FileSystemStream
-        {
-            public MockedFileSystemStream(Stream stream, string path, bool isAsync)
-                : base(stream, path, isAsync)
-            {
-            }
-        }
-
-
         [Fact]
         public async Task M3uParser_ParseM3uFile_ValidInput_ReturnsCorrectChannels()
         {

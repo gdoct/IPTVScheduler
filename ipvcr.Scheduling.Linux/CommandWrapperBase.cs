@@ -1,16 +1,17 @@
 using ipvcr.Scheduling.Shared;
+using ipvcr.Scheduling.Shared.Settings;
 
 namespace ipvcr.Scheduling.Linux
 {
     public abstract class CommandWrapperBase
     {
         protected readonly IProcessRunner ProcessRunner;
-        protected readonly ISettingsManager SettingsManager;
+        protected readonly ISettingsService SettingsService;
 
-        protected CommandWrapperBase(IProcessRunner processRunner, ISettingsManager settingsManager, string command)
+        protected CommandWrapperBase(IProcessRunner processRunner, ISettingsService settingsService, string command)
         {
             ProcessRunner = processRunner;
-            SettingsManager = settingsManager;
+            SettingsService = settingsService;
             Command = command;
             EnsureCommandIsInstalled(command);
         }
@@ -34,6 +35,6 @@ namespace ipvcr.Scheduling.Linux
         }
 
         protected string GetScriptFilename(ScheduledTask task) => 
-            Path.Combine(SettingsManager.Settings.DataPath, "tasks", $"{task.Id}.sh");
+            Path.Combine(SettingsService.SchedulerSettings.DataPath, "tasks", $"{task.Id}.sh");
     }
 }

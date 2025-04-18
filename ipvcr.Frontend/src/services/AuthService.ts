@@ -9,6 +9,11 @@ interface LoginRequest {
   username: string;
   password: string;
 }
+
+interface RestartResponse {
+  message: string;
+}
+
 const AUTH_BASE_URI = config.apiBaseUrl;
 
 export const AuthService = {
@@ -37,7 +42,11 @@ export const AuthService = {
   },
 
   logout: (): void => {
+    // Remove token from localStorage
     localStorage.removeItem(AUTH_TOKEN_KEY);
+    
+    // Force reload of the application to ensure clean state
+    window.location.href = '/login';
   },
 
   isAuthenticated: (): boolean => {
@@ -66,7 +75,6 @@ export const AuthService = {
       if (parts.length !== 3) {
         // Not a valid JWT token format
         AuthService.logout();
-        window.location.href = '/login';
         return false;
       }
       
@@ -81,38 +89,74 @@ export const AuthService = {
         if (payload.exp < currentTime) {
           console.log('Token expired, redirecting to login');
           AuthService.logout();
-          window.location.href = '/login';
           return false;
         }
       }
       
-      // Optional: Make a lightweight API call to verify token validity on server
-      // This is useful for cases where the token might be revoked on the server
-      // but still valid by expiration date
-      try {
-        const response = await fetch(`${AUTH_BASE_URI}/validate-token`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (!response.ok) {
-          console.log('Token validation failed on server, redirecting to login');
-          AuthService.logout();
-          window.location.href = '/login';
-          return false;
-        }
-      } catch (error) {
-        // If server validation fails but token looks valid locally,
-        // we can still consider it valid (optional behavior)
-        console.warn('Token server validation error:', error);
-      }
-      
+      // Skip server-side validation which may cause freezing issues
+      // Just check the token format and expiration locally
       return true;
     } catch (error) {
       console.error('Token validation error:', error);
       AuthService.logout();
-      window.location.href = '/login';
+      return false;
+    }
+  },
+
+  restartServer: async (): Promise<boolean> => {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (!token) {
+      return false;
+    }
+
+    try {
+      const response = await fetch(`${AUTH_BASE_URI}/login/restart`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        console.error('Failed to restart server:', response.statusText);
+        return false;
+      }
+
+      const data: RestartResponse = await response.json();
+      console.log(data.message);
+      return true;
+    } catch (error) {
+      console.error('Restart server error:', error);
+      return false;
+    }
+  },
+  
+  resetToDefaults: async (): Promise<boolean> => {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (!token) {
+      return false;
+    }
+
+    try {
+      const response = await fetch(`${AUTH_BASE_URI}/login/resetdefault`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        console.error('Failed to reset to defaults:', response.statusText);
+        return false;
+      }
+
+      const data: RestartResponse = await response.json();
+      console.log(data.message);
+      return true;
+    } catch (error) {
+      console.error('Reset to defaults error:', error);
       return false;
     }
   }
