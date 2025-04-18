@@ -23,10 +23,10 @@ const TaskEditor: React.FC<TaskEditorProps> = ({
   
   // Initialize editor with task definition
   useEffect(() => {
-    if (taskDefinition) {
+    if (taskDefinition && show) {
       setContent(taskDefinition.content);
     }
-  }, [taskDefinition]);
+  }, [taskDefinition, show]);
 
   // Handle content change
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -40,6 +40,12 @@ const TaskEditor: React.FC<TaskEditorProps> = ({
     }
   };
 
+  // Handle safe close
+  const handleClose = () => {
+    // Simply call onHide without additional complexity
+    onHide();
+  };
+  
   // Handle tab key press in textarea
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Tab') {
@@ -75,7 +81,7 @@ const TaskEditor: React.FC<TaskEditorProps> = ({
   return (
     <Modal 
       show={show} 
-      onHide={onHide} 
+      onHide={handleClose} 
       size="lg" 
       backdrop="static"
       dialogClassName="task-editor-modal"
@@ -85,7 +91,7 @@ const TaskEditor: React.FC<TaskEditorProps> = ({
           <i className="bi bi-braces me-2"></i>
           Edit Task Definition: {taskDefinition?.name || ''}
         </Modal.Title>
-        <Button variant="close" onClick={onHide} className="btn-close-white" aria-label="Close" />
+        <Button variant="close" onClick={handleClose} className="btn-close-white" aria-label="Close" />
       </Modal.Header>
       <Modal.Body className="d-flex flex-column" style={{ overflow: 'hidden' }}>
         <div className="mb-2 d-flex justify-content-between align-items-center">
@@ -166,7 +172,7 @@ const TaskEditor: React.FC<TaskEditorProps> = ({
         </div>
       </Modal.Body>
       <div className="card-footer bg-light p-3 d-flex justify-content-end">
-        <Button variant="secondary" className="me-2" onClick={onHide}>
+        <Button variant="secondary" className="me-2" onClick={handleClose}>
           <i className="bi bi-x-circle me-1"></i>Cancel
         </Button>
         <Button 

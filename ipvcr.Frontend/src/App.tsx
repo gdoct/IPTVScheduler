@@ -4,7 +4,9 @@ import React from 'react';
 import { Link, Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
 import './App.css';
 import RequireAuth from './components/RequireAuth';
+import { RouterResetProvider } from './components/RouterReset';
 import LoginPage from './pages/LoginPage';
+import RecordingFormPage from './pages/RecordingFormPage';
 import RecordingsPage from './pages/RecordingsPage';
 import SettingsPage from './pages/SettingsPage';
 
@@ -66,9 +68,11 @@ const Navigation: React.FC = () => {
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <RouterResetProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </RouterResetProvider>
   );
 }
 
@@ -83,6 +87,8 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<RequireAuth><RecordingsPage /></RequireAuth>} />
           <Route path="/recordings" element={<RequireAuth><RecordingsPage /></RequireAuth>} />
+          <Route path="/recordings/new" element={<RequireAuth><RecordingFormPage /></RequireAuth>} />
+          <Route path="/recordings/:id" element={<RequireAuth><RecordingFormPage /></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
           <Route path="/login" element={<LoginPage />} />
         </Routes>

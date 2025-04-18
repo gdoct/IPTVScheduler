@@ -62,6 +62,18 @@ export interface TlsSettings {
   certificatePassword?: string;
 }
 
+export interface FfmpegSettings {
+  fileType: string;
+  codec: string;
+  audioCodec: string;
+  videoBitrate: string;
+  audioBitrate: string;
+  resolution: string;
+  frameRate: string;
+  aspectRatio: string;
+  outputFormat: string;
+}
+
 export interface AdminPasswordSettings {
   adminUsername: string;
   allowUserRegistration?: boolean;
@@ -73,6 +85,7 @@ export interface AppSettings {
   playlist: PlaylistSettings;
   userManagement: UserManagementSettings;
   tls: TlsSettings;
+  ffmpeg: FfmpegSettings;
 }
 
 // Helper function to obfuscate channel URI

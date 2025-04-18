@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Modal, Nav, Row, Tab } from 'react-bootstrap';
+import FfmpegSettingsComponent from '../components/settings/FfmpegSettingsComponent';
 import GeneralSettingsComponent from '../components/settings/GeneralSettingsComponent';
 import PlaylistSettingsComponent from '../components/settings/PlaylistSettingsComponent';
 import SystemSettingsComponent from '../components/settings/SystemSettingsComponent';
@@ -10,10 +11,10 @@ import { settingsApi } from '../services/SettingsApiService';
 import { AppSettings } from '../types/recordings';
 
 // Define a type for tab keys
-type TabKey = 'general' | 'playlist' | 'users' | 'ssl' | 'system';
+type TabKey = 'general' | 'playlist' | 'users' | 'ssl' | 'system' | 'ffmpeg';
 
 const SettingsPage: React.FC = () => {
-  // State for settings with four categories
+  // State for settings with five categories
   const [settings, setSettings] = useState<AppSettings>({
     general: {
       mediaPath: '',
@@ -36,6 +37,17 @@ const SettingsPage: React.FC = () => {
       useSsl: false,
       certificatePath: '',
       certificatePassword: ''
+    },
+    ffmpeg: {
+      fileType: 'mp4',
+      codec: 'libx264',
+      audioCodec: 'aac',
+      videoBitrate: '1000k',
+      audioBitrate: '128k',
+      resolution: '1280x720',
+      frameRate: '30',
+      aspectRatio: '16:9',
+      outputFormat: 'mp4'
     }
   });
   
@@ -48,7 +60,8 @@ const SettingsPage: React.FC = () => {
     playlist: false,
     users: false,
     ssl: false,
-    system: false
+    system: false,
+    ffmpeg: false
   });
 
   // State for confirm modal when there are unsaved changes
@@ -158,6 +171,21 @@ const SettingsPage: React.FC = () => {
     }));
   };
 
+  const handleFfmpegInputChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSettings(prev => ({
+      ...prev,
+      ffmpeg: {
+        ...prev.ffmpeg,
+        [name]: value // Empty string ('') will be used for 'default' option
+      }
+    }));
+    setHasUnsavedChanges(prev => ({
+      ...prev,
+      ffmpeg: true
+    }));
+  };
+
   // Handle form submission
   const handleSubmit = async () => {
     try {
@@ -193,6 +221,12 @@ const SettingsPage: React.FC = () => {
           setHasUnsavedChanges(prev => ({ ...prev, ssl: false }));
           setSuccess('SSL settings saved successfully');
           break;
+          
+        case 'ffmpeg':
+          await settingsApi.updateFfmpegSettings(settings.ffmpeg);
+          setHasUnsavedChanges(prev => ({ ...prev, ffmpeg: false }));
+          setSuccess('FFmpeg settings saved successfully');
+          break;
       }
       
       setError(null);
@@ -211,6 +245,8 @@ const SettingsPage: React.FC = () => {
               return { ...prev, userManagement: { ...settings.userManagement } };
             case 'ssl':
               return { ...prev, tls: { ...settings.tls } };
+            case 'ffmpeg':
+              return { ...prev, ffmpeg: { ...settings.ffmpeg } };
             default:
               return prev;
           }
@@ -330,6 +366,12 @@ const SettingsPage: React.FC = () => {
                     </Nav.Link>
                   </Nav.Item>
                   <Nav.Item>
+                    <Nav.Link eventKey="ffmpeg" className="rounded-0 border-bottom text-start">
+                    <i className="bi bi-film me-2"></i>
+                    FFmpeg Settings
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
                     <Nav.Link eventKey="system" className="rounded-0 text-start">
                     <i className="bi bi-pc-display me-2"></i>
                     System
@@ -387,6 +429,18 @@ const SettingsPage: React.FC = () => {
                   <TlsSettingsComponent 
                     settings={settings.tls}
                     handleInputChange={handleTlsInputChange}
+                  />
+                  <div className="d-flex justify-content-end">
+                    <Button variant="success" onClick={handleSubmit}>
+                      <i className="bi bi-save me-2"></i>Save Settings
+                    </Button>
+                  </div>
+                </Tab.Pane>
+
+                <Tab.Pane eventKey="ffmpeg">
+                  <FfmpegSettingsComponent 
+                    settings={settings.ffmpeg}
+                    handleInputChange={handleFfmpegInputChange}
                   />
                   <div className="d-flex justify-content-end">
                     <Button variant="success" onClick={handleSubmit}>

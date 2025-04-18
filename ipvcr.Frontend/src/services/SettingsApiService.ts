@@ -1,5 +1,5 @@
 import { config } from '../config';
-import { AdminPasswordSettings, AppSettings, PlaylistSettings, SchedulerSettings, TlsSettings } from '../types/recordings';
+import { AdminPasswordSettings, AppSettings, FfmpegSettings, PlaylistSettings, SchedulerSettings, TlsSettings } from '../types/recordings';
 import { AuthService } from './AuthService';
 
 // Base API URL from config
@@ -61,6 +61,17 @@ export const settingsApi = {
         useSsl: false,
         certificatePath: '',
         certificatePassword: ''
+      },
+      ffmpeg: {
+        fileType: 'mp4',
+        codec: 'libx264',
+        audioCodec: 'aac',
+        videoBitrate: '1000k',
+        audioBitrate: '128k',
+        resolution: '1280x720',
+        frameRate: '30',
+        aspectRatio: '16:9',
+        outputFormat: 'mp4'
       }
     };
 
@@ -123,6 +134,16 @@ export const settingsApi = {
       console.log('Mapped SSL settings:', result.tls);
     } catch (error) {
       console.error('Error fetching SSL settings:', error);
+    }
+    
+    // Try to fetch FFmpeg settings
+    try {
+      console.log('Fetching FFmpeg settings...');
+      const ffmpegSettings = await settingsApi.getFfmpegSettings();
+      console.log('FFmpeg settings received:', ffmpegSettings);
+      result.ffmpeg = ffmpegSettings;
+    } catch (error) {
+      console.error('Error fetching FFmpeg settings:', error);
     }
     
     console.log('All settings combined:', result);
@@ -384,6 +405,53 @@ export const settingsApi = {
       return result;
     } catch (error) {
       console.error('Error in uploadM3uPlaylist:', error);
+      throw error;
+    }
+  },
+
+  // Get FFmpeg settings
+  getFfmpegSettings: async (): Promise<FfmpegSettings> => {
+    try {
+      const response = await fetch(`${SETTINGS_API_BASE_URL}/ffmpeg`, getCommonOptions());
+      
+      if (response.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      } else if (response.status === 403) {
+        throw new Error('You do not have permission to access FFmpeg settings.');
+      } else if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server error ${response.status}: ${errorText || response.statusText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error in getFfmpegSettings:', error);
+      throw error;
+    }
+  },
+  
+  // Update FFmpeg settings
+  updateFfmpegSettings: async (settings: FfmpegSettings): Promise<void> => {
+    try {
+      const options = withCsrf({
+        ...getCommonOptions(),
+        method: 'PUT',
+        body: JSON.stringify(settings)
+      });
+
+      console.log('Sending FFmpeg settings to server:', settings);
+      const response = await fetch(`${SETTINGS_API_BASE_URL}/ffmpeg`, options);
+      
+      if (response.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      } else if (response.status === 403) {
+        throw new Error('You do not have permission to update FFmpeg settings.');
+      } else if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update FFmpeg settings: ${errorText || response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error in updateFfmpegSettings:', error);
       throw error;
     }
   }

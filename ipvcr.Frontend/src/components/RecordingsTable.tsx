@@ -140,7 +140,11 @@ const RecordingsTable: React.FC<RecordingsTableProps> = ({
                       <Button variant="outline-secondary" title="Edit Code" onClick={() => onEditTask(item.id)}>
                         <i className="bi bi-braces"></i>
                       </Button>
-                      <Button variant="outline-danger" title="Delete" onClick={() => onDelete(item.id)}>
+                      <Button 
+                        variant="outline-danger" 
+                        title="Delete" 
+                        onClick={() => onDelete(item.id)}
+                      >
                         <i className="bi bi-trash"></i>
                       </Button>
                     </ButtonGroup>
