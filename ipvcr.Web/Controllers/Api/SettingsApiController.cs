@@ -250,6 +250,65 @@ public class SettingsApiController : ControllerBase
         }
     }
 
+    [HttpPost]
+    [Route("ssl/generate-certificate")]
+    public IActionResult GenerateSelfSignedCertificate()
+    {
+        // Get the SSL settings
+        var settings = _settingsManager.SslSettings;
+        if (!settings.UseSsl)
+        {
+            return BadRequest("SSL is not enabled in settings.");
+        }
+
+        var certificateDir = Path.GetDirectoryName(settings.CertificatePath);
+        
+        if (string.IsNullOrEmpty(certificateDir))
+        {
+            certificateDir = "/data/ssl-certificates";
+        }
+
+        // Ensure directory exists
+        if (!Directory.Exists(certificateDir))
+        {
+            try
+            {
+                Directory.CreateDirectory(certificateDir);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create certificate directory at {certificateDir}", certificateDir);
+                return BadRequest($"Failed to create certificate directory: {ex.Message}");
+            }
+        }
+
+        try
+        {
+            // Generate a timestamped filename
+            var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+            var filePath = Path.Combine(certificateDir, $"selfsigned_certificate_{timestamp}.pfx");
+            
+            // Create the certificate generator
+            var certificateGenerator = new ipvcr.Auth.SelfSignedCertificateGenerator(new System.IO.Abstractions.FileSystem());
+            
+            // Generate the certificate 
+            var certificate = certificateGenerator.GenerateSelfSignedTlsCertificate(filePath, settings.CertificatePassword);
+            
+            // Update the settings
+            settings.CertificatePath = filePath;
+            _settingsManager.SslSettings = settings;
+
+            _logger.LogInformation("Self-signed certificate generated successfully at {filePath}", filePath);
+            
+            return Ok(new { message = "Self-signed certificate generated successfully", path = filePath });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating self-signed certificate");
+            return StatusCode(500, $"An error occurred while generating the certificate: {ex.Message}");
+        }
+    }
+
     [HttpGet]
     [Route("adminsettings")]
     public IActionResult GetAdminSettings()

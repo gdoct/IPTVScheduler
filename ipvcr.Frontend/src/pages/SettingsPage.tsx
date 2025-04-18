@@ -350,25 +350,25 @@ const SettingsPage: React.FC = () => {
                   <Nav.Item>
                     <Nav.Link eventKey="playlist" className="rounded-0 border-bottom text-start">
                     <i className="bi bi-music-note-list me-2"></i>
-                    Playlist Management
-                    </Nav.Link>
-                  </Nav.Item>
-                  <Nav.Item>
-                    <Nav.Link eventKey="users" className="rounded-0 border-bottom text-start">
-                    <i className="bi bi-people-fill me-2"></i>
-                    User Management
-                    </Nav.Link>
-                  </Nav.Item>
-                  <Nav.Item>
-                    <Nav.Link eventKey="ssl" className="rounded-0 border-bottom text-start">
-                    <i className="bi bi-shield-lock-fill me-2"></i>
-                    SSL Settings
+                    Playlist
                     </Nav.Link>
                   </Nav.Item>
                   <Nav.Item>
                     <Nav.Link eventKey="ffmpeg" className="rounded-0 border-bottom text-start">
                     <i className="bi bi-film me-2"></i>
-                    FFmpeg Settings
+                    FFmpeg
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="users" className="rounded-0 border-bottom text-start">
+                    <i className="bi bi-people-fill me-2"></i>
+                    Security
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="ssl" className="rounded-0 border-bottom text-start">
+                    <i className="bi bi-shield-lock-fill me-2"></i>
+                    TLS Settings
                     </Nav.Link>
                   </Nav.Item>
                   <Nav.Item>
@@ -429,6 +429,9 @@ const SettingsPage: React.FC = () => {
                   <TlsSettingsComponent 
                     settings={settings.tls}
                     handleInputChange={handleTlsInputChange}
+                    setSuccess={setSuccess}
+                    setError={setError}
+                    refreshSettings={fetchSettings}
                   />
                   <div className="d-flex justify-content-end">
                     <Button variant="success" onClick={handleSubmit}>

@@ -4,6 +4,33 @@ using ipvcr.Auth;
 namespace ipvcr.Scheduling.Shared.Settings;
 
 /// <summary>
+/// Enum for identifying which type of settings has changed
+/// </summary>
+public enum SettingsType
+{
+    Scheduler,
+    Playlist,
+    Ssl,
+    Ffmpeg,
+    AdminPassword
+}
+
+/// <summary>
+/// Event arguments for the SettingsChanged event
+/// </summary>
+public class SettingsServiceChangedEventArgs : EventArgs
+{
+    public SettingsType SettingsType { get; }
+    public object NewSettings { get; }
+
+    public SettingsServiceChangedEventArgs(SettingsType settingsType, object newSettings)
+    {
+        SettingsType = settingsType;
+        NewSettings = newSettings;
+    }
+}
+
+/// <summary>
 /// A facade service that provides centralized access to all settings in the application.
 /// </summary>
 public interface ISettingsService
@@ -18,6 +45,8 @@ public interface ISettingsService
     bool ValidateAdminPassword(string passwordhash);
     void UpdateAdminPassword(string newPassword);
     void ResetFactoryDefaults();
+    // Settings changed event
+    event EventHandler<SettingsServiceChangedEventArgs>? SettingsChanged;
 }
 
 /// <summary>
@@ -32,6 +61,10 @@ public class SettingsService : ISettingsService
     private readonly ISettingsManager<FfmpegSettings> _ffmpegSettingsManager;
     private readonly ISettingsManager<AdminPasswordSettings> _adminPasswordManager;
 
+    /// <summary>
+    /// Event that is raised when any of the underlying settings are changed
+    /// </summary>
+    public event EventHandler<SettingsServiceChangedEventArgs>? SettingsChanged;
 
     /// <summary>
     /// Initializes a new instance of the SettingsService class.
@@ -44,6 +77,13 @@ public class SettingsService : ISettingsService
         _sslSettingsManager = new SslSettingsManager(fileSystem);
         _ffmpegSettingsManager = new FfmpegSettingsManager(fileSystem);
         _adminPasswordManager = new AdminPasswordManager(fileSystem, tokenManager);
+
+        // Subscribe to the SettingsChanged event of each settings manager
+        _schedulerSettingsManager.SettingsChanged += (sender, args) => OnSettingsChanged(SettingsType.Scheduler, args.NewSettings);
+        _playlistSettingsManager.SettingsChanged += (sender, args) => OnSettingsChanged(SettingsType.Playlist, args.NewSettings);
+        _sslSettingsManager.SettingsChanged += (sender, args) => OnSettingsChanged(SettingsType.Ssl, args.NewSettings);
+        _ffmpegSettingsManager.SettingsChanged += (sender, args) => OnSettingsChanged(SettingsType.Ffmpeg, args.NewSettings);
+        _adminPasswordManager.SettingsChanged += (sender, args) => OnSettingsChanged(SettingsType.AdminPassword, args.NewSettings);
     }
 
     // Settings properties that automatically load and save
@@ -111,5 +151,13 @@ public class SettingsService : ISettingsService
         {
             schedulerManager.SetDefaultAdminPassword();
         }
+    }
+
+    /// <summary>
+    /// Raises the SettingsChanged event with the appropriate settings type and new settings
+    /// </summary>
+    private void OnSettingsChanged(SettingsType settingsType, object newSettings)
+    {
+        SettingsChanged?.Invoke(this, new SettingsServiceChangedEventArgs(settingsType, newSettings));
     }
 }

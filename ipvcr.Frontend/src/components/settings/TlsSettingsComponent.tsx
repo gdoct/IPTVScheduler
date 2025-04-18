@@ -1,15 +1,27 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Button, Card, Col, Form, InputGroup, Row } from 'react-bootstrap';
+import { settingsApi } from '../../services/SettingsApiService';
 import { TlsSettings } from '../../types/recordings';
 
 interface TlsSettingsProps {
   settings: TlsSettings;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   uploadCertificate?: (file: File) => Promise<void>;
+  setSuccess?: (message: string | null) => void;
+  setError?: (message: string | null) => void;
+  refreshSettings?: () => void;
 }
 
-const TlsSettingsComponent: React.FC<TlsSettingsProps> = ({ settings, handleInputChange, uploadCertificate }) => {
+const TlsSettingsComponent: React.FC<TlsSettingsProps> = ({ 
+  settings, 
+  handleInputChange, 
+  uploadCertificate, 
+  setSuccess,
+  setError,
+  refreshSettings 
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
   
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0 && uploadCertificate) {
@@ -24,6 +36,33 @@ const TlsSettingsComponent: React.FC<TlsSettingsProps> = ({ settings, handleInpu
   const triggerFileInput = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
+    }
+  };
+
+  const handleRegenerateCertificate = async () => {
+    if (!settings.useSsl) {
+      return;
+    }
+
+    setIsRegenerating(true);
+    try {
+      const result = await settingsApi.regenerateSelfSignedCertificate();
+      
+      if (setSuccess) {
+        setSuccess(result.message || 'Self-signed certificate generated successfully');
+      }
+      
+      // Refresh settings to get updated certificate path
+      if (refreshSettings) {
+        refreshSettings();
+      }
+    } catch (error) {
+      console.error('Error regenerating certificate:', error);
+      if (setError) {
+        setError('Failed to generate self-signed certificate');
+      }
+    } finally {
+      setIsRegenerating(false);
     }
   };
 
@@ -94,6 +133,15 @@ const TlsSettingsComponent: React.FC<TlsSettingsProps> = ({ settings, handleInpu
                 >
                   <i className="bi bi-upload me-2"></i>
                   Upload Certificate
+                </Button>
+                <Button 
+                  variant="outline-primary" 
+                  size="sm"
+                  onClick={handleRegenerateCertificate}
+                  disabled={!settings.useSsl || isRegenerating}
+                >
+                  <i className="bi bi-patch-check-fill"></i>
+                  {isRegenerating ? 'Regenerating...' : 'Regenerate self-signed certificate'}
                 </Button>
               </div>
               <Form.Text className="text-muted">

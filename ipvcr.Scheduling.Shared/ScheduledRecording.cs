@@ -1,4 +1,6 @@
-﻿namespace ipvcr.Scheduling;
+﻿using ipvcr.Scheduling.Shared.Settings;
+
+namespace ipvcr.Scheduling;
 
 public class ScheduledRecording
 {
@@ -15,7 +17,7 @@ public class ScheduledRecording
 
     }
 
-    public ScheduledRecording(Guid id, string name, string description, string filename, string channelUri, string channelName, DateTimeOffset startTime, DateTime endTime)
+    public ScheduledRecording(Guid id, string name, string description, string filename, string channelUri, string channelName, DateTimeOffset startTime, DateTimeOffset endTime)
     {
         Id = id;
         Name = name;
@@ -27,19 +29,84 @@ public class ScheduledRecording
         EndTime = endTime;
     }
 
-    private string GenerateFfMpegCommandString()
+    private string GenerateFfMpegCommandString(FfmpegSettings ffmpegSettings)
     {
-        return $"ffmpeg -i {ChannelUri} -t {Convert.ToInt32((EndTime - StartTime).TotalSeconds)} -c copy -f mp4 -metadata title=\"{Name}\" -metadata description=\"{Description}\" {Filename}";
+        var command = $"ffmpeg -i {ChannelUri} -t {Convert.ToInt32((EndTime - StartTime).TotalSeconds)}";
+
+        // Add video codec if specified
+        if (!string.IsNullOrEmpty(ffmpegSettings.Codec))
+        {
+            command += $" -c:v {ffmpegSettings.Codec}";
+        }
+        else
+        {
+            command += " -c:v copy";
+        }
+
+        // Add audio codec if specified
+        if (!string.IsNullOrEmpty(ffmpegSettings.AudioCodec))
+        {
+            command += $" -c:a {ffmpegSettings.AudioCodec}";
+        }
+        else
+        {
+            command += " -c:a copy";
+        }
+
+        // Add video bitrate if specified
+        if (!string.IsNullOrEmpty(ffmpegSettings.VideoBitrate))
+        {
+            command += $" -b:v {ffmpegSettings.VideoBitrate}";
+        }
+
+        // Add audio bitrate if specified
+        if (!string.IsNullOrEmpty(ffmpegSettings.AudioBitrate))
+        {
+            command += $" -b:a {ffmpegSettings.AudioBitrate}";
+        }
+
+        // Add resolution if specified
+        if (!string.IsNullOrEmpty(ffmpegSettings.Resolution))
+        {
+            command += $" -s {ffmpegSettings.Resolution}";
+        }
+
+        // Add frame rate if specified
+        if (!string.IsNullOrEmpty(ffmpegSettings.FrameRate))
+        {
+            command += $" -r {ffmpegSettings.FrameRate}";
+        }
+
+        // Add aspect ratio if specified
+        if (!string.IsNullOrEmpty(ffmpegSettings.AspectRatio))
+        {
+            command += $" -aspect {ffmpegSettings.AspectRatio}";
+        }
+
+        // Use specified output format, falling back to FileType if needed
+        string format = !string.IsNullOrEmpty(ffmpegSettings.OutputFormat) 
+            ? ffmpegSettings.OutputFormat 
+            : (!string.IsNullOrEmpty(ffmpegSettings.FileType) ? ffmpegSettings.FileType : "mp4");
+
+        command += $" -f {format}";
+
+        // Add metadata
+        command += $" -metadata title=\"{Name}\" -metadata description=\"{Description}\"";
+        
+        // Add filename
+        command += $" {Filename}";
+
+        return command;
     }
 
-    public ScheduledTask ToScheduledTask()
+    public ScheduledTask ToScheduledTask(FfmpegSettings ffmpegSettings)
     {
         // we have the user's StartTime and we have the user's TimezoneOffset
         // e.g. the user schedules at 16.00 localtime with a 2 hr offset. we should create a task at 14.00 UTC
         // so we need to convert the local time to UTC by subtracting the offset
         return new(Id,
             Name,
-            GenerateFfMpegCommandString(),
+            GenerateFfMpegCommandString(ffmpegSettings),
             StartTime,
             System.Text.Json.JsonSerializer.Serialize(this)
             );

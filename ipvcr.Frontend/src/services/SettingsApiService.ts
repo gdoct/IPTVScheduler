@@ -290,6 +290,7 @@ export const settingsApi = {
     }
   },
   
+  // Upload SSL certificate
   uploadSslCertificate: async (file: File): Promise<{ message: string, path: string }> => {
     try {
       const formData = new FormData();
@@ -318,6 +319,33 @@ export const settingsApi = {
       return await response.json();
     } catch (error) {
       console.error('Error uploading certificate:', error);
+      throw error;
+    }
+  },
+
+  // Regenerate a self-signed SSL certificate
+  regenerateSelfSignedCertificate: async (): Promise<{ message: string, path: string }> => {
+    try {
+      const options = withCsrf({
+        ...getCommonOptions(),
+        method: 'POST'
+      });
+
+      console.log('Requesting self-signed certificate generation');
+      const response = await fetch(`${SETTINGS_API_BASE_URL}/ssl/generate-certificate`, options);
+      
+      if (response.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      } else if (response.status === 403) {
+        throw new Error('You do not have permission to generate certificates.');
+      } else if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to generate certificate: ${errorText || response.statusText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error generating self-signed certificate:', error);
       throw error;
     }
   },

@@ -18,7 +18,6 @@ const UserManagementSettingsComponent: React.FC<UserManagementSettingsProps> = (
 }) => {
   const [adminPassword, setAdminPassword] = useState<string>('');
   const [changingPassword, setChangingPassword] = useState<boolean>(false);
-  const [restartingServer, setRestartingServer] = useState<boolean>(false);
 
   const handlePasswordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAdminPassword(e.target.value);

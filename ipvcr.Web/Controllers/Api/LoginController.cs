@@ -24,8 +24,8 @@ public class LoginController : ControllerBase
     public IActionResult Login([FromBody] LoginRequest request)
     {
         if (request.Username == _settingsService.AdminPasswordSettings.AdminUsername
-         &&_settingsService.ValidateAdminPassword(request.Password))
-        {   
+         && _settingsService.ValidateAdminPassword(request.Password))
+        {
             var token = _tokenManager.CreateToken(request.Username);
             return Ok(new { Token = token });
         }
@@ -50,18 +50,18 @@ public class LoginController : ControllerBase
     [Route("restart")]
     public IActionResult Restart()
     {
-        var username = User.Identity?.Name;
-        if (string.IsNullOrWhiteSpace(username))
+        // restart the asp.net server
+        try
         {
-            return Unauthorized();
-        }
-        if (_settingsService.AdminPasswordSettings.AdminUsername == username)
-        {
-            // restart the asp.net server
-            Task.Run(Program.RestartAspNetAsync);
+            Console.WriteLine("Server is restarting..."); // Ensure this message is displayed
+            Environment.Exit(0); // Use a specific exit code if needed
+
             return Ok(new { Message = "Restarting..." });
         }
-        return Unauthorized();
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Error = $"Failed to initiate restart: {ex.Message}" });
+        }
     }
 
     [Authorize]

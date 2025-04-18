@@ -31,6 +31,17 @@ public class PlaylistManager : IPlaylistManager
         {
             LoadPlaylist(settingsManager.PlaylistSettings.M3uPlaylistPath);
         }
+        settingsManager.SettingsChanged += (sender, args) =>
+        {
+            if (args.SettingsType == SettingsType.Playlist)
+            {
+                if (args.NewSettings is not PlaylistSettings newSettings)
+                {
+                    throw new ArgumentException("New settings must be of type PlaylistSettings.", nameof(args));
+                }
+                LoadPlaylist(newSettings.M3uPlaylistPath);
+            }
+        };
     }
 
     public Task LoadFromFileAsync(string filePath)

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, Card, Container } from 'react-bootstrap';
+import { Alert, Card, Container } from 'react-bootstrap';
 import { useLocation, useNavigate } from 'react-router-dom';
 import RecordingsTable from '../components/RecordingsTable';
 import { useRouterReset } from '../components/RouterReset';
@@ -28,10 +28,6 @@ const RecordingsPage: React.FC = () => {
   // Task editor modal state (we'll keep this as a modal for now)
   const [showTaskEditor, setShowTaskEditor] = useState<boolean>(false);
   const [selectedTask, setSelectedTask] = useState<TaskDefinitionModel | null>(null);
-
-  // Added diagnostic state
-  const [routerState, setRouterState] = useState<any>(null);
-  const [lastDeleted, setLastDeleted] = useState<string | null>(null);
 
   // Validate token on page load
   useEffect(() => {
@@ -208,53 +204,6 @@ const RecordingsPage: React.FC = () => {
                     <div><strong>Recording path:</strong> {data.recordingPath}</div>
                     <div><strong>Channel count:</strong> {data.channelsCount}</div>
                   </div>
-                </div>
-              </Card.Body>
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {/* Router Diagnostic Panel (only shows after deletion) */}
-      {lastDeleted && (
-        <div className="row mb-4">
-          <div className="col-md-12">
-            <Card className="border-warning">
-              <Card.Header className="bg-warning text-dark">
-                <i className="bi bi-bug me-2"></i>
-                Diagnostic Panel (Record {lastDeleted} was deleted)
-              </Card.Header>
-              <Card.Body>
-                <div className="mb-3">
-                  <p>Router State: {JSON.stringify(routerState)}</p>
-                  <p>Current Location: {JSON.stringify({
-                    pathname: location.pathname,
-                    search: location.search,
-                    hash: location.hash,
-                  })}</p>
-                </div>
-                <div>
-                  <p>If links aren't working properly, try one of these solutions:</p>
-                  <Button 
-                    variant="outline-primary" 
-                    className="me-2"
-                    onClick={() => { navigate('/'); }}
-                  >
-                    Navigate to Home
-                  </Button>
-                  <Button 
-                    variant="outline-secondary" 
-                    className="me-2"
-                    onClick={() => { navigate('/settings'); }}
-                  >
-                    Navigate to Settings
-                  </Button>
-                  <Button 
-                    variant="outline-danger"
-                    onClick={handleManualRouterReset}
-                  >
-                    Reload Page
-                  </Button>
                 </div>
               </Card.Body>
             </Card>
