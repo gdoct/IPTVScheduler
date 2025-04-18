@@ -44,4 +44,23 @@ public class LoginController : ControllerBase
         }
         return Unauthorized();
     }
+
+    [Authorize]
+    [HttpPost]
+    [Route("restart")]
+    public IActionResult Restart()
+    {
+        var username = User.Identity?.Name;
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return Unauthorized();
+        }
+        if (_settingsService.AdminPasswordSettings.AdminUsername == username)
+        {
+            // restart the asp.net server
+            Task.Run(Program.RestartAspNetAsync);
+            return Ok(new { Message = "Restarting..." });
+        }
+        return Unauthorized();
+    }
 }

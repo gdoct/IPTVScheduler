@@ -9,6 +9,13 @@ namespace ipvcr.Web;
 
 public class Program
 {
+
+    public static async Task RestartAspNetAsync()
+    {
+        await Task.Delay(1000); // Delay to allow the response to be sent
+        
+    }
+
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);

@@ -2,18 +2,24 @@
 # IPVCR: A Docker-based IPTV Recorder / Scheduler
 ![image](https://github.com/user-attachments/assets/7c23f585-7103-4eda-aa75-ba20adfd9c4b)
 
-A simple web VCR in a docker image
+A web VCR in a docker image. 
+This started out as a project so that I could schedule ffmpeg to record some tv. How complex can a simple wrapper for the Linux ```at``` command become? But this has quickly evolved into a semi-overengineered project complete with security, configuration management, full CI/CD, and more planned.
 
 ## Features
 
-- React-based web interface for managing IPTV recordings
-- Schedule recordings by time and channel.
-- Allows timezone offsets between user and server.
-- Records IPTV streams (http) through ```ffmpeg```
-- Schedules recordings through ```at```
-- Easy configuration through the web interface
-- Support for large channel lists ( > 100 mb)
-- Requires authentication
+- Modern React-based web interface with syntax highlighting for task scripts 
+- Schedule and manage IPTV recordings with flexible timing options
+- Real-time timezone offset handling between user interface and server
+- Advanced M3U playlist management with support for very large channel lists (>100 MB)
+- Channel search functionality with filtering options
+- Secure authentication system with JWT token-based access control
+- Task script editing capabilities with syntax highlighting
+- Flexible FFmpeg configuration for optimal recording quality
+- Robust scheduling through Linux `at` command (Linux) or Task Scheduler (Windows)
+- Comprehensive settings management (media paths, data storage, SSL)
+- Docker-ready with full containerization support
+- Multi-platform support (Linux-first with Windows compatibility)
+- RESTful API for programmatic control
 
 ## Screenshot
 
@@ -77,4 +83,15 @@ services:
 ```
 
 Save this to a docker-compose.yml file and run with `docker-compose up -d`.
+
+## Architecture
+
+IPVCR consists of several components:
+
+- **Web UI**: React-based frontend for managing recordings and settings
+- **API Layer**: RESTful endpoints for UI interaction 
+- **Scheduling Engine**: Manages recording tasks using native OS capabilities
+- **Settings Management**: Handles configuration persistence and validation
+- **Authentication**: Provides secure access to the application
+- **M3U Parser**: Processes IPTV channel lists of various sizes
 
