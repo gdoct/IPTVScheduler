@@ -3,13 +3,20 @@ using ipvcr.Auth;
 
 namespace ipvcr.Scheduling.Shared.Settings;
 
-public class AdminPasswordManager(IFileSystem fileSystem, ITokenManager tokenManager) : BaseSettingsManager<AdminPasswordSettings>(fileSystem, SETTINGS_FILENAME, "/data"),
-                    IAdminSettingsManager, ISettingsManager<AdminPasswordSettings>
+public class AdminPasswordManager : BaseSettingsManager<AdminPasswordSettings>, IAdminSettingsManager, ISettingsManager<AdminPasswordSettings>
 {
-    private readonly ITokenManager _tokenManager = tokenManager;
+    private readonly ITokenManager _tokenManager;
     private const string DEFAULT_PASSWORD = "default_password";
     private const string DEFAULT_USERNAME = "admin";
     const string SETTINGS_FILENAME = "adminpassword.json";
+
+    public AdminPasswordManager(IFileSystem fileSystem, ITokenManager tokenManager) : base(fileSystem, SETTINGS_FILENAME, "/data")
+    {
+        if (tokenManager == null)
+            throw new ArgumentNullException(nameof(tokenManager));
+            
+        _tokenManager = tokenManager;
+    }
 
     public string AdminUsername { get; set; } = DEFAULT_USERNAME;
     public string AdminPassword { get; set; } = DEFAULT_PASSWORD;
@@ -42,6 +49,8 @@ public class AdminPasswordManager(IFileSystem fileSystem, ITokenManager tokenMan
             {
                 _settings.AdminUsername = value.AdminUsername;
                 SaveSettings(_settings);
+                // Make sure to raise the event when settings are changed
+                RaiseSettingsChanged(_settings);
             }
         }
     }
