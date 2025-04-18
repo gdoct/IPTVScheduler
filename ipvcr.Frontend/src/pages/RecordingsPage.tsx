@@ -3,9 +3,9 @@ import { Alert, Card, Container } from 'react-bootstrap';
 import RecordingForm from '../components/RecordingForm';
 import RecordingsTable from '../components/RecordingsTable';
 import TaskEditor from '../components/TaskEditor';
+import { AuthService } from '../services/AuthService';
 import { recordingsApi } from '../services/RecordingsApi';
 import { HomeRecordingsViewModel, ScheduledRecording, TaskDefinitionModel } from '../types/recordings';
-import { AuthService } from '../services/AuthService';
 
 // Refresh interval in milliseconds (30 seconds)
 const REFRESH_INTERVAL = 300000;
@@ -53,7 +53,8 @@ const RecordingsPage: React.FC = () => {
     
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // fetchData is intentionally excluded to avoid unnecessary recreation of interval
 
   // Fetch all required data
   const fetchData = async () => {
@@ -166,7 +167,7 @@ const RecordingsPage: React.FC = () => {
         <img 
           src="/ipvcr.png" 
           className="img-fluid w-60" 
-          alt="IPVCR Hero Image" 
+          alt="IPVCR Logo" 
           style={{ objectFit: 'cover', maxHeight: '250px', width: '40%' }}
         />
       </div>

@@ -76,6 +76,7 @@ const SettingsPage: React.FC = () => {
   // Load settings on component mount
   useEffect(() => {
     fetchSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch settings from API
@@ -240,6 +241,12 @@ const SettingsPage: React.FC = () => {
       setActiveTab(newTabKey);
     }
   };
+
+  // Make sure all useEffect hooks have proper dependencies
+  useEffect(() => {
+    fetchSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // This is intended to run only once on mount
 
   const handleConfirmTabChange = () => {
     setActiveTab(pendingTabChange || 'general');
