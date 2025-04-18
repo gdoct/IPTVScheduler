@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Modal, Nav, Row, Tab } from 'react-bootstrap';
 import GeneralSettingsComponent from '../components/settings/GeneralSettingsComponent';
 import PlaylistSettingsComponent from '../components/settings/PlaylistSettingsComponent';
+import SystemSettingsComponent from '../components/settings/SystemSettingsComponent';
 import TlsSettingsComponent from '../components/settings/TlsSettingsComponent';
 import UserManagementSettingsComponent from '../components/settings/UserManagementSettingsComponent';
 import { AuthService } from '../services/AuthService';
@@ -9,7 +10,7 @@ import { settingsApi } from '../services/SettingsApiService';
 import { AppSettings } from '../types/recordings';
 
 // Define a type for tab keys
-type TabKey = 'general' | 'playlist' | 'users' | 'ssl';
+type TabKey = 'general' | 'playlist' | 'users' | 'ssl' | 'system';
 
 const SettingsPage: React.FC = () => {
   // State for settings with four categories
@@ -46,7 +47,8 @@ const SettingsPage: React.FC = () => {
     general: false,
     playlist: false,
     users: false,
-    ssl: false
+    ssl: false,
+    system: false
   });
 
   // State for confirm modal when there are unsaved changes
@@ -322,9 +324,15 @@ const SettingsPage: React.FC = () => {
                     </Nav.Link>
                   </Nav.Item>
                   <Nav.Item>
-                    <Nav.Link eventKey="ssl" className="rounded-0 text-start">
+                    <Nav.Link eventKey="ssl" className="rounded-0 border-bottom text-start">
                     <i className="bi bi-shield-lock-fill me-2"></i>
                     SSL Settings
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="system" className="rounded-0 text-start">
+                    <i className="bi bi-pc-display me-2"></i>
+                    System
                     </Nav.Link>
                   </Nav.Item>
                   </Nav>
@@ -385,6 +393,13 @@ const SettingsPage: React.FC = () => {
                       <i className="bi bi-save me-2"></i>Save Settings
                     </Button>
                   </div>
+                </Tab.Pane>
+
+                <Tab.Pane eventKey="system">
+                  <SystemSettingsComponent 
+                    setSuccess={setSuccess}
+                    setError={setError}
+                  />
                 </Tab.Pane>
               </Tab.Content>
             </Col>

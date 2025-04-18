@@ -269,6 +269,38 @@ export const settingsApi = {
     }
   },
   
+  uploadSslCertificate: async (file: File): Promise<{ message: string, path: string }> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const options = withCsrf({
+        ...getCommonOptions(),
+        method: 'POST',
+        body: formData,
+        // Don't set Content-Type as it will be automatically set with the boundary for FormData
+        headers: {} 
+      });
+
+      console.log('Uploading certificate file:', file.name);
+      const response = await fetch(`${SETTINGS_API_BASE_URL}/ssl/certificate`, options);
+      
+      if (response.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      } else if (response.status === 403) {
+        throw new Error('You do not have permission to upload certificates.');
+      } else if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to upload certificate: ${errorText || response.statusText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error uploading certificate:', error);
+      throw error;
+    }
+  },
+  
   // Get admin password settings
   getAdminPasswordSettings: async (): Promise<AdminPasswordSettings> => {
     try {

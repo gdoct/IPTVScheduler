@@ -87,4 +87,10 @@ public class AdminPasswordManager(IFileSystem fileSystem, ITokenManager tokenMan
         _settings.AdminPassword = _tokenManager.CreateHash(newPassword);
         SaveSettings(_settings);
     }
+
+    public void SetDefaultAdminPassword()
+    {
+        _settings.AdminPassword = DEFAULT_PASSWORD;
+        SaveSettings(_settings);
+    }
 }

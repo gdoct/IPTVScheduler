@@ -1,4 +1,3 @@
-// filepath: /home/guido/dotnet/ipvcr/ipvcr.Frontend/src/components/settings/UserManagementSettingsComponent.tsx
 import React, { useState } from 'react';
 import { Button, Card, Col, Form, InputGroup, Row } from 'react-bootstrap';
 import { AuthService } from '../../services/AuthService';
@@ -19,6 +18,7 @@ const UserManagementSettingsComponent: React.FC<UserManagementSettingsProps> = (
 }) => {
   const [adminPassword, setAdminPassword] = useState<string>('');
   const [changingPassword, setChangingPassword] = useState<boolean>(false);
+  const [restartingServer, setRestartingServer] = useState<boolean>(false);
 
   const handlePasswordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAdminPassword(e.target.value);

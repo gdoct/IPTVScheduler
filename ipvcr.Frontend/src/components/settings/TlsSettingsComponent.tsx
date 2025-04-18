@@ -1,13 +1,32 @@
-import React from 'react';
-import { Card, Col, Form, InputGroup, Row } from 'react-bootstrap';
+import React, { useRef } from 'react';
+import { Button, Card, Col, Form, InputGroup, Row } from 'react-bootstrap';
 import { TlsSettings } from '../../types/recordings';
 
 interface TlsSettingsProps {
   settings: TlsSettings;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  uploadCertificate?: (file: File) => Promise<void>;
 }
 
-const TlsSettingsComponent: React.FC<TlsSettingsProps> = ({ settings, handleInputChange }) => {
+const TlsSettingsComponent: React.FC<TlsSettingsProps> = ({ settings, handleInputChange, uploadCertificate }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0 && uploadCertificate) {
+      try {
+        await uploadCertificate(e.target.files[0]);
+      } catch (error) {
+        console.error('Failed to upload certificate:', error);
+      }
+    }
+  };
+
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   return (
     <Card className="mb-4">
       <Card.Header className="bg-light d-flex justify-content-between align-items-center">
@@ -53,6 +72,32 @@ const TlsSettingsComponent: React.FC<TlsSettingsProps> = ({ settings, handleInpu
               </InputGroup>
               <Form.Text className="text-muted">
               Path to your .pfx certificate file
+              </Form.Text>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <div className="d-flex justify-content-between align-items-center">
+                <Form.Label>Upload Certificate</Form.Label>
+                <input 
+                  type="file" 
+                  accept=".pfx,.p12"
+                  className="d-none"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  disabled={!settings.useSsl}
+                />
+                <Button 
+                  variant="outline-primary" 
+                  size="sm"
+                  onClick={triggerFileInput}
+                  disabled={!settings.useSsl || !uploadCertificate}
+                >
+                  <i className="bi bi-upload me-2"></i>
+                  Upload Certificate
+                </Button>
+              </div>
+              <Form.Text className="text-muted">
+                Upload a .pfx or .p12 certificate file
               </Form.Text>
             </Form.Group>
 

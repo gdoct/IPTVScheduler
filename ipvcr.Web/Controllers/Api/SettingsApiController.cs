@@ -182,6 +182,74 @@ public class SettingsApiController : ControllerBase
         }
     }
 
+    // POST: api/settings/ssl/certificate
+    [HttpPost]
+    [Route("ssl/certificate")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadSslCertificate(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest("Please upload a valid certificate file.");
+        }
+
+        // Get the SSL settings directory
+        var settings = _settingsManager.SslSettings;
+        var certificateDir = Path.GetDirectoryName(settings.CertificatePath);
+        
+        if (string.IsNullOrEmpty(certificateDir))
+        {
+            certificateDir = "/data/ssl-certificates";
+        }
+
+        // Ensure directory exists
+        if (!Directory.Exists(certificateDir))
+        {
+            try
+            {
+                Directory.CreateDirectory(certificateDir);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create certificate directory at {certificateDir}", certificateDir);
+                return BadRequest($"Failed to create certificate directory: {ex.Message}");
+            }
+        }
+
+        // Generate a filename that includes timestamp to avoid conflicts
+        var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (fileExtension != ".pfx" && fileExtension != ".p12")
+        {
+            return BadRequest("Only .pfx or .p12 certificate files are accepted.");
+        }
+
+        var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+        var fileName = $"certificate_{timestamp}{fileExtension}";
+        var filePath = Path.Combine(certificateDir, fileName);
+
+        try
+        {
+            // Save the file
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            // Update the settings
+            settings.CertificatePath = filePath;
+            _settingsManager.SslSettings = settings;
+
+            _logger.LogInformation("SSL certificate uploaded successfully to {filePath}", filePath);
+            
+            return Ok(new { message = "Certificate uploaded successfully", path = filePath });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading SSL certificate.");
+            return StatusCode(500, $"An error occurred while uploading the certificate: {ex.Message}");
+        }
+    }
+
     [HttpGet]
     [Route("adminsettings")]
     public IActionResult GetAdminSettings()

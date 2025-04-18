@@ -63,4 +63,23 @@ public class LoginController : ControllerBase
         }
         return Unauthorized();
     }
+
+    [Authorize]
+    [HttpPost]
+    [Route("resetdefaults")]
+    public IActionResult ResetDefaults()
+    {
+        var username = User.Identity?.Name;
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return Unauthorized();
+        }
+        if (_settingsService.AdminPasswordSettings.AdminUsername == username)
+        {
+            // reset the settings to defaults
+            _settingsService.ResetFactoryDefaults();
+            return Ok(new { Message = "Settings reset to defaults." });
+        }
+        return Unauthorized();
+    }
 }

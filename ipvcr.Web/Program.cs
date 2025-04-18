@@ -14,6 +14,12 @@ public class Program
     {
         await Task.Delay(1000); // Delay to allow the response to be sent
         
+        // Log the restart
+        Console.WriteLine("Application restart requested at: " + DateTime.Now);
+        
+        // Exit the application with success code
+        // The hosting environment (systemd, docker, etc.) should restart the process
+        Environment.Exit(0);
     }
 
     public static void Main(string[] args)

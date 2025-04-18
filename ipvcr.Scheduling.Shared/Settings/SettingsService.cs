@@ -17,6 +17,7 @@ public interface ISettingsService
     // Admin password management
     bool ValidateAdminPassword(string passwordhash);
     void UpdateAdminPassword(string newPassword);
+    void ResetFactoryDefaults();
 }
 
 /// <summary>
@@ -96,6 +97,19 @@ public class SettingsService : ISettingsService
         else
         {
             throw new InvalidOperationException("Cannot access admin password methods");
+        }
+    }
+
+    public void ResetFactoryDefaults()
+    {
+        _schedulerSettingsManager.Settings = new();
+        _playlistSettingsManager.Settings = new();
+        _sslSettingsManager.Settings = new();
+        _ffmpegSettingsManager.Settings = new();
+        _adminPasswordManager.Settings = new();
+        if (_adminPasswordManager is AdminPasswordManager schedulerManager)
+        {
+            schedulerManager.SetDefaultAdminPassword();
         }
     }
 }
