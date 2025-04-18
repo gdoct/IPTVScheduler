@@ -8,5 +8,8 @@
     <ItemGroup>
     <PackageReference Include="System.IO.Abstractions" Version="22.0.12" />
   </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="../ipvcr.Auth/ipvcr.Auth.csproj" />
+    </ItemGroup>
   
 </Project>

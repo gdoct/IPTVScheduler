@@ -3,17 +3,18 @@ namespace ipvcr.Scheduling.Linux.Tests;
 using System.ComponentModel.DataAnnotations;
 using ipvcr.Scheduling.Linux;
 using ipvcr.Scheduling.Shared;
+using ipvcr.Scheduling.Shared.Settings;
 using Moq;
 
 public class AtqWrapperTests
 {
     private readonly Mock<IProcessRunner> _processRunnerMock;
-    private readonly Mock<ISettingsManager> _settingsManagerMock;
+    private readonly Mock<ISettingsService> _settingsManagerMock;
 
     public AtqWrapperTests()
     {
         _processRunnerMock = new Mock<IProcessRunner>();
-        _settingsManagerMock = new Mock<ISettingsManager>();
+        _settingsManagerMock = new Mock<ISettingsService>();
     }
 
     [Fact]

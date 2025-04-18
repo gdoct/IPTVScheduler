@@ -1,9 +1,8 @@
 namespace ipvcr.Web.Controllers.Api;
 using Microsoft.AspNetCore.Mvc;
 using ipvcr.Auth;
-using ipvcr.Scheduling.Shared;
+using ipvcr.Scheduling.Shared.Settings;
 using ipvcr.Web.Models;
-using System;
 using Microsoft.AspNetCore.Authorization;
 
 [Route("api/login")]
@@ -13,20 +12,20 @@ using Microsoft.AspNetCore.Authorization;
 public class LoginController : ControllerBase
 {
     private readonly ITokenManager _tokenManager;
-    private readonly ISettingsManager _settingsManager;
+    private readonly ISettingsService _settingsService;
 
-    public LoginController(ITokenManager tokenManager, ISettingsManager settingsManager)
+    public LoginController(ITokenManager tokenManager, ISettingsService settingsService)
     {
         _tokenManager = tokenManager;
-        _settingsManager = settingsManager;
+        _settingsService = settingsService;
     }
 
     [HttpPost]
     public IActionResult Login([FromBody] LoginRequest request)
     {
-        if (request.Username == _settingsManager.Settings.AdminUsername
-         && _tokenManager.CreateHash(request.Password) == _settingsManager.GetAdminPassword())
-        {
+        if (request.Username == _settingsService.AdminPasswordSettings.AdminUsername
+         &&_settingsService.ValidateAdminPassword(request.Password))
+        {   
             var token = _tokenManager.CreateToken(request.Username);
             return Ok(new { Token = token });
         }
@@ -38,9 +37,9 @@ public class LoginController : ControllerBase
     [Route("changepassword")]
     public IActionResult UpdatePassword([FromBody] LoginRequest request)
     {
-        if (request.Username == _settingsManager.Settings.AdminUsername)
+        if (request.Username == _settingsService.AdminPasswordSettings.AdminUsername)
         {
-            _settingsManager.UpdateAdminPassword(request.Password);
+            _settingsService.UpdateAdminPassword(request.Password);
             return Ok(new { Message = "Password updated successfully." });
         }
         return Unauthorized();

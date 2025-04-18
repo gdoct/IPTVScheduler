@@ -40,7 +40,39 @@ export interface SchedulerSettings {
   mediaPath: string;
   dataPath: string;
   m3uPlaylistPath: string;
+  removeTaskAfterExecution?: boolean;
+}
+
+export interface PlaylistSettings {
+  m3uPlaylistPath: string;
+  playlistAutoUpdateInterval?: number;
+  autoReloadPlaylist?: boolean;
+  filterEmptyGroups?: boolean;
+}
+
+export interface UserManagementSettings {
   adminUsername: string;
+  allowUserRegistration?: boolean;
+  maxUsersAllowed?: number;
+}
+
+export interface TlsSettings {
+  useSsl?: boolean;
+  certificatePath?: string;
+  certificatePassword?: string;
+}
+
+export interface AdminPasswordSettings {
+  adminUsername: string;
+  allowUserRegistration?: boolean;
+  maxUsersAllowed?: number;
+}
+
+export interface AppSettings {
+  general: SchedulerSettings;
+  playlist: PlaylistSettings;
+  userManagement: UserManagementSettings;
+  tls: TlsSettings;
 }
 
 // Helper function to obfuscate channel URI

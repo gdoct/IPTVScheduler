@@ -1,7 +1,7 @@
 using ipvcr.Auth;
 using ipvcr.Scheduling;
 using ipvcr.Scheduling.Linux;
-using ipvcr.Scheduling.Shared;
+using ipvcr.Scheduling.Shared.Settings;
 using Microsoft.AspNetCore.Authentication;
 using System.IO.Abstractions;
 
@@ -15,26 +15,25 @@ public class Program
         var configuration = builder.Configuration; // Access the configuration
         var port = configuration.GetValue<int?>("Port") ?? 5000;
         var sslport = configuration.GetValue<int?>("SslPort") ?? 5001;
-        var useSsl = configuration.GetValue<bool?>("UseSsl") ?? false; // Default to false if not set
+        
         // Create a settings manager instance early to access certificate path
-        var fileSystem = new System.IO.Abstractions.FileSystem();
-        var settingsManager = new SettingsManager(fileSystem);
-        var certpath = settingsManager.Settings.SslCertificatePath ?? string.Empty;
-        if (!string.IsNullOrEmpty(certpath) && !File.Exists(certpath))
+        var fileSystem = new FileSystem();
+        var schedulerSettingsManager = new SchedulerSettingsManager(fileSystem);
+        var tokenManager = new TokenManager();
+        var settingsService = new SettingsService(fileSystem, tokenManager);
+
+        var certpath = settingsService.SslSettings.CertificatePath ?? string.Empty;
+        var useSsl = settingsService.SslSettings.UseSsl;
+
+        // Check if the certificate file exists, if not, generate it
+        if (useSsl && !string.IsNullOrEmpty(certpath) && !File.Exists(certpath))
         {
             var gen = new SelfSignedCertificateGenerator(new FileSystem());
-            gen.GenerateSelfSignedTlsCertificate(certpath, "ipvcr");
+            gen.GenerateSelfSignedTlsCertificate(certpath, settingsService.SslSettings.CertificatePassword);
             Console.WriteLine($"Generated self-signed certificate at: {certpath}");
         }
         // Register the pre-created instance in the DI container
-        builder.Services.AddSingleton<ISettingsManager>(settingsManager);
-
-        // Subscribe to settings changes to update certificate when it changes
-        settingsManager.SettingsChanged += (sender, args) =>
-        {
-            certpath = args.NewSettings.SslCertificatePath ?? string.Empty;
-            Console.WriteLine($"Certificate path updated to: {certpath}");
-        };
+        builder.Services.AddSingleton<ISettingsService>(settingsService);
 
         if (useSsl && !string.IsNullOrEmpty(certpath) && File.Exists(certpath))
         {
@@ -47,7 +46,7 @@ public class Program
                 // HTTPS endpoint with certificate
                 serverOptions.ListenAnyIP(sslport, listenOptions =>
                 {
-                    listenOptions.UseHttps(certpath, "ipvcr");
+                    listenOptions.UseHttps(certpath, settingsService.SslSettings.CertificatePassword);
                 });
             });
         }
@@ -74,9 +73,8 @@ public class Program
         var platform = Environment.OSVersion.Platform;
 
         builder.Services.AddSingleton<IFileSystem, FileSystem>();
-        builder.Services.AddSingleton<ISettingsManager, SettingsManager>();
         builder.Services.AddSingleton<IPlaylistManager, PlaylistManager>();
-        builder.Services.AddSingleton<ITokenManager, TokenManager>();
+        builder.Services.AddSingleton<ITokenManager>(tokenManager);
 
         builder.Services.AddTransient<IProcessRunner, ProcessRunner>();
         builder.Services.AddTransient<IRecordingSchedulingContext, RecordingSchedulingContext>();

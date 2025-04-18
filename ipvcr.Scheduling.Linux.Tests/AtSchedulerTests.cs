@@ -1,6 +1,7 @@
 using System.IO.Abstractions;
 using System.Text.Json;
 using ipvcr.Scheduling.Shared;
+using ipvcr.Scheduling.Shared.Settings;
 using Moq;
 
 namespace ipvcr.Scheduling.Linux.Tests;
@@ -15,14 +16,14 @@ public class AtSchedulerTests
         // Arrange
         var fileSystem = MockRepository.Create<IFileSystem>();
         var processRunner = MockRepository.Create<IProcessRunner>();
-        var settingsManager = MockRepository.Create<ISettingsManager>();
+        var settingsService = MockRepository.Create<ISettingsService>();
         processRunner.Setup(pr => pr.RunProcess("which", "at")).Returns(("at", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atq")).Returns(("atq", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atrm")).Returns(("atrm", "", 0));
-        settingsManager.Setup(sm => sm.Settings).Returns(new SchedulerSettings { DataPath = "/tmp" });
+        settingsService.Setup(sm => sm.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/tmp" });
 
         // Act
-        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsManager.Object);
+        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsService.Object);
 
         // Assert
         Assert.NotNull(scheduler);
@@ -34,14 +35,14 @@ public class AtSchedulerTests
         // Arrange
         var fileSystem = MockRepository.Create<IFileSystem>();
         var processRunner = MockRepository.Create<IProcessRunner>();
-        var settingsManager = MockRepository.Create<ISettingsManager>();
+        var settingsService = MockRepository.Create<ISettingsService>();
         processRunner.Setup(pr => pr.RunProcess("which", "at")).Returns(("at", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atq")).Returns(("atq", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atrm")).Returns(("atrm", "", 0));
-        settingsManager.Setup(sm => sm.Settings).Returns(new SchedulerSettings { DataPath = "/tmp" });
+        settingsService.Setup(sm => sm.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/tmp" });
         var task = new ScheduledTask(Guid.NewGuid(), "Test Task", "echo Hello World", DateTimeOffset.UtcNow.AddMinutes(10), "{}");
         var taskJson = JsonSerializer.Serialize(task);
-        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsManager.Object);
+        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsService.Object);
         var expectedOutput = "1 2023-10-01 12:00 a\n2 2023-10-02 14:00 a\n";
         processRunner.Setup(pr => pr.RunProcess("atq", It.IsAny<string>()))
             .Returns((expectedOutput, "", 0));
@@ -67,12 +68,12 @@ public class AtSchedulerTests
         // Arrange
         var fileSystem = MockRepository.Create<IFileSystem>();
         var processRunner = MockRepository.Create<IProcessRunner>();
-        var settingsManager = MockRepository.Create<ISettingsManager>();
+        var settingsService = MockRepository.Create<ISettingsService>();
         processRunner.Setup(pr => pr.RunProcess("which", "at")).Returns(("at", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atq")).Returns(("atq", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atrm")).Returns(("atrm", "", 0));
-        settingsManager.Setup(sm => sm.Settings).Returns(new SchedulerSettings { DataPath = "/tmp" });
-        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsManager.Object);
+        settingsService.Setup(sm => sm.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/tmp" });
+        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsService.Object);
         var expectedOutput = "";
         processRunner.Setup(pr => pr.RunProcess("atq", It.IsAny<string>()))
             .Returns((expectedOutput, "", 0));
@@ -96,12 +97,12 @@ public class AtSchedulerTests
         // Arrange
         var fileSystem = MockRepository.Create<IFileSystem>();
         var processRunner = MockRepository.Create<IProcessRunner>();
-        var settingsManager = MockRepository.Create<ISettingsManager>();
+        var settingsService = MockRepository.Create<ISettingsService>();
         processRunner.Setup(pr => pr.RunProcess("which", "at")).Returns(("at", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atq")).Returns(("atq", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atrm")).Returns(("atrm", "", 0));
-        settingsManager.Setup(sm => sm.Settings).Returns(new SchedulerSettings { DataPath = "/tmp" });
-        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsManager.Object);
+        settingsService.Setup(sm => sm.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/tmp" });
+        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsService.Object);
         var taskId = Guid.NewGuid();
         var jobId = 123;
         var task = new ScheduledTask(taskId, "Test Task", "echo Hello World", DateTimeOffset.UtcNow.AddMinutes(10), "{}");
@@ -131,12 +132,12 @@ public class AtSchedulerTests
         // Arrange
         var fileSystem = MockRepository.Create<IFileSystem>();
         var processRunner = MockRepository.Create<IProcessRunner>();
-        var settingsManager = MockRepository.Create<ISettingsManager>();
+        var settingsService = MockRepository.Create<ISettingsService>();
         processRunner.Setup(pr => pr.RunProcess("which", "at")).Returns(("at", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atq")).Returns(("atq", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atrm")).Returns(("atrm", "", 0));
-        settingsManager.Setup(sm => sm.Settings).Returns(new SchedulerSettings { DataPath = "/tmp" });
-        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsManager.Object);
+        settingsService.Setup(sm => sm.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/tmp" });
+        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsService.Object);
         var taskId = Guid.NewGuid();
         processRunner.Setup(pr => pr.RunProcess("atq", string.Empty)).Returns(("", "", 0));
 
@@ -150,13 +151,13 @@ public class AtSchedulerTests
         // Arrange
         var fileSystem = MockRepository.Create<IFileSystem>();
         var processRunner = MockRepository.Create<IProcessRunner>();
-        var settingsManager = MockRepository.Create<ISettingsManager>();
+        var settingsService = MockRepository.Create<ISettingsService>();
         processRunner.Setup(pr => pr.RunProcess("which", "at")).Returns(("at", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atq")).Returns(("atq", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atrm")).Returns(("atrm", "", 0));
-        settingsManager.Setup(sm => sm.Settings).Returns(new SchedulerSettings { DataPath = "/tmp" });
+        settingsService.Setup(sm => sm.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/tmp" });
         processRunner.Setup(pr => pr.RunProcess("atq", string.Empty)).Returns(("", "", 0));
-        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsManager.Object);
+        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsService.Object);
         var taskId = Guid.NewGuid();
 
         // Act & Assert
@@ -169,12 +170,12 @@ public class AtSchedulerTests
         // Arrange
         var fileSystem = MockRepository.Create<IFileSystem>();
         var processRunner = MockRepository.Create<IProcessRunner>();
-        var settingsManager = MockRepository.Create<ISettingsManager>();
+        var settingsService = MockRepository.Create<ISettingsService>();
         processRunner.Setup(pr => pr.RunProcess("which", "at")).Returns(("at", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atq")).Returns(("atq", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atrm")).Returns(("atrm", "", 0));
-        settingsManager.Setup(sm => sm.Settings).Returns(new SchedulerSettings { DataPath = "/tmp" });
-        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsManager.Object);
+        settingsService.Setup(sm => sm.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/tmp" });
+        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsService.Object);
         var taskId = Guid.NewGuid();
         var jobId = 123;
         var task = new ScheduledTask(taskId, "Test Task", "echo Hello World", DateTimeOffset.UtcNow.AddMinutes(10), "{}");
@@ -203,20 +204,20 @@ public class AtSchedulerTests
         // Arrange
         var fileSystem = MockRepository.Create<IFileSystem>();
         var processRunner = MockRepository.Create<IProcessRunner>();
-        var settingsManager = MockRepository.Create<ISettingsManager>();
+        var settingsService = MockRepository.Create<ISettingsService>();
         processRunner.Setup(pr => pr.RunProcess("which", "at")).Returns(("at", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atq")).Returns(("atq", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atrm")).Returns(("atrm", "", 0));
-        settingsManager.Setup(sm => sm.Settings).Returns(new SchedulerSettings { DataPath = "/tmp" });
-        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsManager.Object);
+        settingsService.Setup(sm => sm.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/tmp" });
+        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsService.Object);
         var taskId = Guid.NewGuid();
         var jobId = 123;
         var task = new ScheduledTask(taskId, "Test Task", "echo Hello World", DateTimeOffset.UtcNow.AddMinutes(10), "{}");
         var taskJson = JsonSerializer.Serialize(task);
         processRunner.Setup(pr => pr.RunProcess("atq", It.IsAny<string>()))
             .Returns((jobId.ToString() + "\tinfo more info", "", 0));
-        settingsManager.SetupGet(s => s.Settings).Returns(new SchedulerSettings { DataPath = "/data/path" });
-        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsManager.Object);
+        settingsService.SetupGet(s => s.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/data/path" });
+        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsService.Object);
         var file = MockRepository.Create<IFile>();
         fileSystem.SetupGet(fs => fs.File).Returns(file.Object);
         file.Setup(f => f.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));
@@ -243,12 +244,12 @@ public class AtSchedulerTests
         // Arrange
         var fileSystem = MockRepository.Create<IFileSystem>();
         var processRunner = MockRepository.Create<IProcessRunner>();
-        var settingsManager = MockRepository.Create<ISettingsManager>();
+        var settingsService = MockRepository.Create<ISettingsService>();
         processRunner.Setup(pr => pr.RunProcess("which", "at")).Returns(("at", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atq")).Returns(("atq", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atrm")).Returns(("atrm", "", 0));
-        settingsManager.Setup(sm => sm.Settings).Returns(new SchedulerSettings { DataPath = "/tmp" });
-        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsManager.Object);
+        settingsService.Setup(sm => sm.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/tmp" });
+        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsService.Object);
         var taskId = Guid.NewGuid();
         processRunner.Setup(pr => pr.RunProcess("atq", string.Empty)).Returns(("", "", 0));
 
@@ -262,16 +263,16 @@ public class AtSchedulerTests
         // Arrange
         var fileSystem = MockRepository.Create<IFileSystem>();
         var processRunner = MockRepository.Create<IProcessRunner>();
-        var settingsManager = MockRepository.Create<ISettingsManager>();
+        var settingsService = MockRepository.Create<ISettingsService>();
         processRunner.Setup(pr => pr.RunProcess("which", "at")).Returns(("at", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atq")).Returns(("atq", "", 0));
         processRunner.Setup(pr => pr.RunProcess("which", "atrm")).Returns(("atrm", "", 0));
-        settingsManager.Setup(sm => sm.Settings).Returns(new SchedulerSettings { DataPath = "/tmp" });
-        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsManager.Object);
+        settingsService.Setup(sm => sm.SchedulerSettings).Returns(new SchedulerSettings { DataPath = "/tmp" });
+        var scheduler = new AtScheduler(fileSystem.Object, processRunner.Object, settingsService.Object);
         var taskId = Guid.NewGuid();
         var task = new ScheduledTask(taskId, "Test Task", "echo Hello World", DateTimeOffset.UtcNow.AddMinutes(10), "{}");
         var taskJson = JsonSerializer.Serialize(task);
-        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsManager.Object);
+        var taskScriptManager = new TaskScriptManager(fileSystem.Object, settingsService.Object);
         var file = MockRepository.Create<IFile>();
         fileSystem.SetupGet(fs => fs.File).Returns(file.Object);
         file.Setup(f => f.WriteAllText(It.IsAny<string>(), It.IsAny<string>()));

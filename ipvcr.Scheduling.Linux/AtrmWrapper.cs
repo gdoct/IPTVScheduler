@@ -1,8 +1,9 @@
 using ipvcr.Scheduling.Shared;
+using ipvcr.Scheduling.Shared.Settings;
 
 namespace ipvcr.Scheduling.Linux;
 
-public class AtrmWrapper(IProcessRunner processRunner, ISettingsManager settingsManager) : CommandWrapperBase(processRunner, settingsManager, AtrmCommand)
+public class AtrmWrapper(IProcessRunner processRunner, ISettingsService settingsManager) : CommandWrapperBase(processRunner, settingsManager, AtrmCommand)
 {
     private const string AtrmCommand = "atrm";
 

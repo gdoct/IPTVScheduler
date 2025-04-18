@@ -1,10 +1,11 @@
 using System.Text.RegularExpressions;
 using ipvcr.Scheduling.Shared;
+using ipvcr.Scheduling.Shared.Settings;
 
 namespace ipvcr.Scheduling.Linux;
 
-public class AtqWrapper(IProcessRunner processRunner, ISettingsManager settingsManager) :
-                CommandWrapperBase(processRunner, settingsManager, AtqCommand)
+public class AtqWrapper(IProcessRunner processRunner, ISettingsService settingsService) :
+                CommandWrapperBase(processRunner, settingsService, AtqCommand)
 {
     private const string AtqCommand = "atq";
     private static readonly Regex _atqJobIdRegex = new(@"^(\d+)\s+", RegexOptions.Compiled);

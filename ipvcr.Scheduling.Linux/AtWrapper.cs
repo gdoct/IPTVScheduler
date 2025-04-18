@@ -1,16 +1,16 @@
 using System.IO.Abstractions;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks.Dataflow;
-using ipvcr.Scheduling.Shared;
+using ipvcr.Scheduling.Shared.Settings;
 
 namespace ipvcr.Scheduling.Linux;
 
-public partial class AtWrapper(IFileSystem fileSystem, IProcessRunner processRunner, ISettingsManager settingsManager) : CommandWrapperBase(processRunner, settingsManager, AT_COMMAND)
+public partial class AtWrapper(IFileSystem fileSystem, IProcessRunner processRunner, ISettingsService settingsService) : 
+    CommandWrapperBase(processRunner, settingsService, AT_COMMAND)
 {
     private const string AT_DATE_FORMAT = "HH:mm MM/dd/yyyy";
     private const string AT_COMMAND = "at";
-    private readonly TaskScriptManager _taskScriptManager = new TaskScriptManager(fileSystem, settingsManager);
+    private readonly TaskScriptManager _taskScriptManager = new TaskScriptManager(fileSystem, settingsService);
     public int ScheduleTask(ScheduledTask task)
     {
         Environment.SetEnvironmentVariable("TASK_ID", task.Id.ToString());
