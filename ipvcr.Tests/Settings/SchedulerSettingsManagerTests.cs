@@ -60,10 +60,10 @@ namespace ipvcr.Tests
             Assert.Equal("/media", settings.MediaPath);
             Assert.Equal("/data", settings.DataPath);
             Assert.True(settings.RemoveTaskAfterExecution);
-            
+
             // Verify the settings file was created
             Assert.True(_mockFileSystem.FileExists(SettingsFilePath));
-            
+
             // Verify the content is the serialized default settings
             var fileContent = _mockFileSystem.GetFile(SettingsFilePath).TextContents;
             var deserializedSettings = JsonSerializer.Deserialize<SchedulerSettings>(fileContent);
@@ -71,37 +71,37 @@ namespace ipvcr.Tests
             Assert.Equal("/data", deserializedSettings.DataPath);
             Assert.True(deserializedSettings.RemoveTaskAfterExecution);
         }
-        
+
         [Fact]
         public void Settings_Set_SavesAndUpdatesFile()
         {
             // Arrange
             var manager = new SchedulerSettingsManager(_mockFileSystem);
-            var newSettings = new SchedulerSettings 
-            { 
+            var newSettings = new SchedulerSettings
+            {
                 MediaPath = "/updated/media",
                 DataPath = "/updated/data",
                 RemoveTaskAfterExecution = false
             };
-            
+
             bool eventRaised = false;
             SchedulerSettings eventSettings = null;
-            
-            manager.SettingsChanged += (sender, args) => 
+
+            manager.SettingsChanged += (sender, args) =>
             {
                 eventRaised = true;
                 eventSettings = args.NewSettings;
             };
-            
+
             // Act
             manager.Settings = newSettings;
-            
+
             // Assert
             Assert.True(eventRaised);
             Assert.Equal("/updated/media", eventSettings.MediaPath);
             Assert.Equal("/updated/data", eventSettings.DataPath);
             Assert.False(eventSettings.RemoveTaskAfterExecution);
-            
+
             // Verify the settings file was updated
             var fileContent = _mockFileSystem.GetFile(SettingsFilePath).TextContents;
             var deserializedSettings = JsonSerializer.Deserialize<SchedulerSettings>(fileContent);
@@ -109,13 +109,13 @@ namespace ipvcr.Tests
             Assert.Equal("/updated/data", deserializedSettings.DataPath);
             Assert.False(deserializedSettings.RemoveTaskAfterExecution);
         }
-        
+
         [Fact]
         public void Settings_Set_NullValue_ThrowsArgumentNullException()
         {
             // Arrange
             var manager = new SchedulerSettingsManager(_mockFileSystem);
-            
+
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() => manager.Settings = null);
         }

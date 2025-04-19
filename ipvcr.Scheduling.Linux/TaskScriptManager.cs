@@ -58,7 +58,7 @@ public class TaskScriptManager(IFileSystem fileSystem, ISettingsService settings
         }
         throw new InvalidOperationException("Task definition not found in task script.");
     }
-    
+
     public void MoveScriptToFailed(Guid id)
     {
         string scriptPath = TaskScriptPath(id);

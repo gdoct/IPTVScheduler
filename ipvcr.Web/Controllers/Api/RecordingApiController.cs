@@ -122,7 +122,7 @@ public class RecordingApiController : ControllerBase
         }
 
         var taskDefinition = _context.GetTaskDefinition(recording.Id);
-        
+
         return Ok(new TaskDefinitionModel
         {
             Id = recording.Id,
@@ -145,13 +145,13 @@ public class RecordingApiController : ControllerBase
             ModelState.AddModelError("TaskFile", "Task file content cannot be empty.");
             return BadRequest(ModelState);
         }
-        
+
         var recording = _context.Recordings.FirstOrDefault(r => r.Id == model.Id);
         if (recording == null)
         {
             return NotFound();
         }
-        
+
         _context.UpdateTaskDefinition(recording.Id, model.TaskFile);
         return NoContent();
     }
@@ -163,29 +163,29 @@ public class RecordingApiController : ControllerBase
     {
         return new JsonResult(_playlistManager.ChannelCount);
     }
-    
+
     // GET: api/recordings/channels/search?query={query}
     [HttpGet("channels/search")]
     public ActionResult<IEnumerable<ChannelInfo>> SearchChannels([FromQuery] string query)
     {
         _logger.LogInformation("Search channels endpoint called with query: '{query}'", query);
-        
+
         if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
         {
             _logger.LogInformation("Query is empty or too short, returning empty result");
             return Ok(Array.Empty<ChannelInfo>());
         }
-        
+
         try
         {
             var allChannels = _playlistManager.GetPlaylistItems();
             _logger.LogInformation("Retrieved {count} channels from playlist", allChannels.Count());
-            
+
             var matchingChannels = allChannels
                 .Where(c => c.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
                 .Take(10) // Limit results to prevent large responses
                 .ToList();
-                
+
             _logger.LogInformation("Found {count} matching channels for query '{query}'", matchingChannels.Count, query);
             return Ok(matchingChannels);
         }
@@ -208,7 +208,7 @@ public class RecordingApiController : ControllerBase
     public class TaskEditModel
     {
         public Guid Id { get; set; }
-        
+
         [JsonPropertyName("taskfile")]
         public string TaskFile { get; set; } = string.Empty;
     }

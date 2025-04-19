@@ -21,8 +21,8 @@ public class TokenManager : ITokenManager
     private readonly string _audience;
     private readonly TimeSpan _tokenLifetime;
 
-    public TokenManager(string secretKey = "your_secret_key_at_least_32_chars_long", 
-                      string issuer = "IPTVScheduler", 
+    public TokenManager(string secretKey = "your_secret_key_at_least_32_chars_long",
+                      string issuer = "IPTVScheduler",
                       string audience = "IPTVSchedulerClients",
                       int tokenLifetimeMinutes = 60)
     {

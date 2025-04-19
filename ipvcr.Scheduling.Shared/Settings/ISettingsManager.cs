@@ -7,7 +7,7 @@ public class SettingsChangedEventArgs<T>(T newSettings) : EventArgs
 
 public interface ISettingsManager<T>
 {
-    
+
     T Settings { get; set; }
     event EventHandler<SettingsChangedEventArgs<T>>? SettingsChanged;
 }

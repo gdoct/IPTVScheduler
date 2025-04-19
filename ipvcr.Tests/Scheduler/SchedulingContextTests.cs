@@ -53,7 +53,7 @@ public class SchedulingContextTests
     {
         // Arrange
         var taskScheduler = new Mock<ITaskScheduler>();
-                var settingsService = new Mock<ISettingsService>();
+        var settingsService = new Mock<ISettingsService>();
         settingsService.Setup(s => s.FfmpegSettings).Returns(new FfmpegSettings());
 
         var context = new RecordingSchedulingContext(taskScheduler.Object, settingsService.Object);
@@ -67,13 +67,13 @@ public class SchedulingContextTests
         taskScheduler.Verify(s => s.CancelTask(recording.Id));
     }
 
-    
+
     [Fact]
     public void SchedulingContext_GetTaskDefinition_ReturnsCorrectDefinition()
     {
         // Arrange
         var taskScheduler = new Mock<ITaskScheduler>();
-                var settingsService = new Mock<ISettingsService>();
+        var settingsService = new Mock<ISettingsService>();
         settingsService.Setup(s => s.FfmpegSettings).Returns(new FfmpegSettings());
 
         var context = new RecordingSchedulingContext(taskScheduler.Object, settingsService.Object);

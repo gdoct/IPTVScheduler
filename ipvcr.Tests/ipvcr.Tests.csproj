@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../ipvcr.Auth/ipvcr.Auth.csproj" />
+    <ProjectReference Include="../ipvcr.Scheduling.Linux/ipvcr.Scheduling.Linux.csproj" />
     <ProjectReference Include="..\ipvcr.Scheduling\ipvcr.Scheduling.csproj" />
     <ProjectReference Include="..\ipvcr.Scheduling.Shared\ipvcr.Scheduling.Shared.csproj" />
   </ItemGroup>

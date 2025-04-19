@@ -189,11 +189,11 @@ namespace ipvcr.Tests
             // Arrange
             var mockFileSystem = new MockFileSystem();
             mockFileSystem.AddDirectory("/data");
-            
+
             // Create initial admin password settings
             var initialSettings = new AdminPasswordSettings { AdminUsername = "admin", AdminPassword = "password" };
             mockFileSystem.AddFile("/data/adminpassword.json", new MockFileData(JsonSerializer.Serialize(initialSettings)));
-            
+
             var service = new SettingsService(mockFileSystem, _mockTokenManager.Object);
 
             bool eventRaised = false;
@@ -225,21 +225,21 @@ namespace ipvcr.Tests
             // Arrange
             var fileSystem = new MockFileSystem();
             fileSystem.AddDirectory("/data");
-            
+
             // Create a settings file with a known value
             var settings = new AdminPasswordSettings { AdminUsername = "admin", AdminPassword = "hashed_password" };
             fileSystem.AddFile("/data/adminpassword.json", new MockFileData(JsonSerializer.Serialize(settings)));
-            
+
             // Create a mock token manager that simulates password hashing
             var tokenManager = new Mock<ITokenManager>();
             tokenManager.Setup(tm => tm.CreateHash("password"))
                 .Returns("hashed_password");
-                
+
             var service = new SettingsService(fileSystem, tokenManager.Object);
-            
+
             // Act
             var result = service.ValidateAdminPassword("password");
-            
+
             // Assert
             Assert.True(result);
         }

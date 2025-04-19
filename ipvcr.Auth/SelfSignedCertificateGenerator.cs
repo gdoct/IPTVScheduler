@@ -29,7 +29,7 @@ namespace ipvcr.Auth
 
             // Certificate information
             var distinguishedName = new X500DistinguishedName("CN=ipvcr-self-signed-cert");
-            
+
             // Certificate request with the public key
             var request = new CertificateRequest(
                 distinguishedName,

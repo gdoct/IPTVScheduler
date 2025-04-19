@@ -15,7 +15,7 @@ public interface IRecordingSchedulingContext
 public class RecordingSchedulingContext(ITaskScheduler taskScheduler, ISettingsService settingsService) : IRecordingSchedulingContext
 {
     private readonly ISettingsService SettingsService = settingsService;
-    private ITaskScheduler Scheduler { get; init; } = taskScheduler; 
+    private ITaskScheduler Scheduler { get; init; } = taskScheduler;
 
     public IEnumerable<ScheduledRecording> Recordings => Scheduler
                             .FetchScheduledTasks()

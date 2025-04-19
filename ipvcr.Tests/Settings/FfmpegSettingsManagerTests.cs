@@ -60,46 +60,46 @@ namespace ipvcr.Tests
             Assert.Equal("libx264", settings.Codec);
             Assert.Equal("aac", settings.AudioCodec);
             Assert.Equal("1000k", settings.VideoBitrate);
-            
+
             // Verify the settings file was created
             Assert.True(_mockFileSystem.FileExists(SettingsFilePath));
-            
+
             // Verify the content is the serialized default settings
             var fileContent = _mockFileSystem.GetFile(SettingsFilePath).TextContents;
             var deserializedSettings = JsonSerializer.Deserialize<FfmpegSettings>(fileContent);
             Assert.Equal("libx264", deserializedSettings.Codec);
         }
-        
+
         [Fact]
         public void Settings_Set_SavesAndUpdatesFile()
         {
             // Arrange
             var manager = new FfmpegSettingsManager(_mockFileSystem);
-            var newSettings = new FfmpegSettings 
-            { 
+            var newSettings = new FfmpegSettings
+            {
                 Codec = "h265",
                 AudioCodec = "opus",
                 Resolution = "3840x2160"
             };
-            
+
             bool eventRaised = false;
             FfmpegSettings eventSettings = null;
-            
-            manager.SettingsChanged += (sender, args) => 
+
+            manager.SettingsChanged += (sender, args) =>
             {
                 eventRaised = true;
                 eventSettings = args.NewSettings;
             };
-            
+
             // Act
             manager.Settings = newSettings;
-            
+
             // Assert
             Assert.True(eventRaised);
             Assert.Equal("h265", eventSettings.Codec);
             Assert.Equal("opus", eventSettings.AudioCodec);
             Assert.Equal("3840x2160", eventSettings.Resolution);
-            
+
             // Verify the settings file was updated
             var fileContent = _mockFileSystem.GetFile(SettingsFilePath).TextContents;
             var deserializedSettings = JsonSerializer.Deserialize<FfmpegSettings>(fileContent);
@@ -107,13 +107,13 @@ namespace ipvcr.Tests
             Assert.Equal("opus", deserializedSettings.AudioCodec);
             Assert.Equal("3840x2160", deserializedSettings.Resolution);
         }
-        
+
         [Fact]
         public void Settings_Set_NullValue_ThrowsArgumentNullException()
         {
             // Arrange
             var manager = new FfmpegSettingsManager(_mockFileSystem);
-            
+
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() => manager.Settings = null);
         }

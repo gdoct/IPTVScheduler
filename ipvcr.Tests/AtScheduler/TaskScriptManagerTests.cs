@@ -12,7 +12,7 @@ public class TaskScriptManagerTests
 
     public TaskScriptManagerTests()
     {
-        _mocks = new MockRepository(MockBehavior.Strict);    
+        _mocks = new MockRepository(MockBehavior.Strict);
     }
 
     [Fact]

@@ -60,7 +60,7 @@ public abstract class BaseSettingsManager<T> where T : class, new()
         }
     }
 
-    public virtual T Settings 
+    public virtual T Settings
     {
         get
         {

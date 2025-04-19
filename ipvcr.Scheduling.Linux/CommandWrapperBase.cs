@@ -16,12 +16,12 @@ namespace ipvcr.Scheduling.Linux
             EnsureCommandIsInstalled(command);
         }
 
-        protected string Command { get; init;}
+        protected string Command { get; init; }
 
-        public virtual (string output, string error, int exitCode) ExecuteCommand(string arguments) => 
+        public virtual (string output, string error, int exitCode) ExecuteCommand(string arguments) =>
             ProcessRunner.RunProcess(Command, arguments);
 
-        public virtual (string output, string error, int exitCode) ExecuteShellCommand(string shellCommand) => 
+        public virtual (string output, string error, int exitCode) ExecuteShellCommand(string shellCommand) =>
             ProcessRunner.RunProcess("/bin/bash", $"-c \"{shellCommand}\"");
 
         protected void EnsureCommandIsInstalled(string command)
@@ -34,7 +34,7 @@ namespace ipvcr.Scheduling.Linux
             }
         }
 
-        protected string GetScriptFilename(ScheduledTask task) => 
+        protected string GetScriptFilename(ScheduledTask task) =>
             Path.Combine(SettingsService.SchedulerSettings.DataPath, "tasks", $"{task.Id}.sh");
     }
 }

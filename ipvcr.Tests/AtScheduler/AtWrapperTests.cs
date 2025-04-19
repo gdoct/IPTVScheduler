@@ -92,8 +92,8 @@ public class AtWrapperTests
         var task = new ScheduledTask(Guid.NewGuid(), "Test Task", "echo Hello World", DateTimeOffset.UtcNow.AddMinutes(10), "{}");
         var taskJson = JsonSerializer.Serialize(task);
 
-         _processRunnerMock.Setup(pr => pr.RunProcess("at", $"-c {jobId}"))
-            .Returns(($"SOMETHING=\nTASK_ID={task.Id}\nTEST=\n", string.Empty, 0));
+        _processRunnerMock.Setup(pr => pr.RunProcess("at", $"-c {jobId}"))
+           .Returns(($"SOMETHING=\nTASK_ID={task.Id}\nTEST=\n", string.Empty, 0));
         _filesystemMock.Setup(fs => fs.Directory.Exists(It.IsAny<string>())).Returns(true);
         _filesystemMock.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
         _filesystemMock.Setup(fs => fs.File.Move(It.IsAny<string>(), It.IsAny<string>()));
@@ -145,8 +145,8 @@ public class AtWrapperTests
         var task = new ScheduledTask(Guid.NewGuid(), "Test Task", "echo Hello World", DateTimeOffset.UtcNow.AddMinutes(10), "{}");
         var taskJson = JsonSerializer.Serialize(task);
 
-         _processRunnerMock.Setup(pr => pr.RunProcess("at", $"-c {jobId}"))
-            .Returns(($"SOMETHING=\nTASK_ID=ABC_DEF\nTEST=\n", string.Empty, 0));
+        _processRunnerMock.Setup(pr => pr.RunProcess("at", $"-c {jobId}"))
+           .Returns(($"SOMETHING=\nTASK_ID=ABC_DEF\nTEST=\n", string.Empty, 0));
         _filesystemMock.Setup(fs => fs.Directory.Exists(It.IsAny<string>())).Returns(true);
         _filesystemMock.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
         _filesystemMock.Setup(fs => fs.File.Move(It.IsAny<string>(), It.IsAny<string>()));
@@ -171,8 +171,8 @@ public class AtWrapperTests
         var task = new ScheduledTask(Guid.NewGuid(), "Test Task", "echo Hello World", DateTimeOffset.UtcNow.AddMinutes(10), "{}");
         var taskJson = JsonSerializer.Serialize(task);
 
-         _processRunnerMock.Setup(pr => pr.RunProcess("at", $"-c {jobId}"))
-            .Returns(($"SOMETHING=\nTASK_ID={task.Id}\nTEST=\n", string.Empty, 0));
+        _processRunnerMock.Setup(pr => pr.RunProcess("at", $"-c {jobId}"))
+           .Returns(($"SOMETHING=\nTASK_ID={task.Id}\nTEST=\n", string.Empty, 0));
         _filesystemMock.Setup(fs => fs.Directory.Exists(It.IsAny<string>())).Returns(true);
         _filesystemMock.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
         _filesystemMock.Setup(fs => fs.File.Move(It.IsAny<string>(), It.IsAny<string>()));
@@ -197,8 +197,8 @@ public class AtWrapperTests
         var task = new ScheduledTask(Guid.NewGuid(), "Test Task", "echo Hello World", DateTimeOffset.UtcNow.AddMinutes(10), "{}");
         var taskJson = JsonSerializer.Serialize(task);
 
-         _processRunnerMock.Setup(pr => pr.RunProcess("at", $"-c {jobId}"))
-            .Returns(($"SOMETHING=\nTASK_ID={task.Id}\nTEST=\n", string.Empty, 0));
+        _processRunnerMock.Setup(pr => pr.RunProcess("at", $"-c {jobId}"))
+           .Returns(($"SOMETHING=\nTASK_ID={task.Id}\nTEST=\n", string.Empty, 0));
         _filesystemMock.Setup(fs => fs.Directory.Exists(It.IsAny<string>())).Returns(true);
         _filesystemMock.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);
         _filesystemMock.Setup(fs => fs.File.Move(It.IsAny<string>(), It.IsAny<string>()));
@@ -324,7 +324,7 @@ public class AtWrapperTests
 
         var jobId = 123;
         var task = new ScheduledTask(Guid.NewGuid(), "Test Task", "echo Hello World", DateTimeOffset.UtcNow.AddMinutes(10), "{}");
-        var taskJson = JsonSerializer.Serialize(task);_processRunnerMock.Setup(pr => pr.RunProcess("at", $"-c {jobId}"))
+        var taskJson = JsonSerializer.Serialize(task); _processRunnerMock.Setup(pr => pr.RunProcess("at", $"-c {jobId}"))
             .Returns(($"TASK_ID={task.Id}\n", string.Empty, 0));
         _filesystemMock.Setup(fs => fs.Directory.Exists(It.IsAny<string>())).Returns(true);
         _filesystemMock.Setup(fs => fs.File.Exists(It.IsAny<string>())).Returns(true);

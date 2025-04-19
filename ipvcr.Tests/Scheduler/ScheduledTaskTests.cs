@@ -111,7 +111,7 @@ public class ScheduledTaskTests
         var startTime = DateTimeOffset.Now;
         var endTime = startTime.AddHours(1);
         var recording = new ScheduledRecording(id, name, description, filename, channelUri, "Test Channel", startTime, endTime);
-        
+
         // Create settings with empty strings to test default behavior
         var ffmpegSettings = new FfmpegSettings
         {
@@ -128,7 +128,7 @@ public class ScheduledTaskTests
 
         // Act
         var scheduledTask = recording.ToScheduledTask(ffmpegSettings);
-        
+
         // Assert
         var command = scheduledTask.Command;
         Assert.Contains($"-i {channelUri}", command);
@@ -153,7 +153,7 @@ public class ScheduledTaskTests
         var startTime = DateTimeOffset.Now;
         var endTime = startTime.AddHours(1);
         var recording = new ScheduledRecording(id, name, description, filename, channelUri, "Test Channel", startTime, endTime);
-        
+
         // Create settings with all options specified
         var ffmpegSettings = new FfmpegSettings
         {
@@ -170,7 +170,7 @@ public class ScheduledTaskTests
 
         // Act
         var scheduledTask = recording.ToScheduledTask(ffmpegSettings);
-        
+
         // Assert
         var command = scheduledTask.Command;
         Assert.Contains($"-i {channelUri}", command);
@@ -200,7 +200,7 @@ public class ScheduledTaskTests
         var startTime = DateTimeOffset.Now;
         var endTime = startTime.AddHours(1);
         var recording = new ScheduledRecording(id, name, description, filename, channelUri, "Test Channel", startTime, endTime);
-        
+
         // Create settings with only some options specified
         var ffmpegSettings = new FfmpegSettings
         {
@@ -217,7 +217,7 @@ public class ScheduledTaskTests
 
         // Act
         var scheduledTask = recording.ToScheduledTask(ffmpegSettings);
-        
+
         // Assert
         var command = scheduledTask.Command;
         Assert.Contains($"-i {channelUri}", command);
@@ -247,7 +247,7 @@ public class ScheduledTaskTests
         var startTime = DateTimeOffset.Now;
         var endTime = startTime.AddHours(1);
         var recording = new ScheduledRecording(id, name, description, filename, channelUri, "Test Channel", startTime, endTime);
-        
+
         // Create settings with OutputFormat empty but FileType specified
         var ffmpegSettings = new FfmpegSettings
         {
@@ -259,7 +259,7 @@ public class ScheduledTaskTests
 
         // Act
         var scheduledTask = recording.ToScheduledTask(ffmpegSettings);
-        
+
         // Assert
         var command = scheduledTask.Command;
         Assert.Contains("-f mkv", command); // Should use FileType as fallback

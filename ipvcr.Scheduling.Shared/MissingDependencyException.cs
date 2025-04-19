@@ -2,10 +2,10 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace ipvcr.Scheduling
 {
-     [ExcludeFromCodeCoverage]
-     public class MissingDependencyException : Exception
-     {
-       
+    [ExcludeFromCodeCoverage]
+    public class MissingDependencyException : Exception
+    {
+
         public string DependencyName { get; }
 
         public MissingDependencyException(string dependencyName)

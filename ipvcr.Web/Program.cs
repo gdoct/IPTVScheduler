@@ -13,10 +13,10 @@ public class Program
     public static async Task RestartAspNetAsync()
     {
         await Task.Delay(1000); // Delay to allow the response to be sent
-        
+
         // Log the restart
         Console.WriteLine("Application restart requested at: " + DateTime.Now);
-        
+
         // Exit the application with success code
         // The hosting environment (systemd, docker, etc.) should restart the process
         Environment.Exit(0);
@@ -28,7 +28,7 @@ public class Program
         var configuration = builder.Configuration; // Access the configuration
         var port = configuration.GetValue<int?>("Port") ?? 5000;
         var sslport = configuration.GetValue<int?>("SslPort") ?? 5001;
-        
+
         // Create a settings manager instance early to access certificate path
         var fileSystem = new FileSystem();
         var schedulerSettingsManager = new SchedulerSettingsManager(fileSystem);
@@ -55,7 +55,7 @@ public class Program
             {
                 // HTTP endpoint
                 serverOptions.ListenAnyIP(port);
-                
+
                 // HTTPS endpoint with certificate
                 serverOptions.ListenAnyIP(sslport, listenOptions =>
                 {
@@ -70,7 +70,7 @@ public class Program
             {
                 serverOptions.ListenAnyIP(port);
             });
-            
+
             if (useSsl)
             {
                 //throw new InvalidOperationException("SSL is enabled but no certificate path is provided.");

@@ -172,7 +172,7 @@ public class SettingsApiController : ControllerBase
             _settingsManager.PlaylistSettings = settings;
 
             _logger.LogDebug("M3U file uploaded successfully to {filePath}", filePath);
-            
+
             return Ok(new { message = "M3U file uploaded successfully" });
         }
         catch (Exception ex)
@@ -196,7 +196,7 @@ public class SettingsApiController : ControllerBase
         // Get the SSL settings directory
         var settings = _settingsManager.SslSettings;
         var certificateDir = Path.GetDirectoryName(settings.CertificatePath);
-        
+
         if (string.IsNullOrEmpty(certificateDir))
         {
             certificateDir = "/data/ssl-certificates";
@@ -240,7 +240,7 @@ public class SettingsApiController : ControllerBase
             _settingsManager.SslSettings = settings;
 
             _logger.LogInformation("SSL certificate uploaded successfully to {filePath}", filePath);
-            
+
             return Ok(new { message = "Certificate uploaded successfully", path = filePath });
         }
         catch (Exception ex)
@@ -262,7 +262,7 @@ public class SettingsApiController : ControllerBase
         }
 
         var certificateDir = Path.GetDirectoryName(settings.CertificatePath);
-        
+
         if (string.IsNullOrEmpty(certificateDir))
         {
             certificateDir = "/data/ssl-certificates";
@@ -287,19 +287,19 @@ public class SettingsApiController : ControllerBase
             // Generate a timestamped filename
             var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
             var filePath = Path.Combine(certificateDir, $"selfsigned_certificate_{timestamp}.pfx");
-            
+
             // Create the certificate generator
             var certificateGenerator = new ipvcr.Auth.SelfSignedCertificateGenerator(new System.IO.Abstractions.FileSystem());
-            
+
             // Generate the certificate 
             var certificate = certificateGenerator.GenerateSelfSignedTlsCertificate(filePath, settings.CertificatePassword);
-            
+
             // Update the settings
             settings.CertificatePath = filePath;
             _settingsManager.SslSettings = settings;
 
             _logger.LogInformation("Self-signed certificate generated successfully at {filePath}", filePath);
-            
+
             return Ok(new { message = "Self-signed certificate generated successfully", path = filePath });
         }
         catch (Exception ex)
@@ -313,7 +313,7 @@ public class SettingsApiController : ControllerBase
     [Route("adminsettings")]
     public IActionResult GetAdminSettings()
     {
-        return Ok( _settingsManager.AdminPasswordSettings);
+        return Ok(_settingsManager.AdminPasswordSettings);
     }
 
     [HttpPut]

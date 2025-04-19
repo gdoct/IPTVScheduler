@@ -15,7 +15,7 @@ public class TokenAuthenticationHandler : AuthenticationHandler<AuthenticationSc
         ILoggerFactory logger,
         UrlEncoder encoder,
         ISystemClock clock,
-        ITokenManager tokenManager) 
+        ITokenManager tokenManager)
         : base(options, logger, encoder, clock)
     {
         _tokenManager = tokenManager;
@@ -24,8 +24,8 @@ public class TokenAuthenticationHandler : AuthenticationHandler<AuthenticationSc
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         // Get authorization header
-        if (!Request.Headers.TryGetValue("Authorization", out var authHeader) || 
-            string.IsNullOrEmpty(authHeader) || 
+        if (!Request.Headers.TryGetValue("Authorization", out var authHeader) ||
+            string.IsNullOrEmpty(authHeader) ||
             !authHeader.ToString().StartsWith("Bearer "))
         {
             return Task.FromResult(AuthenticateResult.NoResult());

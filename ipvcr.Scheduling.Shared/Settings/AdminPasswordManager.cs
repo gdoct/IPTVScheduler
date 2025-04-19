@@ -14,7 +14,7 @@ public class AdminPasswordManager : BaseSettingsManager<AdminPasswordSettings>, 
     {
         if (tokenManager == null)
             throw new ArgumentNullException(nameof(tokenManager));
-            
+
         _tokenManager = tokenManager;
     }
 
@@ -22,7 +22,7 @@ public class AdminPasswordManager : BaseSettingsManager<AdminPasswordSettings>, 
     public string AdminPassword { get; set; } = DEFAULT_PASSWORD;
     public override AdminPasswordSettings Settings
     {
-        get 
+        get
         {
             // create a copy of the current adminpasswordsettings and set admin password to empty
             // this is to prevent the password from being exposed when returning the settings

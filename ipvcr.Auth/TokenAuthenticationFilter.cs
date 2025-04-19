@@ -17,25 +17,25 @@ public class TokenAuthenticationFilter : IAsyncAuthorizationFilter
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
         var authHeader = context.HttpContext.Request.Headers["Authorization"].ToString();
-        
+
         if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
         {
             context.Result = new UnauthorizedResult();
             return;
         }
-        
+
         var tokenString = authHeader.Replace("Bearer ", "");
         var principal = _tokenManager.ValidateToken(tokenString);
-        
+
         if (principal == null)
         {
             context.Result = new UnauthorizedResult();
             return;
         }
-        
+
         // Set the user identity on the HttpContext
         context.HttpContext.User = principal;
-        
+
         await Task.CompletedTask;
     }
 }

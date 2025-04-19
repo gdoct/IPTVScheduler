@@ -59,7 +59,7 @@ public class SettingsManagerTests
     {
         // Ensure the /data directory exists
         mockFileSystem.AddDirectory("/data");
-        
+
         var mockFileSystemWrapper = new Mock<IFileSystem>();
         mockFileSystemWrapper.Setup(fs => fs.File).Returns(mockFileSystem.File);
         mockFileSystemWrapper.Setup(fs => fs.Directory).Returns(mockFileSystem.Directory);
@@ -108,7 +108,7 @@ public class SettingsManagerTests
         // Act & Assert
         // Create an expected settings object with default values
         var expected = new SchedulerSettings();
-     
+
         var res = settingsManager.Settings;
         Assert.Equivalent(expected, res);
     }

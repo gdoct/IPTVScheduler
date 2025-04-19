@@ -11,7 +11,7 @@ namespace ipvcr.Tests
         {
             // Act
             var settings = new FfmpegSettings();
-            
+
             // Assert
             Assert.Equal("mp4", settings.FileType);
             Assert.Equal("libx264", settings.Codec);
@@ -23,13 +23,13 @@ namespace ipvcr.Tests
             Assert.Equal("16:9", settings.AspectRatio);
             Assert.Equal("mp4", settings.OutputFormat);
         }
-        
+
         [Fact]
         public void Properties_CanBeModified()
         {
             // Arrange
             var settings = new FfmpegSettings();
-            
+
             // Act
             settings.FileType = "mkv";
             settings.Codec = "libvpx";
@@ -40,7 +40,7 @@ namespace ipvcr.Tests
             settings.FrameRate = "60";
             settings.AspectRatio = "21:9";
             settings.OutputFormat = "webm";
-            
+
             // Assert
             Assert.Equal("mkv", settings.FileType);
             Assert.Equal("libvpx", settings.Codec);

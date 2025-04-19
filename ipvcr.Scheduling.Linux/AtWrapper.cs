@@ -5,7 +5,7 @@ using ipvcr.Scheduling.Shared.Settings;
 
 namespace ipvcr.Scheduling.Linux;
 
-public partial class AtWrapper(IFileSystem fileSystem, IProcessRunner processRunner, ISettingsService settingsService) : 
+public partial class AtWrapper(IFileSystem fileSystem, IProcessRunner processRunner, ISettingsService settingsService) :
     CommandWrapperBase(processRunner, settingsService, AT_COMMAND)
 {
     private const string AT_DATE_FORMAT = "HH:mm MM/dd/yyyy";

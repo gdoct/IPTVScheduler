@@ -51,7 +51,7 @@ public class SelfSignedCertificateGeneratorTests
         Assert.NotNull(certificate);
         Assert.True(certificate.HasPrivateKey);
         Assert.Contains(outputPath, fileSystem.AllFiles);
-        
+
         // Verify the certificate can be loaded with the password
         byte[] pfxBytes = fileSystem.File.ReadAllBytes(outputPath);
         var loadedCert = new X509Certificate2(pfxBytes, password);
@@ -67,9 +67,9 @@ public class SelfSignedCertificateGeneratorTests
         string? outputPath = null;
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
+        var exception = Assert.Throws<ArgumentException>(() =>
             generator.GenerateSelfSignedTlsCertificate(outputPath!));
-        
+
         Assert.Equal("outputPath", exception.ParamName);
         _fileSystemMock.Verify(fs => fs.File.WriteAllBytes(It.IsAny<string>(), It.IsAny<byte[]>()), Times.Never);
     }
@@ -82,9 +82,9 @@ public class SelfSignedCertificateGeneratorTests
         string outputPath = string.Empty;
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
+        var exception = Assert.Throws<ArgumentException>(() =>
             generator.GenerateSelfSignedTlsCertificate(outputPath));
-        
+
         Assert.Equal("outputPath", exception.ParamName);
         _fileSystemMock.Verify(fs => fs.File.WriteAllBytes(It.IsAny<string>(), It.IsAny<byte[]>()), Times.Never);
     }
@@ -111,9 +111,9 @@ public class SelfSignedCertificateGeneratorTests
     public void Constructor_WithNullFileSystem_ThrowsArgumentNullException()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() => 
+        var exception = Assert.Throws<ArgumentNullException>(() =>
             new SelfSignedCertificateGenerator(null!));
-        
+
         Assert.Equal("fileSystem", exception.ParamName);
     }
 }

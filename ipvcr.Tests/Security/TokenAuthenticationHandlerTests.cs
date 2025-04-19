@@ -49,7 +49,7 @@ public class TokenAuthenticationHandlerTests
             _mockTokenManager.Object);
 
         handler.InitializeAsync(new AuthenticationScheme("Bearer", "Bearer", typeof(TokenAuthenticationHandler)), _httpContext).Wait();
-        
+
         return handler;
     }
 
@@ -58,7 +58,7 @@ public class TokenAuthenticationHandlerTests
     {
         // Arrange
         var tokenString = "valid-token";
-        
+
         // Fix ASP0019: Use indexer instead of Add
         _httpContext.Request.Headers["Authorization"] = $"Bearer {tokenString}";
 
@@ -138,7 +138,7 @@ public class TokenAuthenticationHandlerTests
     {
         // Arrange
         var tokenString = "invalid-token";
-        
+
         // Fix ASP0019: Use indexer instead of Add
         _httpContext.Request.Headers["Authorization"] = $"Bearer {tokenString}";
 
@@ -162,7 +162,7 @@ public class TokenAuthenticationHandlerTests
     {
         // Arrange
         var tokenString = "valid-token-with-roles";
-        
+
         // Fix ASP0019: Use indexer instead of Add
         _httpContext.Request.Headers["Authorization"] = $"Bearer {tokenString}";
 
@@ -186,15 +186,15 @@ public class TokenAuthenticationHandlerTests
         // Assert
         Assert.True(result.Succeeded);
         Assert.Same(principal, result.Principal);
-        
+
         // Suppress CS8604: Possible null reference argument
         //#pragma warning disable CS8604
         var newprincipal = result.Principal;
         Assert.NotNull(newprincipal);
         Assert.Equal(2, newprincipal.FindAll(ClaimTypes.Role).Count());
-        Assert.Contains(newprincipal.FindAll(ClaimTypes.Role), 
+        Assert.Contains(newprincipal.FindAll(ClaimTypes.Role),
             c => c.Value == "Admin");
-        Assert.Contains(newprincipal.FindAll(ClaimTypes.Role), 
+        Assert.Contains(newprincipal.FindAll(ClaimTypes.Role),
             c => c.Value == "User");
         //#pragma warning restore CS8604
     }

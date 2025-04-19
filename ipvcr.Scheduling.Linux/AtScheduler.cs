@@ -11,7 +11,7 @@ public class AtScheduler(IFileSystem fileSystem, IProcessRunner processRunner, I
     private readonly AtrmWrapper _atrmWrapper = new AtrmWrapper(processRunner, settingsService);
     private readonly TaskScriptManager _taskScriptManager = new TaskScriptManager(fileSystem, settingsService);
 
-    private IEnumerable<(int JobId, ScheduledTask Task)> Tasks => 
+    private IEnumerable<(int JobId, ScheduledTask Task)> Tasks =>
         _atqWrapper.GetScheduledTasks()
         .Select(jobId =>
         {
@@ -26,12 +26,12 @@ public class AtScheduler(IFileSystem fileSystem, IProcessRunner processRunner, I
         {
             throw new InvalidOperationException($"Task with ID {taskId} not found.");
         }
-        
+
         _atrmWrapper.CancelTask(matchingtask.JobId);
         _taskScriptManager.MoveScriptToFailed(taskId);
     }
 
-    public IEnumerable<ScheduledTask> FetchScheduledTasks() => 
+    public IEnumerable<ScheduledTask> FetchScheduledTasks() =>
         Tasks.Select(t => t.Task);
 
     public string GetTaskDefinition(Guid id)
@@ -41,7 +41,7 @@ public class AtScheduler(IFileSystem fileSystem, IProcessRunner processRunner, I
         {
             throw new InvalidOperationException($"Task with ID {id} not found.");
         }
-        
+
         return _taskScriptManager.ReadTaskScript(id);
     }
 
@@ -58,7 +58,7 @@ public class AtScheduler(IFileSystem fileSystem, IProcessRunner processRunner, I
         {
             throw new InvalidOperationException($"Task with ID {taskId} not found.");
         }
-        
+
         _taskScriptManager.WriteTaskScript(task.Task, false);
     }
 }

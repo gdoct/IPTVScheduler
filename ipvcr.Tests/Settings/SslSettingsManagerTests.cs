@@ -60,10 +60,10 @@ namespace ipvcr.Tests
             Assert.Equal("/data/ssl-certificates/certificate.pfx", settings.CertificatePath);
             Assert.Equal("default_password", settings.CertificatePassword);
             Assert.True(settings.UseSsl);
-            
+
             // Verify the settings file was created
             Assert.True(_mockFileSystem.FileExists(SettingsFilePath));
-            
+
             // Verify the content is the serialized default settings
             var fileContent = _mockFileSystem.GetFile(SettingsFilePath).TextContents;
             var deserializedSettings = JsonSerializer.Deserialize<SslSettings>(fileContent);
@@ -71,37 +71,37 @@ namespace ipvcr.Tests
             Assert.Equal("default_password", deserializedSettings.CertificatePassword);
             Assert.True(deserializedSettings.UseSsl);
         }
-        
+
         [Fact]
         public void Settings_Set_SavesAndUpdatesFile()
         {
             // Arrange
             var manager = new SslSettingsManager(_mockFileSystem);
-            var newSettings = new SslSettings 
-            { 
+            var newSettings = new SslSettings
+            {
                 CertificatePath = "/updated/path/certificate.pfx",
                 CertificatePassword = "updated_password",
                 UseSsl = false
             };
-            
+
             bool eventRaised = false;
             SslSettings eventSettings = null;
-            
-            manager.SettingsChanged += (sender, args) => 
+
+            manager.SettingsChanged += (sender, args) =>
             {
                 eventRaised = true;
                 eventSettings = args.NewSettings;
             };
-            
+
             // Act
             manager.Settings = newSettings;
-            
+
             // Assert
             Assert.True(eventRaised);
             Assert.Equal("/updated/path/certificate.pfx", eventSettings.CertificatePath);
             Assert.Equal("updated_password", eventSettings.CertificatePassword);
             Assert.False(eventSettings.UseSsl);
-            
+
             // Verify the settings file was updated
             var fileContent = _mockFileSystem.GetFile(SettingsFilePath).TextContents;
             var deserializedSettings = JsonSerializer.Deserialize<SslSettings>(fileContent);
@@ -109,13 +109,13 @@ namespace ipvcr.Tests
             Assert.Equal("updated_password", deserializedSettings.CertificatePassword);
             Assert.False(deserializedSettings.UseSsl);
         }
-        
+
         [Fact]
         public void Settings_Set_NullValue_ThrowsArgumentNullException()
         {
             // Arrange
             var manager = new SslSettingsManager(_mockFileSystem);
-            
+
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() => manager.Settings = null);
         }

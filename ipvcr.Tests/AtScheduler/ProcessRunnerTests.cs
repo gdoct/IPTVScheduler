@@ -9,23 +9,14 @@ public class ProcessRunnerTests
     {
         // Arrange
         var processRunner = new ProcessRunner();
-#if WINDOWS
-        var fileName = "ipconfig";
-        var arguments = string.Empty;
-#elif LINUX
         var fileName = "echo";
         var arguments = string.Empty;
-#endif
         // Act
         var (output, error, exitCode) = processRunner.RunProcess(fileName, arguments);
 
         // Assert
         Assert.True(output.Length > 0);
-#if WINDOWS
-        Assert.Equal("\r\n", error);
-#else
         Assert.Equal("\n", error);
-#endif
         Assert.Equal(0, exitCode);
     }
 
@@ -38,12 +29,7 @@ public class ProcessRunnerTests
         var arguments = string.Empty;
 
         // Act
-#if WINDOWS
         Assert.Throws<Win32Exception>(() => processRunner.RunProcess(fileName, arguments));
-
-#elif LINUX
-        Assert.Throws<Win32Exception>(() => processRunner.RunProcess(fileName, arguments));
-#endif
     }
 
     [Fact]
@@ -51,23 +37,14 @@ public class ProcessRunnerTests
     {
         // Arrange
         var processRunner = new ProcessRunner();
-#if WINDOWS
-        var fileName = "ipconfig";
-#elif LINUX
         var fileName = "grep";
-#endif
         var arguments = "--invalid-argument";
         // Act
         var (output, error, exitCode) = processRunner.RunProcess(fileName, arguments);
 
         // Assert
-#if WINDOWS
-        Assert.Contains("Error: unrecognized or incomplete command line", output);
-        Assert.Equal(Environment.NewLine, error);
-#else
         Assert.Equal(Environment.NewLine, output);
         Assert.Contains("grep: unrecognized option", error);
-#endif
 
         Assert.NotEqual(0, exitCode);
     }
@@ -77,13 +54,8 @@ public class ProcessRunnerTests
     {
         // Arrange
         var processRunner = new ProcessRunner();
-#if WINDOWS
-        var fileName = "cmd";
-        var arguments = "";
-#elif LINUX
         var fileName = "sleep";
         var arguments = "10";
-#endif
 
         // Act
         var (output, error, exitCode) = processRunner.RunProcess(fileName, arguments, 1000);

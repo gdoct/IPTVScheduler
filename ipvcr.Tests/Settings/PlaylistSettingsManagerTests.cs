@@ -60,49 +60,49 @@ namespace ipvcr.Tests
             Assert.Equal("/data/m3u-playlist.m3u", settings.M3uPlaylistPath);
             Assert.Equal(24, settings.PlaylistAutoUpdateInterval);
             Assert.False(settings.AutoReloadPlaylist);
-            
+
             // Verify the settings file was created
             Assert.True(_mockFileSystem.FileExists(SettingsFilePath));
-            
+
             // Verify the content is the serialized default settings
             var fileContent = _mockFileSystem.GetFile(SettingsFilePath).TextContents;
             var deserializedSettings = JsonSerializer.Deserialize<PlaylistSettings>(fileContent);
             Assert.Equal("/data/m3u-playlist.m3u", deserializedSettings.M3uPlaylistPath);
             Assert.Equal(24, deserializedSettings.PlaylistAutoUpdateInterval);
         }
-        
+
         [Fact]
         public void Settings_Set_SavesAndUpdatesFile()
         {
             // Arrange
             var manager = new PlaylistSettingsManager(_mockFileSystem);
-            var newSettings = new PlaylistSettings 
-            { 
+            var newSettings = new PlaylistSettings
+            {
                 M3uPlaylistPath = "/updated/path.m3u",
                 PlaylistAutoUpdateInterval = 6,
                 AutoReloadPlaylist = true,
                 FilterEmptyGroups = false
             };
-            
+
             bool eventRaised = false;
             PlaylistSettings eventSettings = null;
-            
-            manager.SettingsChanged += (sender, args) => 
+
+            manager.SettingsChanged += (sender, args) =>
             {
                 eventRaised = true;
                 eventSettings = args.NewSettings;
             };
-            
+
             // Act
             manager.Settings = newSettings;
-            
+
             // Assert
             Assert.True(eventRaised);
             Assert.Equal("/updated/path.m3u", eventSettings.M3uPlaylistPath);
             Assert.Equal(6, eventSettings.PlaylistAutoUpdateInterval);
             Assert.True(eventSettings.AutoReloadPlaylist);
             Assert.False(eventSettings.FilterEmptyGroups);
-            
+
             // Verify the settings file was updated
             var fileContent = _mockFileSystem.GetFile(SettingsFilePath).TextContents;
             var deserializedSettings = JsonSerializer.Deserialize<PlaylistSettings>(fileContent);
@@ -111,13 +111,13 @@ namespace ipvcr.Tests
             Assert.True(deserializedSettings.AutoReloadPlaylist);
             Assert.False(deserializedSettings.FilterEmptyGroups);
         }
-        
+
         [Fact]
         public void Settings_Set_NullValue_ThrowsArgumentNullException()
         {
             // Arrange
             var manager = new PlaylistSettingsManager(_mockFileSystem);
-            
+
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() => manager.Settings = null);
         }

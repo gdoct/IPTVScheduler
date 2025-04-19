@@ -47,7 +47,7 @@ public class PlaylistManagerTests
 
         var s = new SchedulerSettings { DataPath = playlistPath };
         settingsService.SetupGet(s => s.SchedulerSettings).Returns(s);
-        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = playlistPath});
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings() { M3uPlaylistPath = playlistPath });
         fileSystem.Setup(fs => fs.File.Exists(playlistPath)).Returns(true);
 
         var playlistManager = new PlaylistManager(settingsService.Object, fileSystem.Object);
@@ -85,7 +85,7 @@ public class PlaylistManagerTests
 
         var s = new SchedulerSettings { DataPath = playlistPath };
         settingsService.SetupGet(s => s.SchedulerSettings).Returns(s);
-        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = playlistPath});
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings() { M3uPlaylistPath = playlistPath });
 
         fileSystem.Setup(fs => fs.File.Exists(playlistPath)).Returns(true);
 
@@ -116,7 +116,7 @@ public class PlaylistManagerTests
 
         var s = new SchedulerSettings { DataPath = playlistPath };
         settingsService.SetupGet(s => s.SchedulerSettings).Returns(s);
-        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = playlistPath});
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings() { M3uPlaylistPath = playlistPath });
         fileSystem.Setup(fs => fs.File.Exists(playlistPath)).Returns(true);
 
         var playlistManager = new PlaylistManager(settingsService.Object, fileSystem.Object);
@@ -174,7 +174,7 @@ public class PlaylistManagerTests
         var s = new SchedulerSettings { DataPath = "playlist.m3u" };
         fileSystem.Setup(fs => fs.File.Exists(s.DataPath)).Returns(true);
         settingsService.SetupGet(s => s.SchedulerSettings).Returns(s);
-        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = playlistPath});
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings() { M3uPlaylistPath = playlistPath });
         var playlistManager = new PlaylistManager(settingsService.Object, fileSystem.Object);
 
         // Act & Assert
@@ -193,7 +193,7 @@ public class PlaylistManagerTests
             DataPath = playlistPath
         };
         settingsService.SetupGet(s => s.SchedulerSettings).Returns(s);
-        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = playlistPath});
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings() { M3uPlaylistPath = playlistPath });
         fileSystem.Setup(fs => fs.File.Exists(playlistPath)).Returns(false);
 
         var playlistManager = new PlaylistManager(settingsService.Object, fileSystem.Object);
@@ -213,7 +213,7 @@ public class PlaylistManagerTests
             DataPath = string.Empty
         };
         settingsService.SetupGet(s => s.SchedulerSettings).Returns(s);
-        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = ""});
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings() { M3uPlaylistPath = "" });
         // Act & Assert
         Assert.Throws<ArgumentException>(() => new PlaylistManager(settingsService.Object, Mock.Of<IFileSystem>()));
     }
@@ -255,7 +255,7 @@ public class PlaylistManagerTests
             .Returns(new MockedFileSystemStream(stream, playlistPath, true));
 
         var s = new SchedulerSettings { DataPath = playlistPath };
-        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = "data"});
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings() { M3uPlaylistPath = "data" });
 
         fileSystem.Setup(fs => fs.File.Exists(playlistPath)).Returns(true);
 
@@ -301,7 +301,7 @@ public class PlaylistManagerTests
 
         // var s = new SchedulerSettings { DataPath = playlistPath };
         // settingsService.SetupGet(s => s.SchedulerSettings).Returns(s);
-        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings(){M3uPlaylistPath = playlistPath});
+        settingsService.SetupGet(s => s.PlaylistSettings).Returns(new PlaylistSettings() { M3uPlaylistPath = playlistPath });
         fileSystem.Setup(fs => fs.File.Exists(playlistPath)).Returns(true);
 
         var playlistManager = new PlaylistManager(settingsService.Object, fileSystem.Object);
@@ -309,7 +309,7 @@ public class PlaylistManagerTests
         // Act
         var newSettings = new SchedulerSettings { DataPath = newplaylistPath };
 
-      //  fileSystem.SetupGet(x => x.File).Returns(file.Object);
+        //  fileSystem.SetupGet(x => x.File).Returns(file.Object);
         // file.Setup(x => x.OpenRead(It.IsAny<string>()))
         //     .Returns(new MockedFileSystemStream(stream2, newplaylistPath, true));
         // fileSystem.Setup(fs => fs.File.Exists(newplaylistPath)).Returns(true);

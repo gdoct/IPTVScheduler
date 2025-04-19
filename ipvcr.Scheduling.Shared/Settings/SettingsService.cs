@@ -120,24 +120,12 @@ public class SettingsService : ISettingsService
     // Admin password management methods
     public bool ValidateAdminPassword(string password)
     {
-        // Assuming SchedulerSettingsManager has these methods
-        if (_adminPasswordManager is AdminPasswordManager schedulerManager)
-        {
-            return schedulerManager.ValidateAdminPassword(password);
-        }
-        throw new InvalidOperationException("Cannot access admin password methods");
+        return ((AdminPasswordManager)_adminPasswordManager).ValidateAdminPassword(password);
     }
 
     public void UpdateAdminPassword(string newPassword)
     {
-        if (_adminPasswordManager is AdminPasswordManager schedulerManager)
-        {
-            schedulerManager.UpdateAdminPassword(newPassword);
-        }
-        else
-        {
-            throw new InvalidOperationException("Cannot access admin password methods");
-        }
+        ((AdminPasswordManager)_adminPasswordManager).UpdateAdminPassword(newPassword);
     }
 
     public void ResetFactoryDefaults()

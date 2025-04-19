@@ -84,15 +84,15 @@ public class ScheduledRecording
         }
 
         // Use specified output format, falling back to FileType if needed
-        string format = !string.IsNullOrEmpty(ffmpegSettings.OutputFormat) 
-            ? ffmpegSettings.OutputFormat 
+        string format = !string.IsNullOrEmpty(ffmpegSettings.OutputFormat)
+            ? ffmpegSettings.OutputFormat
             : (!string.IsNullOrEmpty(ffmpegSettings.FileType) ? ffmpegSettings.FileType : "mp4");
 
         command += $" -f {format}";
 
         // Add metadata
         command += $" -metadata title=\"{Name}\" -metadata description=\"{Description}\"";
-        
+
         // Add filename
         command += $" {Filename}";
 
