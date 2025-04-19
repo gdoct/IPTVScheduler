@@ -1,10 +1,9 @@
-namespace ipvcr.Scheduling.Linux.Tests;
+namespace ipvcr.Tests.LinuxScheduler;
 
 using System.IO.Abstractions;
-using System.Reflection.Emit;
 using System.Text.Json;
 using ipvcr.Scheduling.Linux;
-using ipvcr.Scheduling.Shared;
+using ipvcr.Scheduling;
 using ipvcr.Scheduling.Shared.Settings;
 using Moq;
 

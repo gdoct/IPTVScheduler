@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
+using ipvcr.Scheduling.Linux;
 
-namespace ipvcr.Scheduling.Linux.Tests;
+namespace ipvcr.Tests.LinuxScheduler;
 
 public class ProcessRunnerTests
 {

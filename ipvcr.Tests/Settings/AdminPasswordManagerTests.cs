@@ -7,7 +7,7 @@ using ipvcr.Auth;
 using ipvcr.Scheduling.Shared.Settings;
 using Moq;
 #pragma warning disable CS8600, CS8602, CS8603, CS8604, CS8618, CS8625
-namespace ipvcr.Tests
+namespace ipvcr.Tests.Settings
 {
     public class AdminPasswordManagerTests
     {
@@ -316,6 +316,35 @@ namespace ipvcr.Tests
             // Assert
             Assert.Equal(string.Empty, result);
         }
+
+        [Fact]
+        public void LoadSettings_EmptyUsernameAndPassword_AppliesDefaultValues()
+        {
+            // Arrange
+            _fileMock.Setup(f => f.Exists(SettingsFilePath)).Returns(true);
+
+            // Create settings with empty username and password
+            var settings = new AdminPasswordSettings { AdminUsername = "", AdminPassword = "" };
+            _fileMock.Setup(f => f.ReadAllText(SettingsFilePath))
+                .Returns(JsonSerializer.Serialize(settings));
+
+            var manager = new AdminPasswordManager(_fileSystemMock.Object, _tokenManagerMock.Object);
+
+            // Act - This will load settings internally
+            // We can't access LoadSettings directly as it's protected, but we can verify the results
+            
+            // Verify username is set to default via public Settings property
+            Assert.Equal("admin", manager.AdminUsername);
+            
+            // The default password in AdminPasswordManager is set to the constant "default_password"
+            // without hashing it first, so the validation should work by comparing hashes
+            _tokenManagerMock.Setup(tm => tm.CreateHash("default_password"))
+                .Returns("default_password");
+                
+            Assert.True(manager.ValidateAdminPassword("default_password"));
+        }
+
     }
+    
 }
 #pragma warning restore CS8600, CS8602, CS8603, CS8604, CS8618, CS8625
