@@ -2,6 +2,7 @@ using ipvcr.Auth;
 using ipvcr.Scheduling;
 using ipvcr.Scheduling.Linux;
 using ipvcr.Scheduling.Shared.Settings;
+using ipvcr.Scheduling.Shared.Services;
 using Microsoft.AspNetCore.Authentication;
 using System.IO.Abstractions;
 
@@ -88,6 +89,9 @@ public class Program
         builder.Services.AddSingleton<IFileSystem, FileSystem>();
         builder.Services.AddSingleton<IPlaylistManager, PlaylistManager>();
         builder.Services.AddSingleton<ITokenManager>(tokenManager);
+        
+        // Register the folder service
+        builder.Services.AddScoped<IFolderService, FolderService>();
 
         builder.Services.AddTransient<IProcessRunner, ProcessRunner>();
         builder.Services.AddTransient<IRecordingSchedulingContext, RecordingSchedulingContext>();

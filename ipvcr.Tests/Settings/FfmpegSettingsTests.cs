@@ -14,13 +14,13 @@ namespace ipvcr.Tests
 
             // Assert
             Assert.Equal("mp4", settings.FileType);
-            Assert.Equal("libx264", settings.Codec);
-            Assert.Equal("aac", settings.AudioCodec);
-            Assert.Equal("1000k", settings.VideoBitrate);
-            Assert.Equal("128k", settings.AudioBitrate);
-            Assert.Equal("1280x720", settings.Resolution);
-            Assert.Equal("30", settings.FrameRate);
-            Assert.Equal("16:9", settings.AspectRatio);
+            Assert.Equal("", settings.Codec);
+            Assert.Equal("", settings.AudioCodec);
+            Assert.Equal("", settings.VideoBitrate);
+            Assert.Equal("", settings.AudioBitrate);
+            Assert.Equal("", settings.Resolution);
+            Assert.Equal("", settings.FrameRate);
+            Assert.Equal("", settings.AspectRatio);
             Assert.Equal("mp4", settings.OutputFormat);
         }
 

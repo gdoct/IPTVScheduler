@@ -57,9 +57,9 @@ namespace ipvcr.Tests
 
             // Assert
             var settings = manager.Settings;
-            Assert.Equal("libx264", settings.Codec);
-            Assert.Equal("aac", settings.AudioCodec);
-            Assert.Equal("1000k", settings.VideoBitrate);
+            Assert.Equal("", settings.Codec);
+            Assert.Equal("", settings.AudioCodec);
+            Assert.Equal("mp4", settings.OutputFormat);
 
             // Verify the settings file was created
             Assert.True(_mockFileSystem.FileExists(SettingsFilePath));
@@ -67,7 +67,7 @@ namespace ipvcr.Tests
             // Verify the content is the serialized default settings
             var fileContent = _mockFileSystem.GetFile(SettingsFilePath).TextContents;
             var deserializedSettings = JsonSerializer.Deserialize<FfmpegSettings>(fileContent);
-            Assert.Equal("libx264", deserializedSettings.Codec);
+            Assert.Equal("mp4", deserializedSettings.OutputFormat);
         }
 
         [Fact]

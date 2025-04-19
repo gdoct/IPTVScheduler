@@ -288,7 +288,8 @@ namespace ipvcr.Tests
             Assert.Equal("/media", service.SchedulerSettings.MediaPath);
             Assert.Equal("/data/m3u-playlist.m3u", service.PlaylistSettings.M3uPlaylistPath);
             Assert.True(service.SslSettings.UseSsl);
-            Assert.Equal("libx264", service.FfmpegSettings.Codec);
+            Assert.Equal("", service.FfmpegSettings.Codec);
+            Assert.Equal("mp4", service.FfmpegSettings.OutputFormat);
             Assert.Equal("admin", service.AdminPasswordSettings.AdminUsername);
         }
 

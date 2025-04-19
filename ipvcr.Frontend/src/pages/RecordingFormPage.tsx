@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card, Col, Container, Form, InputGroup, ListGroup, Row } from 'react-bootstrap';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import FolderBrowserModal from '../components/FolderBrowserModal';
 import { searchChannels } from '../services/api';
 import { recordingsApi } from '../services/RecordingsApi';
 import { ChannelInfo, formatFileDate, formatNiceDate, ScheduledRecording } from '../types/recordings';
@@ -9,7 +10,7 @@ const RecordingFormPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const recordingPath = location.state?.recordingPath || '';
+  const baseRecordingPath = location.state?.recordingPath || '';
   
   const isEdit = Boolean(id && id !== '00000000-0000-0000-0000-000000000000');
 
@@ -26,6 +27,10 @@ const RecordingFormPage: React.FC = () => {
     endTime: getTomorrowDatetimePlusHour(),
     filename: ''
   });
+  
+  // Folder browser state
+  const [showFolderBrowser, setShowFolderBrowser] = useState(false);
+  const [selectedFolder, setSelectedFolder] = useState('');
   
   const [channelLogo, setChannelLogo] = useState<string>('');
   const [channelQuery, setChannelQuery] = useState<string>('');
@@ -49,6 +54,10 @@ const RecordingFormPage: React.FC = () => {
             });
             setChannelQuery(recording.channelName);
             
+            // Extract folder from filename
+            const folderPath = extractFolderPath(recording.filename);
+            setSelectedFolder(folderPath);
+            
             // Try to fetch the channel logo
             fetchChannelInfoForName(recording.channelName, recording.channelUri);
           }
@@ -61,8 +70,21 @@ const RecordingFormPage: React.FC = () => {
       };
       
       fetchRecording();
+    } else {
+      // For new recordings, initialize with the base path
+      setSelectedFolder(baseRecordingPath);
     }
-  }, [id, isEdit]);
+  }, [id, isEdit, baseRecordingPath]);
+
+  // Helper to extract folder path from filename
+  const extractFolderPath = (filename: string): string => {
+    if (!filename) return baseRecordingPath;
+    
+    const lastSlashIndex = filename.lastIndexOf('/');
+    if (lastSlashIndex === -1) return baseRecordingPath;
+    
+    return filename.substring(0, lastSlashIndex);
+  };
 
   // Utility function to fetch channel info by name
   const fetchChannelInfoForName = async (channelName: string, channelUri: string) => {
@@ -197,11 +219,25 @@ const RecordingFormPage: React.FC = () => {
     }
   };
 
+  // Handle folder selection
+  const handleFolderSelect = (folderPath: string) => {
+    setSelectedFolder(folderPath);
+    
+    // Update filename with the new folder path
+    updateFilenameAndDescription(
+      formData.name || '',
+      formData.startTime || '',
+      formData.channelName || '',
+      folderPath
+    );
+  };
+
   // Update filename and description based on form data
   const updateFilenameAndDescription = (
     name: string,
     startTimeStr: string, 
-    channelName: string
+    channelName: string,
+    folderPath?: string
   ) => {
     if (name && startTimeStr && channelName) {
       // Generate filename
@@ -210,7 +246,8 @@ const RecordingFormPage: React.FC = () => {
         startTimeStr.split('T')[1].replace(':', '').substring(0, 4);
       
       const sanitizedName = name.replace(/ /g, '_').toLowerCase();
-      const filename = `${recordingPath}/${sanitizedName}_${startTimeFormatted}.mp4`;
+      const useFolderPath = folderPath || selectedFolder || baseRecordingPath;
+      const filename = `${useFolderPath}/${sanitizedName}_${startTimeFormatted}.mp4`;
       
       // Generate description
       const niceStartTime = formatNiceDate(startDate);
@@ -261,10 +298,36 @@ const RecordingFormPage: React.FC = () => {
     navigate('/');
   };
 
+  // Get the relative path for display
+  const getRelativeFolderPath = () => {
+    if (!selectedFolder) return '';
+    
+    // Show only the path after the base recording path
+    if (selectedFolder.startsWith(baseRecordingPath)) {
+      const relativePath = selectedFolder.substring(baseRecordingPath.length);
+      if (!relativePath) return '/';
+      return relativePath.startsWith('/') ? relativePath : '/' + relativePath;
+    }
+    
+    return selectedFolder;
+  };
+
+  const getFullFolderpath = () => {
+    let root = baseRecordingPath;
+    if (!root.endsWith('/')) {
+      root += '/';
+    }
+    let relative = getRelativeFolderPath();
+    if(relative.startsWith('/')) {
+      relative = relative.substring(1);
+    }
+    return root + relative;
+  }
+
   return (
     <Container fluid className="px-4 py-3">
-      <Card className="mb-4 border-0 shadow-sm">
-        <Card.Header className="bg-primary text-white py-3">
+      <Card className="mb-4 border-0 shadow">
+        <Card.Header className="bg-dark text-white py-3">
           <h4 className="mb-0">
             {isEdit ? (
               <><i className="bi bi-pencil-square me-2"></i>Edit Recording</>
@@ -290,28 +353,29 @@ const RecordingFormPage: React.FC = () => {
                 </Alert>
               )}
               
-              <Form onSubmit={handleSubmit}>
+              <Form onSubmit={handleSubmit} className="modern-form">
                 <input type="hidden" name="id" value={formData.id || ''} />
                 
-                <Row className="mb-3">
-                  <Col md={3} className="text-center">
-                    {channelLogo !== '' && (
-                    <img 
-                      src={channelLogo} 
-                      alt=""
-                      className="img-fluid rounded mb-2" 
-                      style={{ maxHeight: '100px', maxWidth: '100%', objectFit: 'contain' }} 
-                    />
-                    )}
-                    {channelLogo === '' && (
-                      <div className="bg-light rounded d-flex align-items-center justify-content-center mb-2" style={{ height: '100px', width: '100px' }}>
-                        <i className="bi bi-tv text-muted" style={{ fontSize: '2.5rem' }}></i>
-                      </div>
-                    )}
+                <Row className="mb-4 g-4">
+                  <Col lg={3} md={4} className="text-center">
+                    <div className="channel-logo-container bg-light rounded d-flex align-items-center justify-content-center mb-2 mx-auto" 
+                      style={{ height: '140px', width: '140px' }}>
+                      {channelLogo !== '' ? (
+                        <img 
+                          src={channelLogo} 
+                          alt=""
+                          className="img-fluid rounded" 
+                          style={{ maxHeight: '120px', maxWidth: '120px', objectFit: 'contain' }} 
+                        />
+                      ) : (
+                        <i className="bi bi-tv-fill text-muted" style={{ fontSize: '3rem' }}></i>
+                      )}
+                    </div>
                   </Col>
-                  <Col md={9}>
+                  
+                  <Col lg={9} md={8}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-bold">Recording name</Form.Label>
+                      <Form.Label className="fw-bold text-dark">Recording Name</Form.Label>
                       <Form.Control
                         type="text"
                         name="name"
@@ -319,10 +383,13 @@ const RecordingFormPage: React.FC = () => {
                         onChange={handleInputChange}
                         required
                         data-testid="recording-name-input"
+                        className="form-control-lg"
+                        placeholder="Enter a descriptive name for this recording"
                       />
                     </Form.Group>
+                    
                     <Form.Group className="mb-3">
-                      <Form.Label className="fw-bold">Description</Form.Label>
+                      <Form.Label className="fw-bold text-dark">Description</Form.Label>
                       <Form.Control
                         as="textarea"
                         rows={2}
@@ -336,10 +403,10 @@ const RecordingFormPage: React.FC = () => {
                   </Col>
                 </Row>
                 
-                <Row className="mb-3">
-                  <Col md={6}>
+                <Row className="mb-4 g-4">
+                  <Col lg={6}>
                     <Form.Group className="mb-3 position-relative">
-                      <Form.Label className="fw-bold">Channel</Form.Label>
+                      <Form.Label className="fw-bold text-dark">Channel</Form.Label>
                       <InputGroup>
                         {channelLogo && (
                           <InputGroup.Text className="px-2">
@@ -403,11 +470,11 @@ const RecordingFormPage: React.FC = () => {
                       )}
                     </Form.Group>
                   </Col>
-                  <Col md={6}>
-                    <Row>
+                  <Col lg={6}>
+                    <Row className="g-3">
                       <Col md={6}>
                         <Form.Group className="mb-3">
-                          <Form.Label className="fw-bold">Start Time</Form.Label>
+                          <Form.Label className="fw-bold text-dark">Start Time</Form.Label>
                           <Form.Control
                             type="datetime-local"
                             name="startTime"
@@ -419,7 +486,7 @@ const RecordingFormPage: React.FC = () => {
                       </Col>
                       <Col md={6}>
                         <Form.Group className="mb-3">
-                          <Form.Label className="fw-bold">End Time</Form.Label>
+                          <Form.Label className="fw-bold text-dark">End Time</Form.Label>
                           <Form.Control
                             type="datetime-local"
                             name="endTime"
@@ -433,33 +500,62 @@ const RecordingFormPage: React.FC = () => {
                   </Col>
                 </Row>
 
-                {formData.filename && (
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-bold">Recording will be saved to</Form.Label>
-                    <InputGroup>
-                      <InputGroup.Text>
-                        <i className="bi bi-file-earmark-play"></i>
-                      </InputGroup.Text>
-                      <Form.Control
-                        className="bg-light text-muted text-truncate"
-                        value={formData.filename}
-                        disabled
-                      />
-                    </InputGroup>
-                  </Form.Group>
-                )}
+                <Card className="mb-4 bg-light border">
+                  <Card.Body>
+                    <Form.Group>
+                      <Form.Label className="fw-bold text-dark d-flex align-items-center">
+                        <i className="bi bi-folder-fill me-2 text-primary"></i>
+                        Save Recording To
+                      </Form.Label>
+                      <InputGroup>
+                        <InputGroup.Text className="bg-dark text-white">
+                          <i className="bi bi-folder-fill"></i>
+                        </InputGroup.Text>
+                        <Form.Control
+                          readOnly
+                          value={getFullFolderpath()}
+                          className="bg-white"
+                        />
+                        <Button 
+                          variant="outline-primary" 
+                          onClick={() => setShowFolderBrowser(true)}
+                          title="Browse folders"
+                        >
+                          <i className="bi bi-folder-symlink me-2"></i>
+                          Browse
+                        </Button>
+                      </InputGroup>
+                      <Form.Text className="text-muted">
+                        Select a subfolder to organize your recordings
+                      </Form.Text>
+                    </Form.Group>
+
+                    {formData.filename && (
+                      <div className="mt-3">
+                        <Form.Label className="fw-bold text-dark">File</Form.Label>
+                        <p className="bg-white p-2 border rounded text-truncate">
+                          <i className="bi bi-file-earmark-play text-primary me-1"></i>
+                          {formData.filename}
+                        </p>
+                      </div>
+                    )}
+                  </Card.Body>
+                </Card>
                 
                 <div className="d-flex justify-content-end mt-4">
-                  <Button variant="secondary" className="me-2" onClick={handleCancel}>
-                    <i className="bi bi-x-circle me-1"></i>Cancel
+                  <Button variant="outline-secondary" className="me-2" onClick={handleCancel}>
+                    <i className="bi bi-x-circle me-1"></i>
+                    Cancel
                   </Button>
                   <Button 
                     variant="primary" 
                     type="submit" 
                     disabled={!isFormValid}
                     data-testid="save-recording-btn"
+                    className="px-4"
                   >
-                    <i className="bi bi-save me-1"></i>Save
+                    <i className="bi bi-save me-1"></i>
+                    Save
                   </Button>
                 </div>
               </Form>
@@ -467,6 +563,15 @@ const RecordingFormPage: React.FC = () => {
           )}
         </Card.Body>
       </Card>
+
+      {/* Folder browser modal */}
+      <FolderBrowserModal
+        show={showFolderBrowser}
+        onHide={() => setShowFolderBrowser(false)}
+        onSelect={handleFolderSelect}
+        basePath={baseRecordingPath}
+        initialPath={selectedFolder || baseRecordingPath}
+      />
     </Container>
   );
 };
