@@ -1,7 +1,8 @@
-using ipvcr.Scheduling;
-using ipvcr.Scheduling.Shared.Settings;
+using ipvcr.Logic;
+using ipvcr.Logic.Scheduler;
+using ipvcr.Logic.Settings;
 
-namespace ipvcr.Tests;
+namespace ipvcr.Tests.Scheduler;
 
 public class ScheduledTaskTests
 {

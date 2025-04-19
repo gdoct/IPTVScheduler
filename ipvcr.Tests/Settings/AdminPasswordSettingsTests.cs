@@ -1,8 +1,6 @@
-using System;
-using ipvcr.Scheduling.Shared.Settings;
-using Xunit;
+using ipvcr.Logic.Settings;
 
-namespace ipvcr.Tests
+namespace ipvcr.Tests.Settings
 {
     public class AdminPasswordSettingsTests
     {
@@ -21,11 +19,12 @@ namespace ipvcr.Tests
         public void Properties_CanBeModified()
         {
             // Arrange
-            var settings = new AdminPasswordSettings();
-
-            // Act
-            settings.AdminUsername = "customadmin";
-            settings.AdminPassword = "custompassword";
+            var settings = new AdminPasswordSettings
+            {
+                // Act
+                AdminUsername = "customadmin",
+                AdminPassword = "custompassword"
+            };
 
             // Assert
             Assert.Equal("customadmin", settings.AdminUsername);

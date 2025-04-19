@@ -1,7 +1,6 @@
-using ipvcr.Scheduling.Shared;
-using ipvcr.Scheduling.Shared.Settings;
+using ipvcr.Logic.Api;
 
-namespace ipvcr.Scheduling.Linux
+namespace ipvcr.Logic.Scheduler
 {
     public abstract class CommandWrapperBase
     {

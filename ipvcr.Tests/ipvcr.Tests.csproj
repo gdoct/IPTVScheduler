@@ -23,13 +23,6 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="../ipvcr.Auth/ipvcr.Auth.csproj" />
-    <ProjectReference Include="../ipvcr.Scheduling.Linux/ipvcr.Scheduling.Linux.csproj" />
-    <ProjectReference Include="..\ipvcr.Scheduling\ipvcr.Scheduling.csproj" />
-    <ProjectReference Include="..\ipvcr.Scheduling.Shared\ipvcr.Scheduling.Shared.csproj" />
-  </ItemGroup>
-
   <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
     <DefineConstants>WINDOWS</DefineConstants>
   </PropertyGroup>
@@ -43,6 +36,10 @@
     </ItemGroup>
     <Copy SourceFiles="@(WindowsScheduler)" DestinationFolder="$(OutputPath)\windows" />
   </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ipvcr.Logic\ipvcr.Logic.csproj" />
+  </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>

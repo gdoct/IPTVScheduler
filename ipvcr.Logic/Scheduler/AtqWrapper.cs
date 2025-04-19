@@ -1,8 +1,7 @@
+using ipvcr.Logic.Api;
 using System.Text.RegularExpressions;
-using ipvcr.Scheduling.Shared;
-using ipvcr.Scheduling.Shared.Settings;
 
-namespace ipvcr.Scheduling.Linux;
+namespace ipvcr.Logic.Scheduler;
 
 public class AtqWrapper(IProcessRunner processRunner, ISettingsService settingsService) :
                 CommandWrapperBase(processRunner, settingsService, AtqCommand)
@@ -22,7 +21,7 @@ public class AtqWrapper(IProcessRunner processRunner, ISettingsService settingsS
         if (match.Success)
         {
             // jobId is guaranteed to be integer here (due to the regex)
-            jobId = Int32.Parse(match.Groups[1].Value);
+            jobId = int.Parse(match.Groups[1].Value);
             return true;
         }
         else

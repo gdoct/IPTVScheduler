@@ -1,4 +1,4 @@
-namespace ipvcr.Scheduling.Shared.Settings;
+namespace ipvcr.Logic.Settings;
 public class FfmpegSettings
 {
     // class for managing ffmpeg parameters such as file type, codec, etc.

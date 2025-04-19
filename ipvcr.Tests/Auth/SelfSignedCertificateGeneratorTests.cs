@@ -1,10 +1,10 @@
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using System.Security.Cryptography.X509Certificates;
-using ipvcr.Auth;
+using ipvcr.Logic.Auth;
 using Moq;
 
-namespace ipvcr.Tests;
+namespace ipvcr.Tests.Auth;
 
 public class SelfSignedCertificateGeneratorTests
 {

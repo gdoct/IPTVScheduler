@@ -1,7 +1,7 @@
-namespace ipvcr.Tests.LinuxScheduler;
+namespace ipvcr.Tests.Scheduler;
 
-using ipvcr.Scheduling.Linux;
-using ipvcr.Scheduling.Shared.Settings;
+using ipvcr.Logic.Api;
+using ipvcr.Logic.Scheduler;
 using Moq;
 
 public class AtrmWrapperTests

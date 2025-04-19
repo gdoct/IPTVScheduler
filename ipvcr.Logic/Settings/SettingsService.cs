@@ -1,7 +1,7 @@
+using ipvcr.Logic.Api;
 using System.IO.Abstractions;
-using ipvcr.Auth;
 
-namespace ipvcr.Scheduling.Shared.Settings;
+namespace ipvcr.Logic.Settings;
 
 /// <summary>
 /// Enum for identifying which type of settings has changed
@@ -28,25 +28,6 @@ public class SettingsServiceChangedEventArgs : EventArgs
         SettingsType = settingsType;
         NewSettings = newSettings;
     }
-}
-
-/// <summary>
-/// A facade service that provides centralized access to all settings in the application.
-/// </summary>
-public interface ISettingsService
-{
-    // Properties for direct settings access with auto-save functionality
-    SchedulerSettings SchedulerSettings { get; set; }
-    PlaylistSettings PlaylistSettings { get; set; }
-    SslSettings SslSettings { get; set; }
-    FfmpegSettings FfmpegSettings { get; set; }
-    AdminPasswordSettings AdminPasswordSettings { get; set; }
-    // Admin password management
-    bool ValidateAdminPassword(string passwordhash);
-    void UpdateAdminPassword(string newPassword);
-    void ResetFactoryDefaults();
-    // Settings changed event
-    event EventHandler<SettingsServiceChangedEventArgs>? SettingsChanged;
 }
 
 /// <summary>

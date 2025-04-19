@@ -1,5 +1,6 @@
 // filepath: /home/guido/dotnet/ipvcr/ipvcr.Tests/TokenAuthenticationHandlerTests.cs
-using ipvcr.Auth;
+using ipvcr.Logic.Api;
+using ipvcr.Logic.Auth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,7 @@ using Moq;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 
-namespace ipvcr.Tests;
+namespace ipvcr.Tests.Auth;
 
 #pragma warning disable CS0618 // Type or member is obsolete - suppressing warnings for ISystemClock
 public class TokenAuthenticationHandlerTests

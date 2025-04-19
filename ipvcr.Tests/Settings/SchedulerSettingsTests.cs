@@ -1,8 +1,6 @@
-using System;
-using ipvcr.Scheduling.Shared.Settings;
-using Xunit;
+using ipvcr.Logic.Settings;
 
-namespace ipvcr.Tests
+namespace ipvcr.Tests.Settings
 {
     public class SchedulerSettingsTests
     {
@@ -22,12 +20,13 @@ namespace ipvcr.Tests
         public void Properties_CanBeModified()
         {
             // Arrange
-            var settings = new SchedulerSettings();
-
-            // Act
-            settings.MediaPath = "/custom/media";
-            settings.DataPath = "/custom/data";
-            settings.RemoveTaskAfterExecution = false;
+            var settings = new SchedulerSettings
+            {
+                // Act
+                MediaPath = "/custom/media",
+                DataPath = "/custom/data",
+                RemoveTaskAfterExecution = false
+            };
 
             // Assert
             Assert.Equal("/custom/media", settings.MediaPath);

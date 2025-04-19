@@ -1,4 +1,4 @@
-namespace ipvcr.Scheduling;
+namespace ipvcr.Logic;
 
 public class ChannelInfo(string id, string name, string logo, Uri uri, string group)
 {

@@ -1,4 +1,6 @@
-namespace ipvcr.Scheduling.Shared.Settings;
+using ipvcr.Logic.Settings;
+
+namespace ipvcr.Logic.Api;
 
 public class SettingsChangedEventArgs<T>(T newSettings) : EventArgs
 {

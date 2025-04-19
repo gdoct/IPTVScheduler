@@ -2,7 +2,7 @@ using System.IO.Abstractions;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
-namespace ipvcr.Auth
+namespace ipvcr.Logic.Auth
 {
     public class SelfSignedCertificateGenerator
     {

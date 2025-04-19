@@ -1,10 +1,10 @@
-namespace ipvcr.Tests.LinuxScheduler;
+namespace ipvcr.Tests.Scheduler;
 
-using System.IO.Abstractions;
-using ipvcr.Scheduling.Linux;
-using ipvcr.Scheduling;
-using ipvcr.Scheduling.Shared.Settings;
+using ipvcr.Logic.Api;
+using ipvcr.Logic.Scheduler;
+using ipvcr.Logic.Settings;
 using Moq;
+using System.IO.Abstractions;
 
 public class TaskScriptManagerTests
 {

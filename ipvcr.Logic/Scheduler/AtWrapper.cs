@@ -1,9 +1,9 @@
+using ipvcr.Logic.Api;
 using System.IO.Abstractions;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using ipvcr.Scheduling.Shared.Settings;
 
-namespace ipvcr.Scheduling.Linux;
+namespace ipvcr.Logic.Scheduler;
 
 public partial class AtWrapper(IFileSystem fileSystem, IProcessRunner processRunner, ISettingsService settingsService) :
     CommandWrapperBase(processRunner, settingsService, AT_COMMAND)
@@ -14,10 +14,10 @@ public partial class AtWrapper(IFileSystem fileSystem, IProcessRunner processRun
     public int ScheduleTask(ScheduledTask task)
     {
         Environment.SetEnvironmentVariable("TASK_ID", task.Id.ToString());
-        var taskjson = System.Text.Json.JsonSerializer.Serialize(task);
+        var taskjson = JsonSerializer.Serialize(task);
         //Environment.SetEnvironmentVariable("TASK_DEFINITION", taskjson);
         string startTimeFormatted = task.StartTime.ToLocalTime().ToString(AT_DATE_FORMAT);
-        string atCommand = $"echo \"{base.GetScriptFilename(task)}\" | at {startTimeFormatted}";
+        string atCommand = $"echo \"{GetScriptFilename(task)}\" | at {startTimeFormatted}";
         var (output, error, exitCode) = base.ExecuteShellCommand(atCommand);
         //var expected = "warning: commands will be executed using /bin/sh\njob 66 at Thu Apr 17 14:54:00 2025\n\n";
         var lines = error.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -31,7 +31,7 @@ public partial class AtWrapper(IFileSystem fileSystem, IProcessRunner processRun
                 if (match.Success)
                 {
                     string jobIdString = match.Groups[1].Value;
-                    return Int32.Parse(jobIdString);
+                    return int.Parse(jobIdString);
                 }
             }
         }
@@ -39,7 +39,7 @@ public partial class AtWrapper(IFileSystem fileSystem, IProcessRunner processRun
         {
             throw new InvalidOperationException($"Failed to schedule task: {error}");
         }
-        if (Int32.TryParse(output, out int jobId))
+        if (int.TryParse(output, out int jobId))
         {
             return jobId;
         }

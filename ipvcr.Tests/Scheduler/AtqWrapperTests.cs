@@ -1,14 +1,15 @@
-namespace ipvcr.Tests.LinuxScheduler;
+namespace ipvcr.Tests.Scheduler;
 
-using ipvcr.Scheduling;
-using ipvcr.Scheduling.Linux;
-using ipvcr.Scheduling.Shared.Settings;
+using ipvcr.Logic;
+using ipvcr.Logic.Api;
+using ipvcr.Logic.Scheduler;
 using Moq;
 
 public class AtqWrapperTests
 {
     private readonly Mock<IProcessRunner> _processRunnerMock;
     private readonly Mock<ISettingsService> _settingsManagerMock;
+    private static readonly int[] expected = [1, 2];
 
     public AtqWrapperTests()
     {
@@ -39,7 +40,7 @@ public class AtqWrapperTests
         var result = atqWrapper.GetScheduledTasks().ToList();
 
         // Assert
-        Assert.Equal(new[] { 1, 2 }, result);
+        Assert.Equal(expected, result);
     }
 
     [Fact]

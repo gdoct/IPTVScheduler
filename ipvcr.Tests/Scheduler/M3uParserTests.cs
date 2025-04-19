@@ -1,9 +1,10 @@
-using ipvcr.Scheduling;
+using ipvcr.Logic;
+using ipvcr.Logic.Scheduler;
 using Moq;
 using System.IO.Abstractions;
 using System.Text;
 
-namespace ipvcr.Tests
+namespace ipvcr.Tests.Scheduler
 {
     public class M3uParserTests
     {

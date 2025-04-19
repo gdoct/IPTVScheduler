@@ -1,21 +1,8 @@
+using ipvcr.Logic.Api;
 using System.IO.Abstractions;
 using System.Text.Json;
-using System.Text.RegularExpressions;
-using ipvcr.Scheduling.Shared;
-using ipvcr.Scheduling.Shared.Settings;
 
-namespace ipvcr.Scheduling.Linux;
-
-public interface ITaskScriptManager
-{
-    string ReadTaskScript(Guid id);
-    void WriteTaskScript(ScheduledTask task, bool removeAfterCompletion);
-
-    void MoveScriptToFailed(Guid id);
-    void RemoveTaskScript(Guid id);
-    string TaskScriptPath(Guid taskId);
-    string ExtractJsonFromTask(Guid taskId, string definition);
-}
+namespace ipvcr.Logic.Scheduler;
 
 public class TaskScriptManager(IFileSystem fileSystem, ISettingsService settingsService) : ITaskScriptManager
 {

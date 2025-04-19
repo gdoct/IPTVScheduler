@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../ipvcr.Auth/ipvcr.Auth.csproj" />
-    <ProjectReference Include="..\ipvcr.Scheduling\ipvcr.Scheduling.csproj" />
+    <ProjectReference Include="..\ipvcr.Logic\ipvcr.Logic.csproj" />
   </ItemGroup>
 </Project>

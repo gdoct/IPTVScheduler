@@ -1,4 +1,4 @@
-namespace ipvcr.Scheduling.Shared.Settings;
+namespace ipvcr.Logic.Settings;
 
 public class SslSettings
 {

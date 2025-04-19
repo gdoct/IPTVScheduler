@@ -1,8 +1,6 @@
-using System;
-using ipvcr.Scheduling.Shared.Settings;
-using Xunit;
+using ipvcr.Logic.Settings;
 
-namespace ipvcr.Tests
+namespace ipvcr.Tests.Settings
 {
     public class PlaylistSettingsTests
     {
@@ -23,13 +21,14 @@ namespace ipvcr.Tests
         public void Properties_CanBeModified()
         {
             // Arrange
-            var settings = new PlaylistSettings();
-
-            // Act
-            settings.M3uPlaylistPath = "/custom/path/playlist.m3u";
-            settings.PlaylistAutoUpdateInterval = 12;
-            settings.AutoReloadPlaylist = true;
-            settings.FilterEmptyGroups = false;
+            var settings = new PlaylistSettings
+            {
+                // Act
+                M3uPlaylistPath = "/custom/path/playlist.m3u",
+                PlaylistAutoUpdateInterval = 12,
+                AutoReloadPlaylist = true,
+                FilterEmptyGroups = false
+            };
 
             // Assert
             Assert.Equal("/custom/path/playlist.m3u", settings.M3uPlaylistPath);

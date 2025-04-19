@@ -1,18 +1,10 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using ipvcr.Logic.Api;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace ipvcr.Auth;
-
-public interface ITokenManager
-{
-    string CreateToken(string username, IEnumerable<string>? roles = null);
-    ClaimsPrincipal? ValidateToken(string token);
-    // No need for InvalidateToken methods as we'll use JWT expiration instead
-
-    string CreateHash(string input);
-}
+namespace ipvcr.Logic.Auth;
 
 public class TokenManager : ITokenManager
 {
@@ -39,8 +31,8 @@ public class TokenManager : ITokenManager
 
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, username),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(JwtRegisteredClaimNames.Sub, username),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
 
         // Add roles if provided
@@ -92,6 +84,6 @@ public class TokenManager : ITokenManager
         if (string.IsNullOrWhiteSpace(input))
             return string.Empty;
         // Implement a proper hashing algorithm here
-        return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(input.PadLeft(16, '0')));
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes(input.PadLeft(16, '0')));
     }
 }

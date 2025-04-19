@@ -1,6 +1,7 @@
-﻿using ipvcr.Scheduling.Shared.Settings;
+﻿using ipvcr.Logic.Scheduler;
+using ipvcr.Logic.Settings;
 
-namespace ipvcr.Scheduling;
+namespace ipvcr.Logic;
 
 public class ScheduledRecording
 {
@@ -86,7 +87,7 @@ public class ScheduledRecording
         // Use specified output format, falling back to FileType if needed
         string format = !string.IsNullOrEmpty(ffmpegSettings.OutputFormat)
             ? ffmpegSettings.OutputFormat
-            : (!string.IsNullOrEmpty(ffmpegSettings.FileType) ? ffmpegSettings.FileType : "mp4");
+            : !string.IsNullOrEmpty(ffmpegSettings.FileType) ? ffmpegSettings.FileType : "mp4";
 
         command += $" -f {format}";
 

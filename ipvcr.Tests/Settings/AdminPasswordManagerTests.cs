@@ -3,8 +3,8 @@ using System.IO;
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using System.Text.Json;
-using ipvcr.Auth;
-using ipvcr.Scheduling.Shared.Settings;
+using ipvcr.Logic.Api;
+using ipvcr.Logic.Settings;
 using Moq;
 #pragma warning disable CS8600, CS8602, CS8603, CS8604, CS8618, CS8625
 namespace ipvcr.Tests.Settings
@@ -102,10 +102,11 @@ namespace ipvcr.Tests.Settings
             var settings = new AdminPasswordSettings { AdminUsername = "admin", AdminPassword = "hashedpassword" };
             mockFileSystem.AddFile(SettingsFilePath, new MockFileData(JsonSerializer.Serialize(settings)));
 
-            var manager = new AdminPasswordManager(fileSystemWrapperMock.Object, _tokenManagerMock.Object);
-
-            // Act
-            manager.Settings = new AdminPasswordSettings { AdminUsername = "newadmin" };
+            var manager = new AdminPasswordManager(fileSystemWrapperMock.Object, _tokenManagerMock.Object)
+            {
+                // Act
+                Settings = new AdminPasswordSettings { AdminUsername = "newadmin" }
+            };
 
             // Assert
             var savedText = mockFileSystem.GetFile(SettingsFilePath).TextContents;

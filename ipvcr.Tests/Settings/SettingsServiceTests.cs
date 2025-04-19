@@ -1,12 +1,12 @@
 using System;
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
-using ipvcr.Auth;
-using ipvcr.Scheduling.Shared.Settings;
 using Moq;
 using System.Text.Json;
+using ipvcr.Logic.Settings;
+using ipvcr.Logic.Api;
 
-namespace ipvcr.Tests
+namespace ipvcr.Tests.Settings
 {
     public class SettingsServiceTests
     {

@@ -1,10 +1,10 @@
-
+using ipvcr.Logic.Api;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 
-namespace ipvcr.Auth;
+namespace ipvcr.Logic.Auth;
 public class TokenAuthenticationFilter : IAsyncAuthorizationFilter
 {
     private readonly ITokenManager _tokenManager;
@@ -55,7 +55,7 @@ public static class TokenAuthenticationMiddleWare
                 RouteData = context.GetRouteData(),
                 ActionDescriptor = new Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor()
             };
-            await filter.OnAuthorizationAsync(new AuthorizationFilterContext(actionContext, new List<IFilterMetadata>()));
+            await filter.OnAuthorizationAsync(new AuthorizationFilterContext(actionContext, []));
             await next();
         });
     }

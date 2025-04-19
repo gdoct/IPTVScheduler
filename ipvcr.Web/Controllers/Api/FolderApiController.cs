@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using ipvcr.Scheduling.Shared.Services;
+using ipvcr.Logic.Api;
 
 namespace ipvcr.Web.Controllers.Api;
 

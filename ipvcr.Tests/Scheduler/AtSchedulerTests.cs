@@ -1,11 +1,11 @@
+using ipvcr.Logic.Api;
+using ipvcr.Logic.Scheduler;
+using ipvcr.Logic.Settings;
+using Moq;
 using System.IO.Abstractions;
 using System.Text.Json;
-using ipvcr.Scheduling;
-using ipvcr.Scheduling.Linux;
-using ipvcr.Scheduling.Shared.Settings;
-using Moq;
 
-namespace ipvcr.Tests.LinuxScheduler;
+namespace ipvcr.Tests.Scheduler;
 
 public class AtSchedulerTests
 {
@@ -58,7 +58,7 @@ public class AtSchedulerTests
         // Assert
         var tasks = scheduler.FetchScheduledTasks().ToList();
         Assert.NotNull(tasks);
-        var count = tasks.Count();
+        var count = tasks.Count;
         MockRepository.VerifyAll();
         Assert.Equal(2, count);
     }

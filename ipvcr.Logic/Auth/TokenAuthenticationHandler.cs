@@ -1,9 +1,10 @@
+using ipvcr.Logic.Api;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text.Encodings.Web;
 
-namespace ipvcr.Auth;
+namespace ipvcr.Logic.Auth;
 
 #pragma warning disable CS0618 // Type or member ISystemClock is obsolete
 public class TokenAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>

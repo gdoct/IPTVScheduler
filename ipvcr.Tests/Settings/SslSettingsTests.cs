@@ -1,8 +1,6 @@
-using System;
-using ipvcr.Scheduling.Shared.Settings;
-using Xunit;
+using ipvcr.Logic.Settings;
 
-namespace ipvcr.Tests
+namespace ipvcr.Tests.Settings
 {
     public class SslSettingsTests
     {

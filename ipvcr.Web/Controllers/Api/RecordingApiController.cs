@@ -1,9 +1,10 @@
-using ipvcr.Scheduling;
+using ipvcr.Logic;
+using ipvcr.Logic.Api;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
 
-namespace ipvcr.Web.Controllers;
+namespace ipvcr.Web.Controllers.Api;
 
 [Authorize]
 [Route("api/recordings")]

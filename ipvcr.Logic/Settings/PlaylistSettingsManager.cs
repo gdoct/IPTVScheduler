@@ -1,6 +1,7 @@
+using ipvcr.Logic.Api;
 using System.IO.Abstractions;
 
-namespace ipvcr.Scheduling.Shared.Settings;
+namespace ipvcr.Logic.Settings;
 
 public class PlaylistSettingsManager : BaseSettingsManager<PlaylistSettings>, ISettingsManager<PlaylistSettings>
 {

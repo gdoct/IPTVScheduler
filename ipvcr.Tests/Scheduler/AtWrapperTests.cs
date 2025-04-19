@@ -1,11 +1,11 @@
-namespace ipvcr.Tests.LinuxScheduler;
+namespace ipvcr.Tests.Scheduler;
 
+using ipvcr.Logic.Api;
+using ipvcr.Logic.Scheduler;
+using ipvcr.Logic.Settings;
+using Moq;
 using System.IO.Abstractions;
 using System.Text.Json;
-using ipvcr.Scheduling.Linux;
-using ipvcr.Scheduling;
-using ipvcr.Scheduling.Shared.Settings;
-using Moq;
 
 public class AtWrapperTests
 {

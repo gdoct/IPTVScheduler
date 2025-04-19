@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace ipvcr.Scheduling
+namespace ipvcr.Logic
 {
     [ExcludeFromCodeCoverage]
     public class MissingDependencyException : Exception

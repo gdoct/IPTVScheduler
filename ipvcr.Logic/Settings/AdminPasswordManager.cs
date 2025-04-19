@@ -1,7 +1,7 @@
+using ipvcr.Logic.Api;
 using System.IO.Abstractions;
-using ipvcr.Auth;
 
-namespace ipvcr.Scheduling.Shared.Settings;
+namespace ipvcr.Logic.Settings;
 
 public class AdminPasswordManager : BaseSettingsManager<AdminPasswordSettings>, IAdminSettingsManager, ISettingsManager<AdminPasswordSettings>
 {

@@ -1,11 +1,11 @@
 // filepath: /home/guido/dotnet/ipvcr/ipvcr.Tests/TokenManagerTests.cs
-using ipvcr.Auth;
+using ipvcr.Logic.Auth;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace ipvcr.Tests;
+namespace ipvcr.Tests.Auth;
 
 public class TokenManagerTests
 {
@@ -181,7 +181,7 @@ public class TokenManagerTests
     }
 
     // Helper method to validate tokens manually for test assertions
-    private ClaimsPrincipal? ValidateToken(string token)
+    private static ClaimsPrincipal? ValidateToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var validationParameters = new TokenValidationParameters

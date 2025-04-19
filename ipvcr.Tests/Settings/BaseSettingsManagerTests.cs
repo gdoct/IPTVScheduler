@@ -4,11 +4,11 @@ using System.IO;
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using System.Text.Json;
-using ipvcr.Scheduling.Shared.Settings;
+using ipvcr.Logic.Settings;
 using Moq;
 
 #pragma warning disable CS8600, CS8602, CS8603, CS8604, CS8618, CS8625
-namespace ipvcr.Tests
+namespace ipvcr.Tests.Settings
 {
     public class BaseSettingsManagerTests
     {
@@ -61,7 +61,7 @@ namespace ipvcr.Tests
             public void TestSaveSettingsToFile(string json)
             {
                 // Direct access to the protected method
-                base.SaveSettingsToFile(json);
+                SaveSettingsToFile(json);
             }
         }
 

@@ -1,4 +1,4 @@
-﻿namespace ipvcr.Scheduling.Linux;
+﻿namespace ipvcr.Logic.Api;
 
 public interface IProcessRunner
 {

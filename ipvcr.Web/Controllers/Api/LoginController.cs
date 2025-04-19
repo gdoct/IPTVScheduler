@@ -1,9 +1,8 @@
 namespace ipvcr.Web.Controllers.Api;
 using Microsoft.AspNetCore.Mvc;
-using ipvcr.Auth;
-using ipvcr.Scheduling.Shared.Settings;
 using ipvcr.Web.Models;
 using Microsoft.AspNetCore.Authorization;
+using ipvcr.Logic.Api;
 
 [Route("api/login")]
 [ApiController]

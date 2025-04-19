@@ -1,6 +1,7 @@
-﻿using System.Text;
+﻿using ipvcr.Logic.Api;
+using System.Text;
 
-namespace ipvcr.Scheduling.Linux;
+namespace ipvcr.Logic.Scheduler;
 
 public class ProcessRunner : IProcessRunner
 {

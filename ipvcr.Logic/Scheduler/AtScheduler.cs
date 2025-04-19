@@ -1,8 +1,7 @@
+using ipvcr.Logic.Api;
 using System.IO.Abstractions;
-using ipvcr.Scheduling.Shared;
-using ipvcr.Scheduling.Shared.Settings;
 
-namespace ipvcr.Scheduling.Linux;
+namespace ipvcr.Logic.Scheduler;
 
 public class AtScheduler(IFileSystem fileSystem, IProcessRunner processRunner, ISettingsService settingsService) : ITaskScheduler
 {

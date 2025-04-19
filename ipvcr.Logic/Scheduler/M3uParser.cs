@@ -1,7 +1,7 @@
 using System.IO.Abstractions;
 using System.Text.RegularExpressions;
 
-namespace ipvcr.Scheduling;
+namespace ipvcr.Logic.Scheduler;
 
 public class M3uParser
 {

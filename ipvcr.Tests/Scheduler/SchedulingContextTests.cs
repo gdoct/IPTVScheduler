@@ -1,9 +1,11 @@
 // Purpose: This file contains the tests for the SchedulingContext class.
-using ipvcr.Scheduling;
-using ipvcr.Scheduling.Shared.Settings;
+using ipvcr.Logic;
+using ipvcr.Logic.Api;
+using ipvcr.Logic.Scheduler;
+using ipvcr.Logic.Settings;
 using Moq;
 
-namespace ipvcr.Tests;
+namespace ipvcr.Tests.Scheduler;
 
 public class SchedulingContextTests
 {

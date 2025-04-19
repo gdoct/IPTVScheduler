@@ -1,8 +1,6 @@
-using System;
-using ipvcr.Scheduling.Shared.Settings;
-using Xunit;
+using ipvcr.Logic.Settings;
 
-namespace ipvcr.Tests
+namespace ipvcr.Tests.Settings
 {
     public class FfmpegSettingsTests
     {
@@ -28,18 +26,19 @@ namespace ipvcr.Tests
         public void Properties_CanBeModified()
         {
             // Arrange
-            var settings = new FfmpegSettings();
-
-            // Act
-            settings.FileType = "mkv";
-            settings.Codec = "libvpx";
-            settings.AudioCodec = "libvorbis";
-            settings.VideoBitrate = "2000k";
-            settings.AudioBitrate = "192k";
-            settings.Resolution = "1920x1080";
-            settings.FrameRate = "60";
-            settings.AspectRatio = "21:9";
-            settings.OutputFormat = "webm";
+            var settings = new FfmpegSettings
+            {
+                // Act
+                FileType = "mkv",
+                Codec = "libvpx",
+                AudioCodec = "libvorbis",
+                VideoBitrate = "2000k",
+                AudioBitrate = "192k",
+                Resolution = "1920x1080",
+                FrameRate = "60",
+                AspectRatio = "21:9",
+                OutputFormat = "webm"
+            };
 
             // Assert
             Assert.Equal("mkv", settings.FileType);

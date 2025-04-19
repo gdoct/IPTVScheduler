@@ -1,5 +1,6 @@
 // filepath: /home/guido/dotnet/ipvcr/ipvcr.Tests/TokenAuthenticationFilterTests.cs
-using ipvcr.Auth;
+using ipvcr.Logic.Api;
+using ipvcr.Logic.Auth;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System.Security.Claims;
 
-namespace ipvcr.Tests;
+namespace ipvcr.Tests.Auth;
 
 public class TokenAuthenticationFilterTests
 {
@@ -279,7 +280,7 @@ public class TokenAuthenticationFilterTests
         var appBuilder = new ApplicationBuilder(serviceProvider);
 
         // Act - This is just testing that the extension method doesn't throw
-        var exception = Record.Exception(() => TokenAuthenticationMiddleWare.UseTokenAuthentication(appBuilder));
+        var exception = Record.Exception(() => appBuilder.UseTokenAuthentication());
 
         // Assert
         Assert.Null(exception); // No exception means the middleware was registered successfully

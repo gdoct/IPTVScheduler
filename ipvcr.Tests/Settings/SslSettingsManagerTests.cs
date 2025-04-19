@@ -1,13 +1,8 @@
-using System;
-using System.IO;
-using System.IO.Abstractions;
+using ipvcr.Logic.Settings;
 using System.IO.Abstractions.TestingHelpers;
 using System.Text.Json;
-using ipvcr.Scheduling.Shared.Settings;
-using Moq;
-using Xunit;
 #pragma warning disable CS8600, CS8602, CS8603, CS8604, CS8618, CS8625
-namespace ipvcr.Tests
+namespace ipvcr.Tests.Settings
 {
     public class SslSettingsManagerTests
     {

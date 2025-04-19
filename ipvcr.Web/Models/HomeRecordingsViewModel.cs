@@ -1,4 +1,5 @@
-using ipvcr.Scheduling;
+using ipvcr.Logic;
+
 namespace ipvcr.Web.Models;
 public class HomeRecordingsViewModel
 {

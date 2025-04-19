@@ -1,26 +1,22 @@
-using ipvcr.Scheduling.Shared.Settings;
+using ipvcr.Logic.Api;
+using ipvcr.Logic.Auth;
+using ipvcr.Logic.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ipvcr.Web.Controllers;
+namespace ipvcr.Web.Controllers.Api;
 
 [Authorize]
 [Route("api/settings")]
 [ApiController]
 [Produces("application/json")]
 [Consumes("application/json")]
-public class SettingsApiController : ControllerBase
+public class SettingsApiController(
+    ILogger<SettingsApiController> logger,
+    ISettingsService settingsManager) : ControllerBase
 {
-    private readonly ILogger<SettingsApiController> _logger;
-    private readonly ISettingsService _settingsManager;
-
-    public SettingsApiController(
-        ILogger<SettingsApiController> logger,
-        ISettingsService settingsManager)
-    {
-        _logger = logger;
-        _settingsManager = settingsManager;
-    }
+    private readonly ILogger<SettingsApiController> _logger = logger;
+    private readonly ISettingsService _settingsManager = settingsManager;
 
     // GET: api/settings
     [HttpGet]
@@ -143,7 +139,7 @@ public class SettingsApiController : ControllerBase
         {
             using (var stream = new FileStream(testFilePath, FileMode.Create))
             {
-                await stream.WriteAsync(new byte[0], 0, 0);
+                await stream.WriteAsync([], 0, 0);
             }
             System.IO.File.Delete(testFilePath);
         }
@@ -289,7 +285,7 @@ public class SettingsApiController : ControllerBase
             var filePath = Path.Combine(certificateDir, $"selfsigned_certificate_{timestamp}.pfx");
 
             // Create the certificate generator
-            var certificateGenerator = new ipvcr.Auth.SelfSignedCertificateGenerator(new System.IO.Abstractions.FileSystem());
+            var certificateGenerator = new SelfSignedCertificateGenerator(new System.IO.Abstractions.FileSystem());
 
             // Generate the certificate 
             var certificate = certificateGenerator.GenerateSelfSignedTlsCertificate(filePath, settings.CertificatePassword);

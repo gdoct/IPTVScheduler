@@ -1,27 +1,22 @@
-namespace ipvcr.Scheduling;
+namespace ipvcr.Logic.Scheduler;
 
+using ipvcr.Logic;
+using ipvcr.Logic.Api;
+using ipvcr.Logic.Settings;
 using System.Collections.Generic;
 using System.IO.Abstractions;
-using ipvcr.Scheduling.Shared;
-using ipvcr.Scheduling.Shared.Settings;
-
-public interface IPlaylistManager
-{
-    List<ChannelInfo> GetPlaylistItems();
-    int ChannelCount { get; }
-    Task LoadFromFileAsync(string filePath);
-}
 
 public class PlaylistManager : IPlaylistManager
 {
     private readonly List<ChannelInfo> _playlistItems;
     private readonly IFileSystem _filesystem;
     private string? _m3uPlaylistPath;
-    private object _lock = new object();
+    private static readonly object v = new();
+    private readonly object _lock = v;
 
     public PlaylistManager(ISettingsService settingsManager, IFileSystem fileSystem)
     {
-        _playlistItems = new List<ChannelInfo>();
+        _playlistItems = [];
         _filesystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
         if (string.IsNullOrEmpty(settingsManager.PlaylistSettings.M3uPlaylistPath))
         {

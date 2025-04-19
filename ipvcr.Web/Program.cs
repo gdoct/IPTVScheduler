@@ -1,10 +1,10 @@
-using ipvcr.Auth;
-using ipvcr.Scheduling;
-using ipvcr.Scheduling.Linux;
-using ipvcr.Scheduling.Shared.Settings;
-using ipvcr.Scheduling.Shared.Services;
 using Microsoft.AspNetCore.Authentication;
 using System.IO.Abstractions;
+using ipvcr.Logic.Settings;
+using ipvcr.Logic.Auth;
+using ipvcr.Logic.Services;
+using ipvcr.Logic.Scheduler;
+using ipvcr.Logic.Api;
 
 namespace ipvcr.Web;
 

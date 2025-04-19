@@ -1,8 +1,9 @@
-namespace ipvcr.Tests;
+namespace ipvcr.Tests.Scheduler;
 
-using ipvcr.Scheduling;
-using ipvcr.Scheduling.Shared;
-using ipvcr.Scheduling.Shared.Settings;
+using ipvcr.Logic;
+using ipvcr.Logic.Api;
+using ipvcr.Logic.Scheduler;
+using ipvcr.Logic.Settings;
 using Moq;
 using System;
 using System.IO.Abstractions;

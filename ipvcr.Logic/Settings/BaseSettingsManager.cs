@@ -1,6 +1,7 @@
+using ipvcr.Logic.Api;
 using System.IO.Abstractions;
 
-namespace ipvcr.Scheduling.Shared.Settings;
+namespace ipvcr.Logic.Settings;
 
 public abstract class BaseSettingsManager<T> where T : class, new()
 {
